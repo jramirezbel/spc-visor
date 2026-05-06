@@ -51,7 +51,6 @@
             <h2>Visor de SPC - Control Chart</h2>
             <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <label>1. Cargar Excel: </label>
-                <input type="file" id="excel-file" accept=".xlsx, .xls" />
             </div>
         </div>
         <div class="panel-reportes">
@@ -136,11 +135,18 @@
     let variableActual = "Consumo agua recuperada";
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
-    // 2. CARGA DE EXCEL
-    document.getElementById('excel-file').addEventListener('change', function(e) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
+// 2. CARGA AUTOMÁTICA DESDE GITHUB
+window.addEventListener('DOMContentLoaded', (event) => {
+    // El nombre del archivo debe ser idéntico al que subiste (ej: datos.xlsx)
+    const urlDelExcel = 'datos.xlsx'; 
+
+    fetch(urlDelExcel)
+        .then(res => {
+            if (!res.ok) throw new Error("No se pudo cargar el archivo Excel. Verifica que esté en GitHub.");
+            return res.arrayBuffer();
+        })
+        .then(buffer => {
+            const data = new Uint8Array(buffer);
             const workbook = XLSX.read(data, {type: 'array'});
             const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
@@ -155,11 +161,15 @@
                 };
             }).filter(d => d.lote !== '');
 
-            cambiarVariable(variableActual); // Inicializar con la primera variable
-        };
-        reader.readAsArrayBuffer(e.target.files[0]);
-    });
-
+            // Dibujamos la gráfica inicial
+            cambiarVariable(variableActual);
+            console.log("Datos cargados correctamente desde el servidor.");
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            alert("Error al cargar los datos automáticos: " + err.message);
+        });
+});
     // 3. LÓGICA DE VARIABLES Y PESTAÑAS
     function cambiarVariable(nombre) {
         variableActual = nombre;
