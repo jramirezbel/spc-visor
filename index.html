@@ -132,52 +132,44 @@
     let variableActual = "Consumo agua recuperada";
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
+// 2. CARGA AUTOMÁTICA DESDE GITHUB
 window.addEventListener('DOMContentLoaded', (event) => {
-    // 1. Usa esta URL exactamante (es tu enlace convertido a formato de descarga directa)
-    const urlLimpia = 'https://anheuserbuschinbev-my.sharepoint.com/:x:/g/personal/juan_ramirezb_gmodelo_com_mx/IQCqzjW_IKQpSZfmTtFT1J2qAc3oaWhUpkE5YfLI9mwe-MQ?download=1';
-    
-    // 2. El túnel de AllOrigins para saltar el CORS
-    const urlFinal = 'https://corsproxy.io/?' + encodeURIComponent(urlLimpia);
+    const urlExcel = "/sites/VisorSICs/Documentos compartidos/pruebasics.xlsx";
 
-    console.log("Intentando conectar con:", urlLimpia);
+    fetch(urlExcel, {
+        credentials: "include",
+        headers: { "Accept": "application/octet-stream" }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error(`Error ${res.status}: No se pudo acceder al archivo.`);
+        return res.arrayBuffer();
+    })
+    .then(buffer => {
+        const data = new Uint8Array(buffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        console.log("Hojas encontradas:", workbook.SheetNames);
 
-    fetch(urlFinal)
-        .then(res => {
-            if (!res.ok) throw new Error("SharePoint no respondió correctamente.");
-            return res.arrayBuffer();
-        })
-        .then(buffer => {
-            const data = new Uint8Array(buffer);
-            const workbook = XLSX.read(data, {type: 'array'});
-            
-            // Verificamos qué hojas hay para no fallar
-            console.log("Hojas encontradas:", workbook.SheetNames);
-            const nombreHoja = workbook.SheetNames[0];
-            const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+        const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        if (!rawData.length) throw new Error("El archivo no tiene datos.");
 
-            if (!rawData || rawData.length === 0) {
-                throw new Error("El archivo se leyó pero no se encontraron datos en la primera hoja.");
-            }
+        datosCompletos = rawData.map(f => {
+            const fl = {};
+            Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
+            return {
+                lote: String(fl['lote'] || ''),
+                dia: String(fl['dia'] || ''),
+                mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
+                raw: fl
+            };
+        }).filter(d => d.lote !== '' && d.lote !== 'undefined');
 
-            // PROCESAMIENTO
-            datosCompletos = rawData.map(f => {
-                const fl = {}; 
-                Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
-                return {
-                    lote: String(fl['lote'] || ''),
-                    dia: String(fl['dia'] || ''),
-                    mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
-                    raw: fl
-                };
-            }).filter(d => d.lote !== '' && d.lote !== 'undefined');
-
-            cambiarVariable(variableActual);
-            console.log("¡Carga exitosa! Filas procesadas:", datosCompletos.length);
-        })
-        .catch(err => {
-            console.error("Error técnico:", err);
-            alert("Error: " + err.message + "\n\nRevisa la consola (F12) para más detalles.");
-        });
+        cambiarVariable(variableActual);
+        console.log("¡Carga exitosa! Filas:", datosCompletos.length);
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("Error al cargar datos: " + err.message);
+    });
 });
     
     // 3. LÓGICA DE VARIABLES Y PESTAÑAS
