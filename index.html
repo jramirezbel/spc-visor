@@ -133,22 +133,27 @@
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
 // 2. CARGA AUTOMÁTICA DESDE GITHUB
+// 2. CARGA AUTOMÁTICA DESDE ONEDRIVE/SHAREPOINT
 window.addEventListener('DOMContentLoaded', (event) => {
-    // El nombre del archivo debe ser idéntico al que subiste (ej: datos.xlsx)
-    const urlDelExcel = 'pruebasics.xlsx'; 
+    
+    // AQUÍ PEGAS TU ENLACE CON EL &download=1 AL FINAL
+    const urlDelExcel = 'https://anheuserbuschinbev-my.sharepoint.com/:x:/g/personal/juan_ramirezb_gmodelo_com_mx/IQCqzjW_IKQpSZfmTtFT1J2qAc3oaWhUpkE5YfLI9mwe-MQ?download=1'; 
 
     fetch(urlDelExcel)
         .then(res => {
-            if (!res.ok) throw new Error("No se pudo cargar el archivo Excel. Verifica que esté en GitHub.");
+            if (!res.ok) throw new Error("No se pudo cargar el archivo desde OneDrive. Revisa el enlace.");
             return res.arrayBuffer();
         })
         .then(buffer => {
             const data = new Uint8Array(buffer);
             const workbook = XLSX.read(data, {type: 'array'});
+            
+            // Esto busca la primera hoja del Excel
             const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
             datosCompletos = rawData.map(f => {
                 const fl = {}; 
+                // Limpiamos espacios en los nombres de las columnas por si acaso
                 Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
                 return {
                     lote: String(fl['lote'] || ''),
@@ -158,15 +163,16 @@ window.addEventListener('DOMContentLoaded', (event) => {
                 };
             }).filter(d => d.lote !== '');
 
-            // Dibujamos la gráfica inicial
+            // Dibuja la gráfica con la variable inicial
             cambiarVariable(variableActual);
-            console.log("Datos cargados correctamente desde el servidor.");
+            console.log("Datos cargados exitosamente desde OneDrive.");
         })
         .catch(err => {
             console.error("Error:", err);
-            alert("Error al cargar los datos automáticos: " + err.message);
+            alert("Error al cargar: " + err.message);
         });
 });
+    
     // 3. LÓGICA DE VARIABLES Y PESTAÑAS
     function cambiarVariable(nombre) {
         variableActual = nombre;
