@@ -184,11 +184,34 @@ async function dibujarGrafica(datos) {
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
     // 3. Configuración de la Gráfica
+// 3. Mapeamos los datos para el Hover
+    const hoverText = datos.map(d => {
+        const registro = bd.find(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual);
+        
+        if (registro) {
+            // Si es azul, mostramos info del operador y su comentario
+            return `<b>Lote:</b> ${d.lote}<br>` +
+                   `<b>Valor:</b> ${d.y}<br>` +
+                   `<b>Estado:</b> ✅ Gestionado<br>` +
+                   `<b>Operador:</b> ${registro.operador || 'N/A'}<br>` +
+                   `<b>Comentario:</b> ${registro.comentario || 'Sin notas'}`;
+        } else if (d.y > UCL_LOCAL) {
+            // Si es rojo, avisamos que está pendiente
+            return `<b>Lote:</b> ${d.lote}<br>` +
+                   `<b>Valor:</b> ${d.y}<br>` +
+                   `<b>Estado:</b> ⚠️ PENDIENTE`;
+        }
+        // Si está OK, solo datos básicos
+        return `<b>Lote:</b> ${d.lote}<br><b>Valor:</b> ${d.y}`;
+    });
+
     const trace = {
         x: [datos.map(d => d.dia), datos.map(d => d.lote)],
         y: datos.map(d => d.y),
         mode: 'lines+markers+text',
         text: datos.map(d => d.y),
+        hovertext: hoverText, // Aquí inyectamos el texto que creamos arriba
+        hoverinfo: 'text',    // Le decimos a Plotly que solo use nuestro texto
         textposition: 'top center',
         line: { color: '#2d3748', width: 2 },
         marker: {
@@ -213,7 +236,6 @@ async function dibujarGrafica(datos) {
     container.style.width = Math.max(datos.length * 50, 800) + "px";
     Plotly.newPlot(container, [trace], layout, { responsive: false, displayModeBar: false });
 
-    // 4. Evento de Clic (Sin el bloqueo estricto para permitir múltiples fallas)
     // 4. Evento de Clic con BLOQUEO TOTAL para puntos azules
     container.removeAllListeners('plotly_click');
     container.on('plotly_click', (data) => {
