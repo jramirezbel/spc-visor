@@ -214,18 +214,31 @@ async function dibujarGrafica(datos) {
     Plotly.newPlot(container, [trace], layout, { responsive: false, displayModeBar: false });
 
     // 4. Evento de Clic (Sin el bloqueo estricto para permitir múltiples fallas)
+    // 4. Evento de Clic con BLOQUEO TOTAL para puntos azules
     container.removeAllListeners('plotly_click');
     container.on('plotly_click', (data) => {
         const p = data.points[0];
+        
+        // Solo actuamos si el punto está por encima del UCL (Rojo o Azul)
         if (p.y > UCL_LOCAL) {
             const loteClick = p.data.x[1][p.pointNumber];
-            const yaRegistrado = bd.some(r => String(r.lote_id) === String(loteClick) && r.variable === variableActual);
+            
+            // VERIFICACIÓN: ¿Existe ya en Supabase para esta variable?
+            const yaRegistrado = bd.some(r => 
+                String(r.lote_id) === String(loteClick) && 
+                r.variable === variableActual
+            );
 
+            // SI YA ESTÁ REGISTRADO (PUNTO AZUL), BLOQUEAMOS TODO
             if (yaRegistrado) {
-                // Solo avisamos, pero dejamos que continúe si necesita registrar otra falla
-                console.log(`Lote ${loteClick} ya tiene registros previos.`);
+                console.log("Acceso denegado: El lote ya tiene plan de reacción.");
+                // Opcional: puedes poner un alert pequeño si quieres que el usuario sepa por qué no abre
+                // alert(`El Lote ${loteClick} ya fue gestionado.`);
+                cancelarRegistro(); // Cerramos cualquier panel abierto por si acaso
+                return; // AQUÍ SE DETIENE TODO. No abre el panel, no carga el checklist.
             }
 
+            // SI NO ESTÁ REGISTRADO (PUNTO ROJO), PROCEDEMOS
             datoSeleccionado = { lote: loteClick, valor: p.y, variable: variableActual };
             
             document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `
@@ -239,7 +252,7 @@ async function dibujarGrafica(datos) {
             validarPasos();
         }
     });
-}
+    
     async function enviarReporte() {
         const btn = document.getElementById('btnEnviar');
         btn.disabled = true; btn.innerText = "Enviando...";
