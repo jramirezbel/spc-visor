@@ -209,21 +209,38 @@
         Plotly.newPlot(container, [trace], layout, { responsive: false, displayModeBar: false });
 
         container.removeAllListeners('plotly_click');
-        container.on('plotly_click', (data) => {
-            const p = data.points[0];
-            if (p.y > UCL_LOCAL) {
-                datoSeleccionado = { lote: p.data.x[1][p.pointNumber], valor: p.y, variable: variableActual };
-                document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `
-                    <label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>
-                `).join('');
-                document.getElementById('contenidoPlan').style.display = 'block';
-                document.getElementById('mensajePlaceholder').style.display = 'none';
-                document.getElementById('infoLote').innerText = `${variableActual}: LOTE ${datoSeleccionado.lote}`;
-                document.getElementById('operador').value = "";
-                validarPasos();
+// Dentro de async function dibujarGrafica(datos) ...
+
+    container.on('plotly_click', (data) => {
+        const p = data.points[0];
+        
+        // 1. Verificamos si el punto está fuera de control
+        if (p.y > UCL_LOCAL) {
+            const loteClick = p.data.x[1][p.pointNumber];
+            
+            // 2. BUSCAMOS SI YA EXISTE EN LA DB (Punto Azul)
+            const yaRegistrado = bd.some(r => String(r.lote_id) === String(loteClick) && r.variable === variableActual);
+
+            if (yaRegistrado) {
+                alert(`El Lote ${loteClick} ya tiene un Plan de Reacción registrado.`);
+                cancelarRegistro();
+                return; // Bloqueamos la apertura del panel
             }
-        });
-    }
+
+            // 3. Si no existe, procedemos normal (Punto Rojo)
+            datoSeleccionado = { lote: loteClick, valor: p.y, variable: variableActual };
+            
+            document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `
+                <label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>
+            `).join('');
+            
+            document.getElementById('contenidoPlan').style.display = 'block';
+            document.getElementById('mensajePlaceholder').style.display = 'none';
+            document.getElementById('infoLote').innerText = `${variableActual}: LOTE ${datoSeleccionado.lote}`;
+            document.getElementById('operador').value = "";
+            validarPasos();
+        }
+    });
 
     async function enviarReporte() {
         const btn = document.getElementById('btnEnviar');
