@@ -133,43 +133,40 @@
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
 // 2. CARGA AUTOMÁTICA DESDE GITHUB
+// 2. CARGA AUTOMÁTICA DESDE GITHUB
 window.addEventListener('DOMContentLoaded', (event) => {
-    const urlExcel = "/sites/VisorSICs/Documentos compartidos/pruebasics.xlsx";
+    // El nombre del archivo debe ser idéntico al que subiste (ej: datos.xlsx)
+    const urlDelExcel = 'pruebasics.xlsx'; 
 
-    fetch(urlExcel, {
-        credentials: "include",
-        headers: { "Accept": "application/octet-stream" }
-    })
-    .then(res => {
-        if (!res.ok) throw new Error(`Error ${res.status}: No se pudo acceder al archivo.`);
-        return res.arrayBuffer();
-    })
-    .then(buffer => {
-        const data = new Uint8Array(buffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        console.log("Hojas encontradas:", workbook.SheetNames);
+    fetch(urlDelExcel)
+        .then(res => {
+            if (!res.ok) throw new Error("No se pudo cargar el archivo Excel. Verifica que esté en GitHub.");
+            return res.arrayBuffer();
+        })
+        .then(buffer => {
+            const data = new Uint8Array(buffer);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-        const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        if (!rawData.length) throw new Error("El archivo no tiene datos.");
+            datosCompletos = rawData.map(f => {
+                const fl = {}; 
+                Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
+                return {
+                    lote: String(fl['lote'] || ''),
+                    dia: String(fl['dia'] || ''),
+                    mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
+                    raw: fl
+                };
+            }).filter(d => d.lote !== '');
 
-        datosCompletos = rawData.map(f => {
-            const fl = {};
-            Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
-            return {
-                lote: String(fl['lote'] || ''),
-                dia: String(fl['dia'] || ''),
-                mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
-                raw: fl
-            };
-        }).filter(d => d.lote !== '' && d.lote !== 'undefined');
-
-        cambiarVariable(variableActual);
-        console.log("¡Carga exitosa! Filas:", datosCompletos.length);
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        alert("Error al cargar datos: " + err.message);
-    });
+            // Dibujamos la gráfica inicial
+            cambiarVariable(variableActual);
+            console.log("Datos cargados correctamente desde el servidor.");
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            alert("Error al cargar los datos automáticos: " + err.message);
+        });
 });
     
     // 3. LÓGICA DE VARIABLES Y PESTAÑAS
