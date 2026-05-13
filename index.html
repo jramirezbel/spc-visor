@@ -7,6 +7,8 @@
     
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> ```
+    
 <style>
     body { font-family: 'Segoe UI', sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
     .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
@@ -126,6 +128,12 @@
         "Malta en germen": { ucl: 1, columna: "malta en germen", pasos: ["Paso 1: Revisar mallas y limpiar desgerminadoras.","Paso 2: Limpieza inmediata si hay residuos.","Paso 3: Inspección cauchos y aletas. Reemplazar si hay fugas.","Paso 4: Ajustar damper aspiración (indicador vacío).","Paso 5: Inspección visual tolvas. Coordinar con Ing. Proceso."] }
     };
 
+    const SUPABASE_URL = 'https://abzxbxjhjqzzfjvuitom.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let registrosGlobales = [];
+    
     let datosCompletos = []; // Datos crudos del Excel
     let datosActuales = [];  // Datos filtrados para mostrar
     let datoSeleccionado = {};
@@ -170,25 +178,25 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
     
     // 3. LÓGICA DE VARIABLES Y PESTAÑAS
-    function cambiarVariable(nombre) {
-        variableActual = nombre;
-        const config = planesConfig[nombre];
-        
-        // UI de botones
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === nombre);
-        });
+function cambiarVariable(nombre) {
+    variableActual = nombre;
+    const config = planesConfig[nombre];
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText === nombre);
+    });
 
-        // Filtrar datos para esta variable
-        datosActuales = datosCompletos.map(d => ({
-            ...d,
-            y: parseFloat(d.raw[config.columna])
-        })).filter(d => !isNaN(d.y));
+    datosActuales = datosCompletos.map(d => ({
+        ...d,
+        y: parseFloat(d.raw[config.columna])
+    })).filter(d => !isNaN(d.y));
 
-        cancelarRegistro();
-        dibujarGrafica(datosActuales);
-    }
-
+    cancelarRegistro();
+    
+    // Al ser async, la llamamos normal, pero ella se encargará 
+    // de pedir los datos a Supabase antes de pintar.
+    dibujarGrafica(datosActuales); 
+}
     function filtrarMes(m) {
         const config = planesConfig[variableActual];
         const base = m === 'todos' ? datosCompletos : datosCompletos.filter(d => d.mesNum === m);
@@ -200,39 +208,90 @@ window.addEventListener('DOMContentLoaded', (event) => {
         dibujarGrafica(datosActuales);
     }
 
-    // 4. FUNCIÓN DE DIBUJO
-    function dibujarGrafica(datos) {
-        const container = document.getElementById('myDiv');
-        const config = planesConfig[variableActual];
-        const reportes = JSON.parse(localStorage.getItem('reportes_spc') || '[]');
-        const UCL_LOCAL = config.ucl;
+// 4. FUNCIÓN DE DIBUJO (Ahora es ASYNC para esperar a Supabase)
+async function dibujarGrafica(datos) {
+    const container = document.getElementById('myDiv');
+    const config = planesConfig[variableActual];
+    const UCL_LOCAL = config.ucl;
 
-        // Estadísticas
-        const total = datos.length;
-        const ok = datos.filter(d => d.y <= UCL_LOCAL).length;
-        const fuera = datos.filter(d => d.y > UCL_LOCAL);
-        const realizados = fuera.filter(d => reportes.some(r => String(r.lote) === String(d.lote) && r.variable === variableActual)).length;
-        
-        document.getElementById('stat-total').innerText = total;
-        document.getElementById('stat-ok').innerText = ok;
-        document.getElementById('stat-percent').innerText = total ? ((ok/total)*100).toFixed(1) + "%" : "0%";
-        document.getElementById('stat-pending').innerText = fuera.length - realizados;
+    // Traemos los datos de Supabase
+    const { data: reportes, error } = await _supabase
+        .from('planes_reaccion')
+        .select('*');
 
-        datos.sort((a,b) => parseInt(a.lote) - parseInt(b.lote));
+    const bd = reportes || [];
 
-        const trace = {
-            x: [datos.map(d => d.dia), datos.map(d => d.lote)],
-            y: datos.map(d => d.y),
-            mode: 'lines+markers+text',
-            text: datos.map(d => d.y),
-            textposition: 'top center',
-            line: { color: '#2d3748', width: 2 },
-            marker: {
-                size: 10,
-                color: datos.map(d => (d.y > UCL_LOCAL) ? (reportes.some(r => String(r.lote) === String(d.lote) && r.variable === variableActual) ? '#3182ce' : 'red') : '#2d3748')
-            }
-        };
+    // Estadísticas
+    const total = datos.length;
+    const ok = datos.filter(d => d.y <= UCL_LOCAL).length;
+    const fuera = datos.filter(d => d.y > UCL_LOCAL);
+    
+    // Filtramos cuáles de los que están fuera ya tienen registro en Supabase
+    const realizados = fuera.filter(d => 
+        bd.some(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual)
+    ).length;
 
+    document.getElementById('stat-total').innerText = total;
+    document.getElementById('stat-ok').innerText = ok;
+    document.getElementById('stat-percent').innerText = total ? ((ok / total) * 100).toFixed(1) + "%" : "0%";
+    document.getElementById('stat-pending').innerText = fuera.length - realizados;
+
+    datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
+
+    const trace = {
+        x: [datos.map(d => d.dia), datos.map(d => d.lote)],
+        y: datos.map(d => d.y),
+        mode: 'lines+markers+text',
+        text: datos.map(d => d.y),
+        textposition: 'top center',
+        line: { color: '#2d3748', width: 2 },
+        marker: {
+            size: 10,
+            color: datos.map(d => {
+                const tienePlan = bd.some(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual);
+                if (d.y > UCL_LOCAL) {
+                    return tienePlan ? '#3182ce' : 'red'; // Azul si hay plan en DB, Rojo si está pendiente
+                }
+                return '#2d3748'; // Gris oscuro si está OK
+            })
+        }
+    };
+
+    const layout = {
+        xaxis: { type: 'multicategory', fixedrange: true, range: [-0.5, datos.length - 0.5] },
+        yaxis: { range: [0, Math.max(...datos.map(d => d.y), UCL_LOCAL + 5)], fixedrange: true },
+        margin: { t: 30, b: 60, l: 40, r: 20 },
+        shapes: [
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: UCL_LOCAL, fillcolor: 'rgba(144, 238, 144, 0.15)', line: { width: 0 }, layer: 'below' },
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: UCL_LOCAL, y1: 1000, fillcolor: 'rgba(255, 90, 90, 0.1)', line: { width: 0 }, layer: 'below' }
+        ]
+    };
+
+    container.style.width = Math.max(datos.length * 50, 800) + "px";
+    Plotly.newPlot(container, [trace], layout, { responsive: false, displayModeBar: false });
+    document.querySelector('.canvas-scroll').scrollLeft = 0;
+
+    // Re-vincular el evento de clic
+    container.removeAllListeners('plotly_click');
+    container.on('plotly_click', function(data) {
+        const p = data.points[0];
+        if (p.y > UCL_LOCAL) {
+            // Ajustamos para tomar el ID del lote correctamente del eje X multicategoría
+            datoSeleccionado = { lote: p.data.x[1][p.pointNumber], valor: p.y, variable: variableActual };
+
+            document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `
+                <label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>
+            `).join('');
+
+            document.getElementById('contenidoPlan').style.display = 'block';
+            document.getElementById('mensajePlaceholder').style.display = 'none';
+            document.getElementById('infoLote').innerText = `${variableActual}: LOTE ${datoSeleccionado.lote}`;
+            document.getElementById('operador').value = "";
+            validarPasos();
+        }
+    });
+}
+    
         const layout = {
             xaxis: { type: 'multicategory', fixedrange: true, range: [-0.5, datos.length - 0.5] },
             yaxis: { range: [0, Math.max(...datos.map(d => d.y), UCL_LOCAL + 5)], fixedrange: true },
@@ -283,20 +342,35 @@ window.addEventListener('DOMContentLoaded', (event) => {
         btn.className = (checks === total && op) ? 'active' : '';
     }
 
-    function enviarReporte() {
-        let bd = JSON.parse(localStorage.getItem('reportes_spc') || '[]');
-        bd.push({ 
-            lote: datoSeleccionado.lote, 
-            valor: datoSeleccionado.valor, 
-            variable: datoSeleccionado.variable,
-            operador: document.getElementById('operador').value, 
-            fecha: new Date().toLocaleString() 
-        });
-        localStorage.setItem('reportes_spc', JSON.stringify(bd));
-        cancelarRegistro();
-        dibujarGrafica(datosActuales);
-    }
+async function enviarReporte() {
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true; 
+    btn.innerText = "Enviando...";
 
+    // Enviamos a la tabla de Supabase
+    const { error } = await _supabase
+        .from('planes_reaccion')
+        .insert([{ 
+            lote_id: String(datoSeleccionado.lote), 
+            valor: datoSeleccionado.valor, 
+            variable: variableActual,
+            operador: document.getElementById('operador').value,
+            comentario: document.getElementById('accionExtra').value 
+        }]);
+
+    if (error) {
+        alert("Error al guardar en la base de datos: " + error.message);
+        btn.disabled = false;
+        btn.innerText = "Registrar Cumplimiento";
+    } else {
+        alert("Plan registrado para todos los usuarios.");
+        cancelarRegistro();
+        
+        // Esto es clave: al llamar a cambiarVariable, se dispara 
+        // dibujarGrafica(async) y se actualizan los puntos azules.
+        cambiarVariable(variableActual); 
+    }
+}
     function descargarReportes() {
         const bd = JSON.parse(localStorage.getItem('reportes_spc') || '[]');
         if(!bd.length) return alert("No hay datos");
