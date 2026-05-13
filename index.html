@@ -257,7 +257,7 @@
     function descargarReportes() {
         _supabase.from('planes_reaccion').select('*').then(({data}) => {
             if(!data.length) return alert("No hay datos");
-            const csv = "Variable,Lote,Valor,Operador,Comentario\n" + data.map(r => `${r.variable},${r.lote_id},${r.valor},${r.operador},${r.comentario}`).join("\n");
+            const csv = "Variable,Lote,Operador,Comentario\n" + data.map(r => `${r.variable},${r.lote_id},${r.operador},${r.comentario}`).join("\n");
             const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Reporte_Supabase.csv"; a.click();
         });
