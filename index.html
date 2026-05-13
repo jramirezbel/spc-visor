@@ -137,7 +137,7 @@
 window.addEventListener('DOMContentLoaded', (event) => {
     
     // AQUÍ PEGAS TU ENLACE CON EL &download=1 AL FINAL
-    const urlDelExcel = 'https://anheuserbuschinbev-my.sharepoint.com/:x:/g/personal/juan_ramirezb_gmodelo_com_mx/IQCqzjW_IKQpSZfmTtFT1J2qAc3oaWhUpkE5YfLI9mwe-MQ?download=1'; 
+    const urlDelExcel = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://anheuserbuschinbev-my.sharepoint.com/:x:/g/personal/juan_ramirezb_gmodelo_com_mx/IQCqzjW_IKQpSZfmTtFT1J2qAc3oaWhUpkE5YfLI9mwe-MQ?download=1');
 
     fetch(urlDelExcel)
         .then(res => {
