@@ -185,26 +185,30 @@ async function dibujarGrafica(datos) {
 
     // 3. Configuración de la Gráfica
 // 3. Mapeamos los datos para el Hover
+// 3. Hover con fecha de gestión (Trazabilidad completa)
     const hoverText = datos.map(d => {
         const registro = bd.find(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual);
         
         if (registro) {
-            // Si es azul, mostramos info del operador y su comentario
-            return `<b>Lote:</b> ${d.lote}<br>` +
-                   `<b>Valor:</b> ${d.y}<br>` +
-                   `<b>Estado:</b> ✅ Gestionado<br>` +
-                   `<b>Operador:</b> ${registro.operador || 'N/A'}<br>` +
-                   `<b>Comentario:</b> ${registro.comentario || 'Sin notas'}`;
-        } else if (d.y > UCL_LOCAL) {
-            // Si es rojo, avisamos que está pendiente
-            return `<b>Lote:</b> ${d.lote}<br>` +
-                   `<b>Valor:</b> ${d.y}<br>` +
-                   `<b>Estado:</b> ⚠️ PENDIENTE`;
-        }
-        // Si está OK, solo datos básicos
-        return `<b>Lote:</b> ${d.lote}<br><b>Valor:</b> ${d.y}`;
-    });
+            // Formateamos la fecha (created_at viene de Supabase)
+            const fechaGestion = new Date(registro.created_at).toLocaleString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
+            return `<b>✅ GESTIONADO</b><br>` +
+                   `<b>Fecha:</b> ${fechaGestion}<br>` +
+                   `<b>Por:</b> ${registro.operador}<br>` +
+                   `<b>Nota:</b> ${registro.comentario || 'Sin observaciones'}`;
+        } else if (d.y > UCL_LOCAL) {
+            return `<b>⚠️ PENDIENTE</b>`;
+        }
+        return null; 
+    });
+    
     const trace = {
         x: [datos.map(d => d.dia), datos.map(d => d.lote)],
         y: datos.map(d => d.y),
