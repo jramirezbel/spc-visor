@@ -102,7 +102,9 @@
         </div>
     </div>
 
-<script>
+
+    function<script>
+    <script>
     const planesConfig = {
         "Consumo agua recuperada": { ucl: 90, columna: "consumo agua recuperada", pasos: ["Paso 1: Cerrar manualmente válvula empuje y bombas al finalizar descarga TK.","Paso 2: Notificar 30 min antes. Confirmar niveles terraza.","Paso 3: Limpieza de línea antes y después del descargue.","Paso 4: Ajustar las Y de todo el germinador.","Paso 5: Detener carga de agua en supervisorio.","Paso 6: Poner 0% válvula potable. Verificar flujo (cerrar bypass si marca).","Paso 7: Verificar flujo recuperada >50 m3/h.","Paso 8: Si flujo <50 m3/h suplir con potable (60 m3/h)."] },
         "Consumo agua potable": { ucl: 18, columna: "consumo agua potable", pasos: ["Paso 1: Notificar 30 min previo a descarga.","Paso 2: Limpieza de línea. Limpiar 'Y' si hay residuos.","Paso 3: Ajustar conexión 'Y' (evitar pérdida presión).","Paso 4: Poner 0% válvula potable. Verificar 0 m3/h.","Paso 5: Verificar flujo recuperada >50 m3/h."] },
@@ -119,53 +121,59 @@
     let datosActuales = [];
     let datoSeleccionado = {};
     let variableActual = "Consumo agua recuperada";
-    const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
+    const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11, 'december':11, 'mayo':4};
 
-async function cargarDatosMaestros() {
-    try {
-        const { data, error } = await _supabase
-            .from('produccion')
-            .select('*');
+    // FUNCIÓN DE CARGA CORREGIDA
+    async function cargarDatosMaestros() {
+        try {
+            console.log("Conectando a Supabase...");
+            const { data, error } = await _supabase.from('produccion').select('*');
 
-        if (error) throw error;
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                console.warn("La tabla 'produccion' está vacía.");
+                return;
+            }
 
-        datosCompletos = data.map(f => {
-            const fl = {};
-            Object.keys(f).forEach(k => {
-                let valor = f[k];
-                
-                // Limpieza de datos: Si es un string con coma decimal (ej: "0,9"), lo arreglamos
-                if (typeof valor === 'string' && valor.includes(',')) {
-                    valor = parseFloat(valor.replace(',', '.'));
-                } else if (!isNaN(valor) && valor !== null && valor !== '') {
-                    valor = Number(valor);
-                }
+            datosCompletos = data.map(f => {
+                const fl = {};
+                // Limpieza profunda de llaves y valores
+                Object.keys(f).forEach(k => {
+                    let valor = f[k];
+                    if (typeof valor === 'string' && valor.includes(',')) {
+                        valor = parseFloat(valor.replace(',', '.'));
+                    }
+                    fl[k.toLowerCase().trim()] = valor;
+                });
 
-                fl[k.trim().toLowerCase()] = valor;
-            });
+                return {
+                    lote: String(fl['lote'] || ''),
+                    dia: String(fl['dia'] || ''),
+                    mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
+                    raw: fl
+                };
+            }).filter(d => d.lote !== '');
 
-            return {
-                lote: String(fl['lote'] || ''),
-                dia: String(fl['dia'] || ''),
-                mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] || -1,
-                raw: fl // Aquí van todos los valores ya convertidos a número
-            };
-        }).filter(d => d.lote !== '');
+            console.log("Datos cargados:", datosCompletos.length);
+            cambiarVariable(variableActual);
 
-        console.log("🚀 Datos procesados desde Supabase:", datosCompletos);
-        cambiarVariable(variableActual);
-
-    } catch (err) {
-        console.error("Error:", err);
-        alert("⚠️ Error cargando producción: " + err.message);
+        } catch (err) {
+            console.error("Error en carga:", err);
+            alert("Error: " + err.message);
+        }
     }
-}
-    
+
     function cambiarVariable(nombre) {
         variableActual = nombre;
         const config = planesConfig[nombre];
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === nombre));
-        datosActuales = datosCompletos.map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) })).filter(d => !isNaN(d.y));
+        
+        // Buscamos el valor en el objeto 'raw' usando el nombre de columna de la config
+        datosActuales = datosCompletos.map(d => {
+            const valorY = d.raw[config.columna.toLowerCase().trim()];
+            return { ...d, y: parseFloat(valorY) };
+        }).filter(d => !isNaN(d.y));
+
         cancelarRegistro();
         dibujarGrafica(datosActuales); 
     }
@@ -335,6 +343,8 @@ async function dibujarGrafica(datos) {
     }
 
     function limpiarBaseDatos() { alert("Para borrar datos debes hacerlo desde el panel de Supabase por seguridad."); }
+    window.onload = cargarDatosMaestros; 
+
 </script>
 </body>
 </html>
