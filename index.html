@@ -849,20 +849,18 @@ const layout = {
 
     autosize:false,
 
-    dragmode:'pan',
-
     xaxis:{
         type:'multicategory',
-        fixedrange:true,
         tickangle:-90
     },
-        yaxis:{
-            range:[
-                0,
-                Math.max(...datos.map(d=>d.y), config.ucl) * 1.2
-            ],
-            fixedrange:true
-        },
+yaxis:{
+    range:[
+        0,
+        Math.max(...datos.map(d=>d.y), config.ucl) * 1.2
+    ],
+    fixedrange:true
+},
+    
 
         margin:{
             t:30,
@@ -932,12 +930,52 @@ div.style.minWidth = "100%";
             scrollZoom:true,
             responsive:true,
         }
+        div.on('plotly_click', function(data){
+
+    const punto = data.points[0];
+
+    const index = punto.pointIndex;
+
+    const seleccionado = datos[index];
+
+    if(seleccionado.y <= config.ucl) return;
+
+    abrirPlanReaccion(seleccionado);
+
+});
     );
 
 }
 
 /* PANEL */
+function abrirPlanReaccion(dato){
 
+    datoSeleccionado = dato;
+
+    document.getElementById('contenidoPlan').style.display = 'block';
+
+    document.getElementById('mensajePlaceholder').style.display = 'none';
+
+    document.getElementById('infoLote').innerHTML = `
+        Lote ${dato.lote}<br>
+        Valor: ${dato.y}
+    `;
+
+    const pasos =
+        planesConfig[variableActual].pasos;
+
+    document.getElementById('checklist-pasos').innerHTML =
+        pasos.map((p,i)=>`
+            <label class="step">
+                <input
+                    type="checkbox"
+                    onchange="validarPasos()">
+                ${p}
+            </label>
+        `).join('');
+
+}
+    
 function cancelarRegistro(){
 
     document.getElementById('contenidoPlan').style.display = 'none';
