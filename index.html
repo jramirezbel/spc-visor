@@ -237,11 +237,13 @@ body{
     flex:1;
     overflow-x:auto;
     overflow-y:hidden;
+    width:100%;
+    position:relative;
 }
 
 #myDiv{
     height:100%;
-    min-width:100%;
+    min-width:1200px;
 }
 
 /* PANEL */
@@ -389,8 +391,14 @@ body{
 <!-- DASHBOARD -->
 
 <div id="dashboardScreen">
-
-    <div class="tabs-container" id="tabsIndicadores"></div>
+<div id="tituloIndicadorActual" style="
+padding:20px 25px;
+background:white;
+font-size:28px;
+font-weight:bold;
+border-bottom:1px solid #e2e8f0;
+">
+</div>
 
     <div class="filtros-fecha">
 
@@ -542,20 +550,6 @@ let datoSeleccionado = {};
 
 /* CREAR TABS */
 
-const tabs = document.getElementById('tabsIndicadores');
-
-Object.keys(planesConfig).forEach(k=>{
-
-    const btn = document.createElement('button');
-
-    btn.className = 'tab-btn';
-    btn.innerText = k;
-
-    btn.onclick = ()=>cambiarVariable(k);
-
-    tabs.appendChild(btn);
-
-});
 
 /* FECHAS */
 
@@ -703,14 +697,7 @@ function cambiarVariable(nombre){
 
     variableActual = nombre;
 
-    document.querySelectorAll('.tab-btn').forEach(btn=>{
-
-        btn.classList.toggle(
-            'active',
-            btn.innerText === nombre
-        );
-
-    });
+    document.getElementById('tituloIndicadorActual').innerText = nombre;
 
     cancelarRegistro();
 
@@ -918,15 +905,15 @@ async function dibujarGrafica(datos){
 
     const div = document.getElementById('myDiv');
 
-    div.style.width =
-        Math.max(datos.length * 50, window.innerWidth * 0.7) + "px";
+div.style.width =
+    Math.max(datos.length * 85, window.innerWidth - 350) + "px";
 
     Plotly.newPlot(
         div,
         [trace],
         layout,
         {
-            responsive:true,
+            responsive:false,
             displayModeBar:false
         }
     );
