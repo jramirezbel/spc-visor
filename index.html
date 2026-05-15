@@ -126,7 +126,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const urlBase = 'https://raw.githubusercontent.com/jramirezbel/spc-visor/main/pruebasics.xlsx'; 
     
     // El timestamp (?t=...) rompe la caché de GitHub para que siempre baje lo nuevo
-    const urlFinal = urlBase + '?t=' + Date.now();
+    // Ruta relativa — funciona si ambos archivos están en la raíz del repo
+    const urlFinal = './pruebasics.xlsx?t=' + Date.now();
 
     console.log("Cargando datos desde:", urlFinal);
 
