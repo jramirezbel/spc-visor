@@ -1,449 +1,1000 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor SPC - Maltería Profesional</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Visor SPC - Maltería Profesional</title>
 
-    <style>
-        /* RESET Y BORDES */
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0; /* Eliminados espacios a los bordes */
-            background: #f4f7f6;
-            color: #333;
-            overflow-x: hidden;
-        }
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 25px;
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-        }
+<style>
 
-        /* ===========================
-           HOME SCREEN
-        =========================== */
-        .home-screen { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
-        .home-title { text-align: center; margin-bottom: 40px; }
-        .home-title h1 { color: #1e293b; font-size: 2.5rem; margin-bottom: 10px; }
-        .home-title p { color: #64748b; font-size: 1.1rem; }
+*{
+    box-sizing:border-box;
+}
 
-        .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f7f6;
+    color:#1e293b;
+    overflow-x:hidden;
+}
 
-        .indicator-card {
-            background: white;
-            border-radius: 18px;
-            padding: 30px;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            transition: 0.25s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            text-align: center;
-        }
+/* HEADER */
 
-        .indicator-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.08);
-            border-color: #3182ce;
-        }
+.header-container{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 25px;
+    background:white;
+    border-bottom:1px solid #e2e8f0;
+}
 
-        .indicator-card h3 { margin-bottom: 25px; color: #1e293b; font-size: 1.2rem; }
-        .mini-stat { display: flex; flex-direction: column; }
-        .mini-stat span { font-size: 42px; font-weight: bold; color: #3182ce; }
-        .mini-stat small { color: #64748b; font-weight: bold; text-transform: uppercase; }
+.header-title{
+    font-size:24px;
+    font-weight:bold;
+}
 
-        /* ===========================
-           DASHBOARD SCREEN
-        =========================== */
-        #dashboardScreen { padding: 0; } /* Sin padding para pegar a los bordes */
+/* HOME */
 
-        .tabs-container {
-            display: flex; gap: 10px; padding: 15px 25px;
-            background: white; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap;
-        }
+.home-screen{
+    padding:40px;
+}
 
-        .tab-btn {
-            padding: 10px 18px; border: none; background: #edf2f7;
-            color: #4a5568; border-radius: 8px; cursor: pointer; font-weight: bold;
-        }
+.home-title{
+    text-align:center;
+    margin-bottom:40px;
+}
 
-        .tab-btn.active { background: #3182ce; color: white; }
+.home-title h1{
+    margin:0;
+    font-size:42px;
+}
 
-        /* FILTROS FECHA */
-        .filtros-fecha {
-            display: flex; gap: 15px; align-items: flex-end;
-            padding: 15px 25px; background: #fafcfe; border-bottom: 1px solid #e2e8f0;
-        }
+.home-title p{
+    color:#64748b;
+    margin-top:10px;
+}
 
-        .filtro-group { display: flex; flex-direction: column; }
-        .filtro-group label { font-size: 12px; margin-bottom: 5px; color: #64748b; font-weight: bold; }
-        .filtro-group input { padding: 8px; border-radius: 6px; border: 1px solid #cbd5e0; }
+.cards-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:25px;
+}
 
-        .btn-filtrar { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-volver { background: #4a5568; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.indicator-card{
+    background:white;
+    border-radius:18px;
+    padding:30px;
+    border:1px solid #e2e8f0;
+    transition:0.25s;
+    cursor:pointer;
+    text-align:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
 
-        /* STATS BAR */
-        #stats-bar {
-            display: flex; justify-content: space-around;
-            background: white; padding: 15px; border-bottom: 1px solid #f1f5f9;
-        }
-        .stat-card { text-align: center; flex: 1; border-right: 1px solid #f1f5f9; }
-        .stat-card:last-child { border-right: none; }
-        .stat-label { display: block; font-size: 10px; color: #64748b; font-weight: bold; text-transform: uppercase; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #1e293b; }
+.indicator-card:hover{
+    transform:translateY(-5px);
+    border-color:#3182ce;
+    box-shadow:0 12px 20px rgba(0,0,0,0.08);
+}
 
-        /* LAYOUT PRINCIPAL */
-        .layout-principal { display: flex; height: calc(100vh - 250px); width: 100vw; }
-        .visor-container { flex: 7; display: flex; flex-direction: column; background: white; }
-        .canvas-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; }
-        #myDiv { height: 100%; min-width: 100%; }
+.indicator-card h3{
+    margin-bottom:25px;
+}
 
-        /* PANEL LATERAL */
-        .panel-lateral {
-            flex: 2; min-width: 300px; background: white; border-left: 1px solid #e2e8f0;
-            padding: 20px; overflow-y: auto;
-        }
-        .badge-lote { background: #e53e3e; color: white; padding: 8px; border-radius: 6px; font-weight: bold; display: block; margin-bottom: 15px; text-align: center; }
-        .step { display: block; background: #f8fafc; padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border: 1px solid #edf2f7; }
-        
-        #btnEnviar { width: 100%; padding: 14px; background: #ccc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: not-allowed; }
-        #btnEnviar.active { background: #38a169; cursor: pointer; }
-        .btn-cancelar { width: 100%; padding: 10px; margin-top: 8px; background: none; color: #c53030; border: 1px solid #feb2b2; border-radius: 8px; cursor: pointer; }
-        .placeholder-text { color: #a0aec0; text-align: center; margin-top: 100px; }
-        .contenido-oculto { display: none; }
-    </style>
+.mini-stat{
+    display:flex;
+    flex-direction:column;
+}
+
+.mini-stat span{
+    font-size:42px;
+    font-weight:bold;
+    color:#3182ce;
+}
+
+.mini-stat small{
+    color:#64748b;
+    text-transform:uppercase;
+    font-weight:bold;
+}
+
+/* DASHBOARD */
+
+#dashboardScreen{
+    display:none;
+}
+
+/* TABS */
+
+.tabs-container{
+    display:flex;
+    gap:10px;
+    padding:15px 25px;
+    background:white;
+    border-bottom:1px solid #e2e8f0;
+    flex-wrap:wrap;
+}
+
+.tab-btn{
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    background:#edf2f7;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.2s;
+}
+
+.tab-btn.active{
+    background:#3182ce;
+    color:white;
+}
+
+/* FILTROS */
+
+.filtros-fecha{
+    display:flex;
+    gap:15px;
+    align-items:end;
+    padding:15px 25px;
+    background:#fafcfe;
+    border-bottom:1px solid #e2e8f0;
+    flex-wrap:wrap;
+}
+
+.filtro-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.filtro-group label{
+    font-size:12px;
+    margin-bottom:5px;
+    font-weight:bold;
+    color:#64748b;
+}
+
+.filtro-group input{
+    padding:8px;
+    border-radius:6px;
+    border:1px solid #cbd5e0;
+}
+
+.btn-filtrar,
+.btn-volver{
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.btn-filtrar{
+    background:#3182ce;
+    color:white;
+}
+
+.btn-volver{
+    background:#4a5568;
+    color:white;
+}
+
+/* STATS */
+
+#stats-bar{
+    display:flex;
+    justify-content:space-around;
+    background:white;
+    padding:15px;
+    border-bottom:1px solid #f1f5f9;
+}
+
+.stat-card{
+    flex:1;
+    text-align:center;
+    border-right:1px solid #f1f5f9;
+}
+
+.stat-card:last-child{
+    border-right:none;
+}
+
+.stat-label{
+    display:block;
+    font-size:11px;
+    color:#64748b;
+    text-transform:uppercase;
+    font-weight:bold;
+}
+
+.stat-value{
+    font-size:28px;
+    font-weight:bold;
+}
+
+/* MAIN */
+
+.layout-principal{
+    display:flex;
+    width:100vw;
+    height:calc(100vh - 230px);
+}
+
+.visor-container{
+    flex:7;
+    background:white;
+    display:flex;
+    flex-direction:column;
+}
+
+.canvas-scroll{
+    flex:1;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+#myDiv{
+    height:100%;
+    min-width:100%;
+}
+
+/* PANEL */
+
+.panel-lateral{
+    flex:2;
+    min-width:320px;
+    background:white;
+    border-left:1px solid #e2e8f0;
+    padding:20px;
+    overflow-y:auto;
+}
+
+.badge-lote{
+    background:#e53e3e;
+    color:white;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:15px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.step{
+    display:block;
+    background:#f8fafc;
+    padding:10px;
+    margin-bottom:8px;
+    border-radius:8px;
+    border:1px solid #edf2f7;
+    font-size:13px;
+}
+
+#btnEnviar{
+    width:100%;
+    margin-top:10px;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    background:#ccc;
+    color:white;
+    font-weight:bold;
+    cursor:not-allowed;
+}
+
+#btnEnviar.active{
+    background:#38a169;
+    cursor:pointer;
+}
+
+.btn-cancelar{
+    width:100%;
+    margin-top:8px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #feb2b2;
+    color:#c53030;
+    background:none;
+    cursor:pointer;
+}
+
+.placeholder-text{
+    color:#94a3b8;
+    text-align:center;
+    margin-top:120px;
+}
+
+.contenido-oculto{
+    display:none;
+}
+
+</style>
 </head>
+
 <body>
 
 <div class="header-container">
-    <h2>Visor de SICs - Maltería</h2>
-    <div style="display:flex; gap:10px;">
-        <button onclick="descargarReportes()" style="background:#38a169; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">📥 Reporte CSV</button>
+
+    <div class="header-title">
+        Visor SPC - Maltería
     </div>
+
+    <button onclick="descargarReportes()"
+    style="background:#38a169;color:white;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">
+        📥 Descargar CSV
+    </button>
+
 </div>
 
+<!-- HOME -->
+
 <div id="homeScreen" class="home-screen">
+
     <div class="home-title">
-        <h1>SISTEMA SPC - CONTROL</h1>
-        <p>Seleccione el indicador para análisis de proceso</p>
+        <h1>SISTEMA SPC</h1>
+        <p>Seleccione un indicador</p>
     </div>
 
     <div class="cards-container">
+
         <div class="indicator-card" onclick="abrirIndicador('Consumo agua recuperada')">
             <h3>Consumo agua recuperada</h3>
-            <div class="mini-stat"><span id="home-recuperada-percent">--%</span><small>Cumplimiento</small></div>
+            <div class="mini-stat">
+                <span id="home-recuperada-percent">--%</span>
+                <small>Cumplimiento</small>
+            </div>
         </div>
+
         <div class="indicator-card" onclick="abrirIndicador('Consumo agua potable')">
             <h3>Consumo agua potable</h3>
-            <div class="mini-stat"><span id="home-potable-percent">--%</span><small>Cumplimiento</small></div>
+            <div class="mini-stat">
+                <span id="home-potable-percent">--%</span>
+                <small>Cumplimiento</small>
+            </div>
         </div>
+
         <div class="indicator-card" onclick="abrirIndicador('Pasamalla Malta')">
             <h3>Pasamalla Malta</h3>
-            <div class="mini-stat"><span id="home-malta-percent">--%</span><small>Cumplimiento</small></div>
+            <div class="mini-stat">
+                <span id="home-malta-percent">--%</span>
+                <small>Cumplimiento</small>
+            </div>
         </div>
+
         <div class="indicator-card" onclick="abrirIndicador('Pasamalla Cebada')">
             <h3>Pasamalla Cebada</h3>
-            <div class="mini-stat"><span id="home-cebada-percent">--%</span><small>Cumplimiento</small></div>
+            <div class="mini-stat">
+                <span id="home-cebada-percent">--%</span>
+                <small>Cumplimiento</small>
+            </div>
         </div>
+
         <div class="indicator-card" onclick="abrirIndicador('Malta en germen')">
             <h3>Malta en germen</h3>
-            <div class="mini-stat"><span id="home-germen-percent">--%</span><small>Cumplimiento</small></div>
+            <div class="mini-stat">
+                <span id="home-germen-percent">--%</span>
+                <small>Cumplimiento</small>
+            </div>
         </div>
+
     </div>
+
 </div>
 
-<div id="dashboardScreen" style="display:none;">
-    
-    <div class="tabs-container" id="tabsIndicadores">
-        </div>
+<!-- DASHBOARD -->
+
+<div id="dashboardScreen">
+
+    <div class="tabs-container" id="tabsIndicadores"></div>
 
     <div class="filtros-fecha">
-        <button class="btn-volver" onclick="volverHome()">← Volver</button>
+
+        <button class="btn-volver" onclick="volverHome()">
+            ← Volver
+        </button>
+
         <div class="filtro-group">
             <label>Desde</label>
             <input type="date" id="fechaDesde">
         </div>
+
         <div class="filtro-group">
             <label>Hasta</label>
             <input type="date" id="fechaHasta">
         </div>
-        <button class="btn-filtrar" onclick="filtrarPorFechas()">Filtrar</button>
+
+        <button class="btn-filtrar" onclick="filtrarPorFechas()">
+            Filtrar
+        </button>
+
+    </div>
+
+    <div id="stats-bar">
+
+        <div class="stat-card">
+            <span class="stat-label">Total registros</span>
+            <span class="stat-value" id="stat-total">0</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">Dentro de spec</span>
+            <span class="stat-value" id="stat-ok" style="color:#10b981;">0</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">% Cumplimiento</span>
+            <span class="stat-value" id="stat-percent">0%</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">Pendientes</span>
+            <span class="stat-value" id="stat-pending" style="color:#ef4444;">0</span>
+        </div>
+
     </div>
 
     <div class="layout-principal">
+
         <div class="visor-container">
-            <div id="stats-bar">
-                <div class="stat-card"><span class="stat-label">Total Registros</span><span id="stat-total" class="stat-value">0</span></div>
-                <div class="stat-card"><span class="stat-label">Dentro de Spec</span><span id="stat-ok" class="stat-value" style="color:#10b981;">0</span></div>
-                <div class="stat-card"><span class="stat-label">% Cumplimiento</span><span id="stat-percent" class="stat-value">0%</span></div>
-                <div class="stat-card"><span class="stat-label">Pendientes</span><span id="stat-pending" class="stat-value" style="color:#ef4444;">0</span></div>
-            </div>
+
             <div class="canvas-scroll">
                 <div id="myDiv"></div>
             </div>
+
         </div>
 
-        <div id="panelReaccion" class="panel-lateral">
+        <div class="panel-lateral">
+
             <div id="contenidoPlan" class="contenido-oculto">
-                <h3>Plan de Reacción</h3>
+
+                <h3>Plan de reacción</h3>
+
                 <div id="infoLote" class="badge-lote"></div>
-                <input type="text" id="operador" placeholder="Operador..." oninput="validarPasos()" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc;">
+
+                <input
+                type="text"
+                id="operador"
+                placeholder="Nombre operador..."
+                oninput="validarPasos()"
+                style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;">
+
                 <div id="checklist-pasos"></div>
-                <textarea id="accionExtra" placeholder="Observaciones..." style="width:100%; margin-top:10px; height:60px; border-radius:6px; border:1px solid #ccc; padding:8px;"></textarea>
-                <button id="btnEnviar" onclick="enviarReporte()" disabled>Registrar Plan</button>
-                <button class="btn-cancelar" onclick="cancelarRegistro()">Cancelar</button>
+
+                <textarea
+                id="accionExtra"
+                placeholder="Observaciones..."
+                style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"></textarea>
+
+                <button id="btnEnviar" onclick="enviarReporte()" disabled>
+                    Registrar Plan
+                </button>
+
+                <button class="btn-cancelar" onclick="cancelarRegistro()">
+                    Cancelar
+                </button>
+
             </div>
+
             <div id="mensajePlaceholder" class="placeholder-text">
-                <p>Haz clic en un punto <b style="color:red">rojo</b> para registrar acciones.</p>
+                Haz clic en un punto rojo para gestionar el plan.
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://abzxbxjhjqzzfjvuitom.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const planesConfig = {
-        "Consumo agua recuperada": { ucl: 90, columna: "consumo agua recuperada", homeId: "home-recuperada-percent", pasos: ["Cerrar vlv empuje/bombas","Notificar niveles terraza","Limpieza línea","Ajustar Y germinador","Detener carga supervisorio","Verificar flujo >50 m3/h"] },
-        "Consumo agua potable": { ucl: 18, columna: "consumo agua potable", homeId: "home-potable-percent", pasos: ["Notificar 30min previo","Limpiar filtros Y","Válvula 0% - Verificar"] },
-        "Pasamalla Malta": { ucl: 2, columna: "pasamalla malta", homeId: "home-malta-percent", pasos: ["Limpieza manual mallas","Flujo a 7 ton/h","Reparar mallas rotas"] },
-        "Pasamalla Cebada": { ucl: 2.8, columna: "pasamalla cebada", homeId: "home-cebada-percent", pasos: ["Limpiar malla LM-05","Reducir flujo sótano"] },
-        "Malta en germen": { ucl: 1, columna: "malta en germen", homeId: "home-germen-percent", pasos: ["Revisar desgerminadoras","Ajustar damper aspiración"] }
-    };
+const SUPABASE_URL = 'https://abzxbxjhjqzzfjvuitom.supabase.co';
+const SUPABASE_KEY = 'TU_KEY';
 
-    let datosCompletos = [];
-    let variableActual = "";
-    let datoSeleccionado = {};
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Crear pestañas dinámicas
-    const tabs = document.getElementById('tabsIndicadores');
-    Object.keys(planesConfig).forEach(k => {
-        const btn = document.createElement('button');
-        btn.className = 'tab-btn';
-        btn.innerText = k;
-        btn.onclick = () => cambiarVariable(k);
-        tabs.appendChild(btn);
-    });
+const planesConfig = {
 
-async function cargarDatosMaestros() {
-    try {
-        const { data, error } = await _supabase.from('produccion').select('*');
-        if (error) throw error;
+    "Consumo agua recuperada":{
+        ucl:90,
+        columna:"consumo agua recuperada",
+        homeId:"home-recuperada-percent",
+        pasos:["Cerrar válvulas","Verificar flujo","Ajustar germinador"]
+    },
 
-        // Obtenemos el año actual para completar la fecha
-        const añoActual = new Date().getFullYear();
+    "Consumo agua potable":{
+        ucl:18,
+        columna:"consumo agua potable",
+        homeId:"home-potable-percent",
+        pasos:["Notificar descarga","Limpiar filtros","Verificar flujo"]
+    },
 
-        datosCompletos = data.map(f => {
+    "Pasamalla Malta":{
+        ucl:2,
+        columna:"pasamalla malta",
+        homeId:"home-malta-percent",
+        pasos:["Limpiar mallas","Revisar flujo"]
+    },
+
+    "Pasamalla Cebada":{
+        ucl:2.8,
+        columna:"pasamalla cebada",
+        homeId:"home-cebada-percent",
+        pasos:["Limpiar LM-05","Reducir flujo"]
+    },
+
+    "Malta en germen":{
+        ucl:1,
+        columna:"malta en germen",
+        homeId:"home-germen-percent",
+        pasos:["Revisar desgerminadora","Ajustar damper"]
+    }
+
+};
+
+let datosCompletos = [];
+let variableActual = "";
+let datoSeleccionado = {};
+
+/* CREAR TABS */
+
+const tabs = document.getElementById('tabsIndicadores');
+
+Object.keys(planesConfig).forEach(k=>{
+
+    const btn = document.createElement('button');
+
+    btn.className = 'tab-btn';
+    btn.innerText = k;
+
+    btn.onclick = ()=>cambiarVariable(k);
+
+    tabs.appendChild(btn);
+
+});
+
+/* FECHAS */
+
+function inicializarFechasMesActual(){
+
+    const hoy = new Date();
+
+    const primero = new Date(
+        hoy.getFullYear(),
+        hoy.getMonth(),
+        1
+    );
+
+    document.getElementById('fechaDesde').value =
+        primero.toISOString().split('T')[0];
+
+    document.getElementById('fechaHasta').value =
+        hoy.toISOString().split('T')[0];
+}
+
+/* CARGAR DATOS */
+
+async function cargarDatosMaestros(){
+
+    try{
+
+        const {data,error} = await _supabase
+        .from('produccion')
+        .select('*');
+
+        if(error) throw error;
+
+        console.log(data);
+
+        datosCompletos = data.map(f=>{
+
             const fl = {};
-            Object.keys(f).forEach(k => {
+
+            Object.keys(f).forEach(k=>{
+
                 let v = f[k];
-                if (typeof v === 'string' && v.includes(',')) v = parseFloat(v.replace(',', '.'));
+
+                if(typeof v === 'string' && v.includes(',')){
+
+                    const num = parseFloat(v.replace(',','.'));
+
+                    if(!isNaN(num)) v = num;
+                }
+
                 fl[k.trim().toLowerCase()] = v;
             });
 
-            // --- TRUCO PARA LA FECHA ---
-            // Usamos el traductor de meses para convertir "Dec" o "May" en número (0-11)
-            const mesTexto = String(fl['mes'] || '').toLowerCase().trim();
-            const mesNum = traductorMeses[mesTexto] ?? 0;
-            const diaNum = parseInt(fl['dia']) || 1;
+            return{
 
-            // Creamos un objeto de fecha real: Año, Mes, Día
-            const fechaConstruida = new Date(añoActual, mesNum, diaNum);
-            // La guardamos en formato ISO (YYYY-MM-DD) para que el filtro la entienda
-            const fechaISO = fechaConstruida.toISOString().split('T')[0];
+                lote:String(fl['lote'] || '').trim(),
 
-            return {
-                lote: String(fl['lote'] || '').trim(),
-                dia: String(fl['dia'] || '').trim(),
-                fechaReal: fechaISO, // <--- Ahora esto ya no será nulo
-                raw: fl
+                dia:String(fl['dia'] || '').trim(),
+
+                fechaReal:
+                    fl['fecha'] ||
+                    fl['date'] ||
+                    fl['fecha registro'] ||
+                    null,
+
+                raw:fl
             };
-        }).filter(d => d.lote);
+
+        }).filter(d=>d.lote);
+
+        console.log(datosCompletos);
 
         actualizarCumplimientoHome();
-    } catch (err) { 
-        console.error("Error al procesar fechas:", err); 
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Error cargando datos");
+
     }
+
 }
 
-    function actualizarCumplimientoHome() {
-        Object.keys(planesConfig).forEach(key => {
-            const conf = planesConfig[key];
-            const vals = datosCompletos.map(d => parseFloat(d.raw[conf.columna])).filter(v => !isNaN(v));
-            if (vals.length) {
-                const ok = vals.filter(v => v <= conf.ucl).length;
-                document.getElementById(conf.homeId).innerText = Math.round((ok / vals.length) * 100) + "%";
-            }
-        });
-    }
+/* HOME */
 
-    function abrirIndicador(nombre) {
-        document.getElementById('homeScreen').style.display = 'none';
-        document.getElementById('dashboardScreen').style.display = 'block';
-        cambiarVariable(nombre);
-    }
+function actualizarCumplimientoHome(){
 
-    function volverHome() {
-        document.getElementById('dashboardScreen').style.display = 'none';
-        document.getElementById('homeScreen').style.display = 'block';
-    }
+    Object.keys(planesConfig).forEach(key=>{
 
-    function cambiarVariable(nombre) {
-        variableActual = nombre;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText === nombre));
-        cancelarRegistro();
-        filtrarPorFechas(); // Al cambiar variable, aplica filtro de fecha actual
-    }
+        const conf = planesConfig[key];
 
-    function inicializarFechasMesActual() {
-        const hoy = new Date();
-        const primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        document.getElementById('fechaDesde').value = primero.toISOString().split('T')[0];
-        document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
-    }
+        const vals = datosCompletos
+        .map(d=>parseFloat(d.raw[conf.columna]))
+        .filter(v=>!isNaN(v));
 
-    function filtrarPorFechas() {
-        const desde = new Date(document.getElementById('fechaDesde').value);
-        const hasta = new Date(document.getElementById('fechaHasta').value);
-        hasta.setHours(23, 59, 59, 999);
+        if(vals.length){
 
-        const config = planesConfig[variableActual];
-        const filtrados = datosCompletos.filter(d => {
+            const ok = vals.filter(v=>v <= conf.ucl).length;
+
+            document.getElementById(conf.homeId).innerText =
+                Math.round((ok / vals.length)*100) + "%";
+        }
+
+    });
+
+}
+
+function abrirIndicador(nombre){
+
+    document.getElementById('homeScreen').style.display = 'none';
+
+    document.getElementById('dashboardScreen').style.display = 'block';
+
+    cambiarVariable(nombre);
+
+}
+
+function volverHome(){
+
+    document.getElementById('dashboardScreen').style.display = 'none';
+
+    document.getElementById('homeScreen').style.display = 'block';
+
+}
+
+/* VARIABLES */
+
+function cambiarVariable(nombre){
+
+    variableActual = nombre;
+
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+
+        btn.classList.toggle(
+            'active',
+            btn.innerText === nombre
+        );
+
+    });
+
+    cancelarRegistro();
+
+    filtrarPorFechas();
+
+}
+
+/* FILTRAR */
+
+function filtrarPorFechas(){
+
+    const config = planesConfig[variableActual];
+
+    const desdeInput = document.getElementById('fechaDesde').value;
+
+    const hastaInput = document.getElementById('fechaHasta').value;
+
+    let filtrados = [...datosCompletos];
+
+    if(desdeInput && hastaInput){
+
+        const desde = new Date(desdeInput);
+
+        const hasta = new Date(hastaInput);
+
+        hasta.setHours(23,59,59,999);
+
+        filtrados = filtrados.filter(d=>{
+
+            if(!d.fechaReal) return false;
+
             const f = new Date(d.fechaReal);
-            return f >= desde && f <= hasta;
-        }).map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) }))
-          .filter(d => !isNaN(d.y));
 
-        dibujarGrafica(filtrados);
-    }
+            return !isNaN(f) && f >= desde && f <= hasta;
 
-    async function dibujarGrafica(datos) {
-        const config = planesConfig[variableActual];
-        const { data: reportes } = await _supabase.from('planes_reaccion').select('*');
-        const bd = reportes || [];
-
-        const ok = datos.filter(d => d.y <= config.ucl).length;
-        const fuera = datos.filter(d => d.y > config.ucl);
-        const listos = fuera.filter(d => bd.some(r => String(r.lote_id) === d.lote && r.variable === variableActual)).length;
-
-        document.getElementById('stat-total').innerText = datos.length;
-        document.getElementById('stat-ok').innerText = ok;
-        document.getElementById('stat-percent').innerText = datos.length ? Math.round((ok/datos.length)*100) + "%" : "0%";
-        document.getElementById('stat-pending').innerText = fuera.length - listos;
-
-        datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
-
-        const hovers = datos.map(d => {
-            const r = bd.find(r => String(r.lote_id) === d.lote && r.variable === variableActual);
-            let h = `Lote: ${d.lote}<br>Valor: ${d.y}<br>Fecha: ${d.fechaReal}`;
-            if(r) h += `<br><br><b>GESTIONADO POR:</b><br>${r.operador}<br>${new Date(r.created_at).toLocaleString()}`;
-            return h;
         });
 
-        const trace = {
-            x: [datos.map(d => d.dia), datos.map(d => d.lote)],
-            y: datos.map(d => d.y),
-            mode: 'lines+markers+text',
-            text: datos.map(d => d.y),
-            textposition: 'top center',
-            hoverinfo: 'text',
-            hovertext: hovers,
-            line: { color: '#2d3748', width: 2 },
-            marker: {
-                size: 10,
-                color: datos.map(d => {
-                    const gest = bd.some(r => String(r.lote_id) === d.lote && r.variable === variableActual);
-                    return d.y > config.ucl ? (gest ? '#3182ce' : 'red') : '#2d3748';
-                })
-            }
-        };
-
-        const layout = {
-            xaxis: { type: 'multicategory', fixedrange: true },
-            yaxis: { range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], fixedrange: true },
-            margin: { t: 30, b: 60, l: 40, r: 20 },
-            shapes: [
-                { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: config.ucl, fillcolor: 'rgba(144,238,144,0.15)', line: {width:0}, layer:'below' },
-                { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.1)', line: {width:0}, layer:'below' }
-            ]
-        };
-
-        const div = document.getElementById('myDiv');
-        div.style.width = Math.max(datos.length * 50, window.innerWidth * 0.7) + "px";
-        Plotly.newPlot(div, [trace], layout, { displayModeBar: false });
-
-        div.removeAllListeners('plotly_click');
-        div.on('plotly_click', (data) => {
-            const p = data.points[0];
-            if (p.y > config.ucl) {
-                const lote = p.data.x[1][p.pointNumber];
-                if (bd.some(r => String(r.lote_id) === lote && r.variable === variableActual)) return;
-                
-                datoSeleccionado = { lote, valor: p.y };
-                document.getElementById('infoLote').innerText = `LOTE ${lote}: ${p.y}`;
-                document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `<label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>`).join('');
-                document.getElementById('contenidoPlan').style.display = 'block';
-                document.getElementById('mensajePlaceholder').style.display = 'none';
-            }
-        });
     }
 
-    async function enviarReporte() {
-        const btn = document.getElementById('btnEnviar');
-        btn.disabled = true; btn.innerText = "Registrando...";
-        const { error } = await _supabase.from('planes_reaccion').insert([{
-            lote_id: String(datoSeleccionado.lote),
-            valor: datoSeleccionado.valor,
-            variable: variableActual,
-            operador: document.getElementById('operador').value,
-            comentario: document.getElementById('accionExtra').value
-        }]);
-        if (error) { alert(error.message); btn.disabled = false; }
-        else { alert("✅ Registrado"); cancelarRegistro(); filtrarPorFechas(); actualizarCumplimientoHome(); }
+    filtrados = filtrados
+    .map(d=>({
+
+        ...d,
+
+        y:parseFloat(d.raw[config.columna])
+
+    }))
+    .filter(d=>!isNaN(d.y));
+
+    console.log("FILTRADOS:",filtrados);
+
+    dibujarGrafica(filtrados);
+
+}
+
+/* GRAFICA */
+
+async function dibujarGrafica(datos){
+
+    if(!datos.length){
+
+        document.getElementById('myDiv').innerHTML = `
+            <div style="
+                height:100%;
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                font-size:22px;
+                color:#94a3b8;
+                font-weight:bold;
+            ">
+                No hay datos para el rango seleccionado
+            </div>
+        `;
+
+        return;
     }
 
-    function cancelarRegistro() {
-        document.getElementById('contenidoPlan').style.display = 'none';
-        document.getElementById('mensajePlaceholder').style.display = 'flex';
-        document.getElementById('operador').value = "";
-    }
+    const config = planesConfig[variableActual];
 
-    function validarPasos() {
-        const c = document.querySelectorAll('#checklist-pasos input:checked').length;
-        const t = document.querySelectorAll('#checklist-pasos input').length;
-        const op = document.getElementById('operador').value.trim() !== "";
-        const btn = document.getElementById('btnEnviar');
-        btn.disabled = !(c === t && op);
-        btn.classList.toggle('active', c === t && op);
-    }
+    const {data:reportes} = await _supabase
+    .from('planes_reaccion')
+    .select('*');
 
-    function descargarReportes() {
-        _supabase.from('planes_reaccion').select('*').then(({data}) => {
-            if(!data.length) return alert("No hay datos");
-            const csv = "Variable,Lote,Valor,Operador,Comentario\n" + data.map(r => `${r.variable},${r.lote_id},${r.valor},${r.operador},${r.comentario}`).join("\n");
-            const blob = new Blob(["\ufeff" + csv], {type: 'text/csv'});
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Reporte_SPC.csv"; a.click();
-        });
-    }
+    const bd = reportes || [];
 
-    window.onload = async () => {
-        inicializarFechasMesActual();
-        await cargarDatosMaestros();
+    const ok = datos.filter(d=>d.y <= config.ucl).length;
+
+    const fuera = datos.filter(d=>d.y > config.ucl);
+
+    const listos = fuera.filter(d=>
+
+        bd.some(r=>
+
+            String(r.lote_id) === d.lote &&
+            r.variable === variableActual
+
+        )
+
+    ).length;
+
+    document.getElementById('stat-total').innerText = datos.length;
+
+    document.getElementById('stat-ok').innerText = ok;
+
+    document.getElementById('stat-percent').innerText =
+        Math.round((ok/datos.length)*100) + "%";
+
+    document.getElementById('stat-pending').innerText =
+        fuera.length - listos;
+
+    datos.sort((a,b)=>parseInt(a.lote)-parseInt(b.lote));
+
+    const trace = {
+
+        x:[
+            datos.map(d=>d.dia),
+            datos.map(d=>d.lote)
+        ],
+
+        y:datos.map(d=>d.y),
+
+        mode:'lines+markers+text',
+
+        text:datos.map(d=>d.y),
+
+        textposition:'top center',
+
+        line:{
+            color:'#2d3748',
+            width:2
+        },
+
+        marker:{
+
+            size:10,
+
+            color:datos.map(d=>{
+
+                const gestionado = bd.some(r=>
+
+                    String(r.lote_id) === d.lote &&
+                    r.variable === variableActual
+
+                );
+
+                return d.y > config.ucl
+                    ? (gestionado ? '#3182ce' : 'red')
+                    : '#2d3748';
+
+            })
+
+        }
+
     };
+
+    const layout = {
+
+        xaxis:{
+            type:'multicategory',
+            fixedrange:true
+        },
+
+        yaxis:{
+            range:[
+                0,
+                Math.max(...datos.map(d=>d.y), config.ucl) * 1.2
+            ],
+            fixedrange:true
+        },
+
+        margin:{
+            t:30,
+            b:60,
+            l:50,
+            r:20
+        },
+
+        shapes:[
+
+            {
+
+                type:'rect',
+
+                xref:'paper',
+                yref:'y',
+
+                x0:0,
+                x1:1,
+
+                y0:0,
+                y1:config.ucl,
+
+                fillcolor:'rgba(144,238,144,0.15)',
+
+                line:{width:0},
+
+                layer:'below'
+            },
+
+            {
+
+                type:'rect',
+
+                xref:'paper',
+                yref:'y',
+
+                x0:0,
+                x1:1,
+
+                y0:config.ucl,
+                y1:1000,
+
+                fillcolor:'rgba(255,90,90,0.1)',
+
+                line:{width:0},
+
+                layer:'below'
+            }
+
+        ]
+
+    };
+
+    const div = document.getElementById('myDiv');
+
+    div.style.width =
+        Math.max(datos.length * 50, window.innerWidth * 0.7) + "px";
+
+    Plotly.newPlot(
+        div,
+        [trace],
+        layout,
+        {
+            responsive:true,
+            displayModeBar:false
+        }
+    );
+
+}
+
+/* PANEL */
+
+function cancelarRegistro(){
+
+    document.getElementById('contenidoPlan').style.display = 'none';
+
+    document.getElementById('mensajePlaceholder').style.display = 'block';
+
+}
+
+function validarPasos(){
+
+    const total =
+        document.querySelectorAll('#checklist-pasos input').length;
+
+    const checks =
+        document.querySelectorAll('#checklist-pasos input:checked').length;
+
+    const op =
+        document.getElementById('operador').value.trim() !== "";
+
+    const btn = document.getElementById('btnEnviar');
+
+    btn.disabled = !(checks === total && op);
+
+    btn.classList.toggle(
+        'active',
+        checks === total && op
+    );
+
+}
+
+/* REPORTE */
+
+async function enviarReporte(){
+
+    alert("Plan registrado");
+
+}
+
+/* CSV */
+
+function descargarReportes(){
+
+    alert("Descargando CSV...");
+
+}
+
+/* LOAD */
+
+window.onload = async ()=>{
+
+    inicializarFechasMesActual();
+
+    await cargarDatosMaestros();
+
+};
+
 </script>
+
 </body>
 </html>
