@@ -607,21 +607,37 @@ async function cargarDatosMaestros(){
 
                 fl[k.trim().toLowerCase()] = v;
             });
+// Traductor de meses
+const traductorMeses = {
+    'jan':0, 'ene':0,
+    'feb':1,
+    'mar':2,
+    'apr':3, 'abr':3,
+    'may':4,
+    'jun':5,
+    'jul':6,
+    'aug':7, 'ago':7,
+    'sep':8,
+    'oct':9,
+    'nov':10,
+    'dec':11, 'dic':11
+};
 
-            return{
+return {
+    lote: String(fl['lote'] || '').trim(),
+    dia: String(fl['dia'] || '').trim(),
+    mesTexto: String(fl['mes'] || '').trim().toLowerCase(),
+    mesNum: traductorMeses[String(fl['mes'] || '').trim().toLowerCase()],
+    
+    // Construimos fecha completa
+    fechaReal: new Date(
+        new Date().getFullYear(),
+        traductorMeses[String(fl['mes'] || '').trim().toLowerCase()],
+        parseInt(fl['dia'])
+    ),
 
-                lote:String(fl['lote'] || '').trim(),
-
-                dia:String(fl['dia'] || '').trim(),
-
-                fechaReal:
-                    fl['fecha'] ||
-                    fl['date'] ||
-                    fl['fecha registro'] ||
-                    null,
-
-                raw:fl
-            };
+    raw: fl
+};
 
         }).filter(d=>d.lote);
 
@@ -704,50 +720,31 @@ function cambiarVariable(nombre){
 
 /* FILTRAR */
 
-function filtrarPorFechas(){
+function filtrarPorFechas() {
+
+    const desde = new Date(document.getElementById('fechaDesde').value);
+    const hasta = new Date(document.getElementById('fechaHasta').value);
+
+    hasta.setHours(23,59,59,999);
 
     const config = planesConfig[variableActual];
 
-    const desdeInput = document.getElementById('fechaDesde').value;
+    const filtrados = datosCompletos
+        .filter(d => {
 
-    const hastaInput = document.getElementById('fechaHasta').value;
+            if (!d.fechaReal || isNaN(d.fechaReal)) return false;
 
-    let filtrados = [...datosCompletos];
+            return d.fechaReal >= desde && d.fechaReal <= hasta;
+        })
+        .map(d => ({
+            ...d,
+            y: parseFloat(d.raw[config.columna])
+        }))
+        .filter(d => !isNaN(d.y));
 
-    if(desdeInput && hastaInput){
-
-        const desde = new Date(desdeInput);
-
-        const hasta = new Date(hastaInput);
-
-        hasta.setHours(23,59,59,999);
-
-        filtrados = filtrados.filter(d=>{
-
-            if(!d.fechaReal) return false;
-
-            const f = new Date(d.fechaReal);
-
-            return !isNaN(f) && f >= desde && f <= hasta;
-
-        });
-
-    }
-
-    filtrados = filtrados
-    .map(d=>({
-
-        ...d,
-
-        y:parseFloat(d.raw[config.columna])
-
-    }))
-    .filter(d=>!isNaN(d.y));
-
-    console.log("FILTRADOS:",filtrados);
+    console.log("DATOS FILTRADOS:", filtrados);
 
     dibujarGrafica(filtrados);
-
 }
 
 /* GRAFICA */
