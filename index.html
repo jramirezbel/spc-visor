@@ -239,29 +239,46 @@
         tabs.appendChild(btn);
     });
 
-    async function cargarDatosMaestros() {
-        try {
-            const { data, error } = await _supabase.from('produccion').select('*');
-            if (error) throw error;
+async function cargarDatosMaestros() {
+    try {
+        const { data, error } = await _supabase.from('produccion').select('*');
+        if (error) throw error;
 
-            datosCompletos = data.map(f => {
-                const fl = {};
-                Object.keys(f).forEach(k => {
-                    let v = f[k];
-                    if (typeof v === 'string' && v.includes(',')) v = parseFloat(v.replace(',', '.'));
-                    fl[k.trim().toLowerCase()] = v;
-                });
-                return {
-                    lote: String(fl['lote'] || '').trim(),
-                    dia: String(fl['dia'] || '').trim(),
-                    fechaReal: fl['fecha'], // IMPORTANTE: Columna 'fecha' en Supabase
-                    raw: fl
-                };
-            }).filter(d => d.lote);
+        // Obtenemos el año actual para completar la fecha
+        const añoActual = new Date().getFullYear();
 
-            actualizarCumplimientoHome();
-        } catch (err) { console.error(err); }
+        datosCompletos = data.map(f => {
+            const fl = {};
+            Object.keys(f).forEach(k => {
+                let v = f[k];
+                if (typeof v === 'string' && v.includes(',')) v = parseFloat(v.replace(',', '.'));
+                fl[k.trim().toLowerCase()] = v;
+            });
+
+            // --- TRUCO PARA LA FECHA ---
+            // Usamos el traductor de meses para convertir "Dec" o "May" en número (0-11)
+            const mesTexto = String(fl['mes'] || '').toLowerCase().trim();
+            const mesNum = traductorMeses[mesTexto] ?? 0;
+            const diaNum = parseInt(fl['dia']) || 1;
+
+            // Creamos un objeto de fecha real: Año, Mes, Día
+            const fechaConstruida = new Date(añoActual, mesNum, diaNum);
+            // La guardamos en formato ISO (YYYY-MM-DD) para que el filtro la entienda
+            const fechaISO = fechaConstruida.toISOString().split('T')[0];
+
+            return {
+                lote: String(fl['lote'] || '').trim(),
+                dia: String(fl['dia'] || '').trim(),
+                fechaReal: fechaISO, // <--- Ahora esto ya no será nulo
+                raw: fl
+            };
+        }).filter(d => d.lote);
+
+        actualizarCumplimientoHome();
+    } catch (err) { 
+        console.error("Error al procesar fechas:", err); 
     }
+}
 
     function actualizarCumplimientoHome() {
         Object.keys(planesConfig).forEach(key => {
