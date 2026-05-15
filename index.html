@@ -922,15 +922,30 @@ const anchoDinamico = Math.max(datos.length * 95, 2200);
 div.style.width = anchoDinamico + "px";
 div.style.minWidth = "100%";
 
-    Plotly.newPlot(
-        div,
-        [trace],
-        layout,
-        {
-            scrollZoom:true,
-            responsive:true,
-        }
-        div.on('plotly_click', function(data){
+Plotly.newPlot(
+    div,
+    [trace],
+    layout,
+    {
+        scrollZoom:true,
+        responsive:false,
+        displayModeBar:false
+    }
+);
+
+div.on('plotly_click', function(data){
+
+    const punto = data.points[0];
+
+    const index = punto.pointIndex;
+
+    const seleccionado = datos[index];
+
+    if(seleccionado.y <= config.ucl) return;
+
+    abrirPlanReaccion(seleccionado);
+
+});
 
     const punto = data.points[0];
 
