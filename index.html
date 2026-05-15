@@ -18,8 +18,6 @@
         .tabs-container { display: flex; gap: 10px; margin-bottom: 15px; background: white; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
         .tab-btn { padding: 10px 15px; border: none; background: #edf2f7; color: #4a5568; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .tab-btn.active { background: #3182ce; color: white; }
-        #meses-filtros { margin-bottom: 15px; }
-        #meses-filtros button { padding: 6px 12px; margin: 2px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 6px; }
         #stats-bar { display: flex; justify-content: space-around; background: white; padding: 20px; border-bottom: 2px solid #f1f5f9; }
         .stat-card { text-align: center; flex: 1; border-right: 1px solid #f1f5f9; }
         .stat-card:last-child { border-right: none; }
@@ -97,68 +95,37 @@
     </div>
 
 <script>
-const planesConfig = {
-    "Consumo agua recuperada": { 
-        ucl: 90, 
-        columna: "consumo agua recuperada",  // se leerá tras normalizar
-        pasos: ["Paso 1: Cerrar manualmente válvula empuje y bombas al finalizar descarga TK.","Paso 2: Notificar 30 min antes. Confirmar niveles terraza.","Paso 3: Limpieza de línea antes y después del descargue.","Paso 4: Ajustar las Y de todo el germinador.","Paso 5: Detener carga de agua en supervisorio.","Paso 6: Poner 0% válvula potable. Verificar flujo (cerrar bypass si marca).","Paso 7: Verificar flujo recuperada >50 m3/h.","Paso 8: Si flujo <50 m3/h suplir con potable (60 m3/h)."] 
-    },
-    "Consumo agua potable": { 
-        ucl: 18, 
-        columna: "consumo agua potable", 
-        pasos: ["Paso 1: Notificar 30 min previo a descarga.","Paso 2: Limpieza de línea. Limpiar 'Y' si hay residuos.","Paso 3: Ajustar conexión 'Y' (evitar pérdida presión).","Paso 4: Poner 0% válvula potable. Verificar 0 m3/h.","Paso 5: Verificar flujo recuperada >50 m3/h."] 
-    },
-    "Pasamalla Malta": { 
-        ucl: 2, 
-        columna: "pasamalla malta", 
-        pasos: ["Paso 1: Retirar residuos manualmente de mallas.","Paso 2: Ajustar flujo alimentación a 7 ton/h por limpiadora.","Paso 3: Reparar mallas rotas o remaches en mal estado."] 
-    },
-    "Pasamalla Cebada": { 
-        ucl: 2.8, 
-        columna: "pasamalla cebada", 
-        pasos: ["Paso 1: Limpieza inmediata malla LM-05 (SOP).","Paso 2: Reducir flujo ajustando volantes sótano TC-01.","Paso 3: Retirar atascamientos ductos ingreso tarara."] 
-    },
-    "Malta en germen": { 
-        ucl: 1, 
-        columna: "malta en germen", 
-        pasos: ["Paso 1: Revisar mallas y limpiar desgerminadoras.","Paso 2: Limpieza inmediata si hay residuos.","Paso 3: Inspección cauchos y aletas. Reemplazar si hay fugas.","Paso 4: Ajustar damper aspiración (indicador vacío).","Paso 5: Inspección visual tolvas. Coordinar con Ing. Proceso."] 
-    }
-};
-
-// Traductor robusto — acepta mayúscula inicial y minúsculas
-const traductorMeses = {
-    'jan':0, 'feb':1, 'mar':2, 'apr':3, 'may':4, 'jun':5,
-    'jul':6, 'aug':7, 'sep':8, 'oct':9, 'nov':10, 'dec':11,
-    'ene':0, 'abr':3, 'ago':7, 'dic':11
-};
     const SUPABASE_URL = 'https://abzxbxjhjqzzfjvuitom.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const planesConfig = {
+        "Consumo agua recuperada": { ucl: 90, columna: "consumo agua recuperada", pasos: ["Cerrar manualmente válvula empuje y bombas al finalizar descarga TK.","Notificar 30 min antes. Confirmar niveles terraza.","Limpieza de línea antes y después del descargue.","Ajustar las Y de todo el germinador.","Detener carga de agua en supervisorio.","Poner 0% válvula potable. Verificar flujo.","Verificar flujo recuperada >50 m3/h.","Si flujo <50 m3/h suplir con potable."] },
+        "Consumo agua potable": { ucl: 18, columna: "consumo agua potable", pasos: ["Notificar 30 min previo a descarga.","Limpieza de línea. Limpiar 'Y' si hay residuos.","Ajustar conexión 'Y' (evitar pérdida presión).","Poner 0% válvula potable. Verificar 0 m3/h.","Verificar flujo recuperada >50 m3/h."] },
+        "Pasamalla Malta": { ucl: 2, columna: "pasamalla malta", pasos: ["Retirar residuos manualmente de mallas.","Ajustar flujo alimentación a 7 ton/h por limpiadora.","Reparar mallas rotas o remaches."] },
+        "Pasamalla Cebada": { ucl: 2.8, columna: "pasamalla cebada", pasos: ["Limpieza inmediata malla LM-05.","Reducir flujo ajustando volantes sótano.","Retirar atascamientos ductos ingreso."] },
+        "Malta en germen": { ucl: 1, columna: "malta en germen", pasos: ["Revisar mallas y limpiar desgerminadoras.","Limpieza inmediata si hay residuos.","Inspección cauchos y aletas.","Ajustar damper aspiración.","Inspección visual tolvas."] }
+    };
+
+    const traductorMeses = { 'jan':0, 'feb':1, 'mar':2, 'apr':3, 'may':4, 'jun':5, 'jul':6, 'aug':7, 'sep':8, 'oct':9, 'nov':10, 'dec':11, 'ene':0, 'abr':3, 'ago':7, 'dic':11 };
+
     let datosCompletos = [];
-    let datosActuales = [];
-    let datoSeleccionado = {};
     let variableActual = "Consumo agua recuperada";
-    
+    let datoSeleccionado = {};
 
     async function cargarDatosMaestros() {
         try {
-            console.log("Iniciando carga de datos...");
+            console.log("Conectando a Supabase...");
             const { data, error } = await _supabase.from('produccion').select('*');
             if (error) throw error;
 
             datosCompletos = data.map(f => {
                 const fl = {};
                 Object.keys(f).forEach(k => {
-                    let valor = f[k];
-                    if (typeof valor === 'string' && valor.includes(',')) {
-                        valor = parseFloat(valor.replace(',', '.'));
-                    } else if (!isNaN(valor) && valor !== null && valor !== '') {
-                        valor = Number(valor);
-                    }
-                    fl[k.trim().toLowerCase()] = valor;
+                    let val = f[k];
+                    if (typeof val === 'string' && val.includes(',')) val = parseFloat(val.replace(',', '.'));
+                    fl[k.trim().toLowerCase()] = val;
                 });
-
                 return {
                     lote: String(fl['lote'] || ''),
                     dia: String(fl['dia'] || ''),
@@ -167,56 +134,41 @@ const traductorMeses = {
                 };
             }).filter(d => d.lote !== '');
 
-            console.log("🚀 Datos cargados:", datosCompletos.length);
             cambiarVariable(variableActual);
-
         } catch (err) {
-            console.error("Error crítico:", err);
-            alert("⚠️ Error cargando producción: " + err.message);
+            console.error("Error cargando datos:", err);
+            alert("No se pudieron cargar los datos de Supabase.");
         }
     }
 
     function cambiarVariable(nombre) {
         variableActual = nombre;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText === nombre));
         const config = planesConfig[nombre];
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === nombre);
-        });
-        
-        datosActuales = datosCompletos.map(d => ({ 
-            ...d, 
-            y: parseFloat(d.raw[config.columna]) 
-        })).filter(d => !isNaN(d.y));
-        
+        const filtrados = datosCompletos.map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) })).filter(d => !isNaN(d.y));
         cancelarRegistro();
-        dibujarGrafica(datosActuales); 
+        dibujarGrafica(filtrados);
     }
 
     function filtrarMes(m) {
         const config = planesConfig[variableActual];
         const base = m === 'todos' ? datosCompletos : datosCompletos.filter(d => d.mesNum === m);
-        datosActuales = base.map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) })).filter(d => !isNaN(d.y));
-        dibujarGrafica(datosActuales);
+        const filtrados = base.map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) })).filter(d => !isNaN(d.y));
+        dibujarGrafica(filtrados);
     }
 
     async function dibujarGrafica(datos) {
-        const container = document.getElementById('myDiv');
         const config = planesConfig[variableActual];
-        const UCL_LOCAL = config.ucl;
-
+        const UCL = config.ucl;
         const { data: reportes } = await _supabase.from('planes_reaccion').select('*');
         const bd = reportes || [];
 
-        const total = datos.length;
-        const ok = datos.filter(d => d.y <= UCL_LOCAL).length;
-        const fuera = datos.filter(d => d.y > UCL_LOCAL);
-        const realizados = fuera.filter(d => bd.some(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual)).length;
-
-        document.getElementById('stat-total').innerText = total;
+        // Estadísticas
+        const ok = datos.filter(d => d.y <= UCL).length;
+        document.getElementById('stat-total').innerText = datos.length;
         document.getElementById('stat-ok').innerText = ok;
-        document.getElementById('stat-percent').innerText = total ? ((ok / total) * 100).toFixed(1) + "%" : "0%";
-        document.getElementById('stat-pending').innerText = fuera.length - realizados;
-
+        document.getElementById('stat-percent').innerText = datos.length ? ((ok / datos.length) * 100).toFixed(1) + "%" : "0%";
+        
         datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
         const trace = {
@@ -225,113 +177,82 @@ const traductorMeses = {
             mode: 'lines+markers+text',
             text: datos.map(d => d.y),
             textposition: 'top center',
-            line: { color: '#2d3748', width: 2 },
             marker: {
                 size: 10,
                 color: datos.map(d => {
-                    const tienePlan = bd.some(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual);
-                    return (d.y > UCL_LOCAL) ? (tienePlan ? '#3182ce' : 'red') : '#2d3748';
+                    const gestionado = bd.some(r => String(r.lote_id) === String(d.lote) && r.variable === variableActual);
+                    return (d.y > UCL) ? (gestionado ? '#3182ce' : 'red') : '#2d3748';
                 })
             }
         };
 
         const layout = {
             xaxis: { type: 'multicategory', fixedrange: true },
-            yaxis: { range: [0, Math.max(...datos.map(d => d.y), UCL_LOCAL + 5)], fixedrange: true },
-            margin: { t: 30, b: 60, l: 40, r: 20 },
-            shapes: [
-                { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: UCL_LOCAL, fillcolor: 'rgba(144, 238, 144, 0.15)', line: { width: 0 }, layer: 'below' },
-                { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: UCL_LOCAL, y1: 1000, fillcolor: 'rgba(255, 90, 90, 0.1)', line: { width: 0 }, layer: 'below' }
-            ]
+            yaxis: { range: [0, Math.max(...datos.map(d => d.y), UCL + 2)], fixedrange: true },
+            shapes: [{ type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: UCL, fillcolor: 'rgba(144, 238, 144, 0.1)', line: {width:0}, layer:'below' }]
         };
 
-        container.style.width = Math.max(datos.length * 50, 800) + "px";
-        Plotly.newPlot(container, [trace], layout, { responsive: false, displayModeBar: false });
+        const div = document.getElementById('myDiv');
+        div.style.width = Math.max(datos.length * 50, 800) + "px";
+        Plotly.newPlot(div, [trace], layout, { displayModeBar: false });
 
-        container.removeAllListeners('plotly_click');
-        container.on('plotly_click', (data) => {
+        div.removeAllListeners('plotly_click');
+        div.on('plotly_click', (data) => {
             const p = data.points[0];
-            if (p.y > UCL_LOCAL) {
-                const loteClick = p.data.x[1][p.pointNumber];
-                const yaRegistrado = bd.some(r => String(r.lote_id) === String(loteClick) && r.variable === variableActual);
-
-                if (yaRegistrado) {
-                    alert(`El Lote ${loteClick} ya fue gestionado.`);
-                    return;
-                }
-
-                datoSeleccionado = { lote: loteClick, valor: p.y, variable: variableActual };
-                document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `
-                    <label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>
-                `).join('');
+            if (p.y > UCL) {
+                const lote = p.data.x[1][p.pointNumber];
+                if (bd.some(r => String(r.lote_id) === String(lote) && r.variable === variableActual)) return alert("Ya gestionado.");
                 
+                datoSeleccionado = { lote, valor: p.y, variable: variableActual };
+                document.getElementById('infoLote').innerText = `LOTE ${lote}`;
+                document.getElementById('checklist-pasos').innerHTML = config.pasos.map(paso => `<label class="step"><input type="checkbox" onchange="validarPasos()"> ${paso}</label>`).join('');
                 document.getElementById('contenidoPlan').style.display = 'block';
                 document.getElementById('mensajePlaceholder').style.display = 'none';
-                document.getElementById('infoLote').innerText = `${variableActual}: LOTE ${datoSeleccionado.lote}`;
-                document.getElementById('operador').value = "";
-                validarPasos();
             }
         });
     }
 
     async function enviarReporte() {
         const btn = document.getElementById('btnEnviar');
-        btn.disabled = true; btn.innerText = "Enviando...";
+        btn.disabled = true;
         const { error } = await _supabase.from('planes_reaccion').insert([{ 
             lote_id: String(datoSeleccionado.lote), 
             valor: datoSeleccionado.valor, 
-            variable: variableActual,
+            variable: variableActual, 
             operador: document.getElementById('operador').value,
             comentario: document.getElementById('accionExtra').value 
         }]);
-        if (error) { 
-            alert("Error: " + error.message); 
-            btn.disabled = false; 
-            btn.innerText = "Registrar Cumplimiento"; 
-        } else { 
-            alert("Plan registrado."); 
-            cancelarRegistro(); 
-            cargarDatosMaestros(); // Recargar para ver el punto azul
-        }
+        if (error) { alert(error.message); btn.disabled = false; }
+        else { alert("Guardado."); cargarDatosMaestros(); }
     }
-async function cargarDatosMaestros() {
-    try {
-        const { data, error } = await _supabase.from('produccion').select('*');
-        if (error) throw error;
-        
-        // AGREGA ESTO TEMPORALMENTE
-        console.log("Muestra fila 0 raw:", data[0]);
-        console.log("Columnas disponibles:", Object.keys(data[0]));
-        
-    function cancelarRegistro() { 
-        document.getElementById('contenidoPlan').style.display = 'none'; 
-        document.getElementById('mensajePlaceholder').style.display = 'flex'; 
-        datoSeleccionado = {}; 
+
+    function cancelarRegistro() {
+        document.getElementById('contenidoPlan').style.display = 'none';
+        document.getElementById('mensajePlaceholder').style.display = 'flex';
+        datoSeleccionado = {};
     }
 
     function validarPasos() {
-        const checks = document.querySelectorAll('#checklist-pasos input:checked').length;
         const total = document.querySelectorAll('#checklist-pasos input').length;
+        const marcados = document.querySelectorAll('#checklist-pasos input:checked').length;
         const op = document.getElementById('operador').value.trim() !== "";
         const btn = document.getElementById('btnEnviar');
-        btn.disabled = !(checks === total && op);
-        btn.className = (checks === total && op) ? 'active' : '';
+        btn.disabled = !(total === marcados && op);
+        btn.className = (total === marcados && op) ? 'active' : '';
     }
 
     function descargarReportes() {
         _supabase.from('planes_reaccion').select('*').then(({data}) => {
-            if(!data || !data.length) return alert("No hay datos");
-            const csv = "Variable,Lote,Valor,Operador,Comentario\n" + data.map(r => `${r.variable},${r.lote_id},${r.valor},${r.operador},${r.comentario}`).join("\n");
-            const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Reporte_Supabase.csv"; a.click();
+            if(!data.length) return alert("No hay datos");
+            const csv = "Variable,Lote,Valor,Operador\n" + data.map(r => `${r.variable},${r.lote_id},${r.valor},${r.operador}`).join("\n");
+            const blob = new Blob(["\ufeff" + csv], {type: 'text/csv'});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "reporte.csv"; a.click();
         });
     }
 
-    function limpiarBaseDatos() { alert("Borra los datos directamente en Supabase por seguridad."); }
+    function limpiarBaseDatos() { alert("Acción protegida."); }
 
-    // --- LA LLAVE QUE ENCIENDE TODO ---
     window.onload = cargarDatosMaestros;
-
 </script>
 </body>
 </html>
