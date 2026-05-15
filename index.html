@@ -122,15 +122,14 @@
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
 window.addEventListener('DOMContentLoaded', () => {
-    // URL Raw de tu GitHub
-    const urlBase = 'https://github.com/jramirezbel/spc-visor/raw/refs/heads/main/pruebasics.xlsx'; 
+    // ESTA ES LA URL CORRECTA PARA DATOS (raw.githubusercontent.com)
+    const urlBase = 'https://raw.githubusercontent.com/jramirezbel/spc-visor/main/pruebasics.xlsx'; 
     
-    // Forzamos la descarga de la versión más reciente con un parámetro de tiempo
     const urlFinal = urlBase + '?v=' + new Date().getTime();
 
     fetch(urlFinal)
         .then(res => {
-            if (!res.ok) throw new Error("Error al conectar con GitHub. Verifica el enlace.");
+            if (!res.ok) throw new Error("GitHub no respondió correctamente (Error " + res.status + ").");
             return res.arrayBuffer();
         })
         .then(buffer => {
@@ -140,7 +139,6 @@ window.addEventListener('DOMContentLoaded', () => {
             
             datosCompletos = rawData.map(f => {
                 const fl = {}; 
-                // Normalizamos encabezados (quitar espacios y pasar a minúsculas)
                 Object.keys(f).forEach(k => fl[k.trim().toLowerCase()] = f[k]);
                 return {
                     lote: String(fl['lote'] || ''),
@@ -150,13 +148,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 };
             }).filter(d => d.lote !== '');
 
-            // Inicializamos la gráfica con los datos frescos
             cambiarVariable(variableActual);
-            console.log("Conexión exitosa con GitHub: Datos sincronizados.");
+            console.log("Conexión exitosa con GitHub.");
         })
         .catch(err => {
             console.error("Error de carga:", err);
-            alert("⚠️ No se pudieron cargar los datos desde GitHub.\n\nDetalle: " + err.message);
+            alert("⚠️ Error de conexión con los datos.\n\nDetalle: " + err.message);
         });
 });
 
