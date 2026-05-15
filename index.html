@@ -97,14 +97,40 @@
     </div>
 
 <script>
-    const planesConfig = {
-        "Consumo agua recuperada": { ucl: 90, columna: "consumo agua recuperada", pasos: ["Paso 1: Cerrar manualmente válvula empuje y bombas al finalizar descarga TK.","Paso 2: Notificar 30 min antes. Confirmar niveles terraza.","Paso 3: Limpieza de línea antes y después del descargue.","Paso 4: Ajustar las Y de todo el germinador.","Paso 5: Detener carga de agua en supervisorio.","Paso 6: Poner 0% válvula potable. Verificar flujo (cerrar bypass si marca).","Paso 7: Verificar flujo recuperada >50 m3/h.","Paso 8: Si flujo <50 m3/h suplir con potable (60 m3/h)."] },
-        "Consumo agua potable": { ucl: 18, columna: "consumo agua potable", pasos: ["Paso 1: Notificar 30 min previo a descarga.","Paso 2: Limpieza de línea. Limpiar 'Y' si hay residuos.","Paso 3: Ajustar conexión 'Y' (evitar pérdida presión).","Paso 4: Poner 0% válvula potable. Verificar 0 m3/h.","Paso 5: Verificar flujo recuperada >50 m3/h."] },
-        "Pasamalla Malta": { ucl: 2, columna: "pasamalla malta", pasos: ["Paso 1: Retirar residuos manualmente de mallas.","Paso 2: Ajustar flujo alimentación a 7 ton/h por limpiadora.","Paso 3: Reparar mallas rotas o remaches en mal estado."] },
-        "Pasamalla Cebada": { ucl: 2.8, columna: "pasamalla cebada", pasos: ["Paso 1: Limpieza inmediata malla LM-05 (SOP).","Paso 2: Reducir flujo ajustando volantes sótano TC-01.","Paso 3: Retirar atascamientos ductos ingreso tarara."] },
-        "Malta en germen": { ucl: 1, columna: "malta en germen", pasos: ["Paso 1: Revisar mallas y limpiar desgerminadoras.","Paso 2: Limpieza inmediata si hay residuos.","Paso 3: Inspección cauchos y aletas. Reemplazar si hay fugas.","Paso 4: Ajustar damper aspiración (indicador vacío).","Paso 5: Inspección visual tolvas. Coordinar con Ing. Proceso."] }
-    };
+const planesConfig = {
+    "Consumo agua recuperada": { 
+        ucl: 90, 
+        columna: "consumo agua recuperada",  // se leerá tras normalizar
+        pasos: ["Paso 1: Cerrar manualmente válvula empuje y bombas al finalizar descarga TK.","Paso 2: Notificar 30 min antes. Confirmar niveles terraza.","Paso 3: Limpieza de línea antes y después del descargue.","Paso 4: Ajustar las Y de todo el germinador.","Paso 5: Detener carga de agua en supervisorio.","Paso 6: Poner 0% válvula potable. Verificar flujo (cerrar bypass si marca).","Paso 7: Verificar flujo recuperada >50 m3/h.","Paso 8: Si flujo <50 m3/h suplir con potable (60 m3/h)."] 
+    },
+    "Consumo agua potable": { 
+        ucl: 18, 
+        columna: "consumo agua potable", 
+        pasos: ["Paso 1: Notificar 30 min previo a descarga.","Paso 2: Limpieza de línea. Limpiar 'Y' si hay residuos.","Paso 3: Ajustar conexión 'Y' (evitar pérdida presión).","Paso 4: Poner 0% válvula potable. Verificar 0 m3/h.","Paso 5: Verificar flujo recuperada >50 m3/h."] 
+    },
+    "Pasamalla Malta": { 
+        ucl: 2, 
+        columna: "pasamalla malta", 
+        pasos: ["Paso 1: Retirar residuos manualmente de mallas.","Paso 2: Ajustar flujo alimentación a 7 ton/h por limpiadora.","Paso 3: Reparar mallas rotas o remaches en mal estado."] 
+    },
+    "Pasamalla Cebada": { 
+        ucl: 2.8, 
+        columna: "pasamalla cebada", 
+        pasos: ["Paso 1: Limpieza inmediata malla LM-05 (SOP).","Paso 2: Reducir flujo ajustando volantes sótano TC-01.","Paso 3: Retirar atascamientos ductos ingreso tarara."] 
+    },
+    "Malta en germen": { 
+        ucl: 1, 
+        columna: "malta en germen", 
+        pasos: ["Paso 1: Revisar mallas y limpiar desgerminadoras.","Paso 2: Limpieza inmediata si hay residuos.","Paso 3: Inspección cauchos y aletas. Reemplazar si hay fugas.","Paso 4: Ajustar damper aspiración (indicador vacío).","Paso 5: Inspección visual tolvas. Coordinar con Ing. Proceso."] 
+    }
+};
 
+// Traductor robusto — acepta mayúscula inicial y minúsculas
+const traductorMeses = {
+    'jan':0, 'feb':1, 'mar':2, 'apr':3, 'may':4, 'jun':5,
+    'jul':6, 'aug':7, 'sep':8, 'oct':9, 'nov':10, 'dec':11,
+    'ene':0, 'abr':3, 'ago':7, 'dic':11
+};
     const SUPABASE_URL = 'https://abzxbxjhjqzzfjvuitom.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -114,12 +140,7 @@
     let datoSeleccionado = {};
     let variableActual = "Consumo agua recuperada";
     
-    // Traductor mejorado para los meses del CSV
-const traductorMeses = {
-    'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,
-    'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11,
-    'ene':0,'abr':3,'ago':7,'dic':11  // por si están en español
-};
+
     async function cargarDatosMaestros() {
         try {
             console.log("Iniciando carga de datos...");
