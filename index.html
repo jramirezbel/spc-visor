@@ -122,63 +122,29 @@
     const traductorMeses = {'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11};
 
 window.addEventListener('DOMContentLoaded', () => {
-    // La URL Raw es la correcta para acceso público
-    const urlBase = 'https://raw.githubusercontent.com/jramirezbel/spc-visor/main/pruebasics.xlsx'; 
+    // DATOS DE PRUEBA DIRECTOS (Sin depender de archivos externos)
+    const datosPrueba = [
+        { lote: "123", dia: "15", mes: "mayo", "consumo agua": 4.2 },
+        { lote: "124", dia: "16", mes: "mayo", "consumo agua": 5.8 }, // Este saldría en rojo
+        { lote: "125", dia: "17", mes: "mayo", "consumo agua": 4.5 }
+    ];
+
+    console.log("Cargando datos de prueba internos...");
     
-    // El timestamp (?t=...) rompe la caché de GitHub para que siempre baje lo nuevo
-    // Ruta relativa — funciona si ambos archivos están en la raíz del repo
-    const urlFinal = './pruebasics.xlsx?t=' + Date.now();
+    datosCompletos = datosPrueba.map(f => {
+        const fl = {};
+        Object.keys(f).forEach(k => fl[k.toLowerCase()] = f[k]);
+        return {
+            lote: String(fl['lote']),
+            dia: String(fl['dia']),
+            mesNum: traductorMeses[fl['mes']?.toLowerCase()] || 5,
+            raw: fl
+        };
+    });
 
-    console.log("Cargando datos desde:", urlFinal);
-
-    fetch(urlFinal)
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return res.arrayBuffer();
-        })
-        .then(buffer => {
-            if (!buffer || buffer.byteLength === 0) throw new Error("El archivo llegó vacío.");
-
-            const data = new Uint8Array(buffer);
-            const workbook = XLSX.read(data, {type: 'array', cellDates: true});
-            
-            if (!workbook.SheetNames.length) throw new Error("El Excel no tiene hojas.");
-            
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rawData = XLSX.utils.sheet_to_json(firstSheet);
-            
-            if (rawData.length === 0) throw new Error("La hoja de Excel está vacía.");
-
-            datosCompletos = rawData.map((f, index) => {
-                const fl = {}; 
-                // Normalizamos: "Lote " -> "lote"
-                Object.keys(f).forEach(k => {
-                    const cleanKey = k.toString().trim().toLowerCase();
-                    fl[cleanKey] = f[k];
-                });
-
-                // Validación crítica de columnas
-                const loteVal = String(fl['lote'] || '').trim();
-                if (!loteVal) console.warn(`Fila ${index} sin lote.`, fl);
-
-                return {
-                    lote: loteVal,
-                    dia: String(fl['dia'] || ''),
-                    mesNum: traductorMeses[fl['mes']?.toString().toLowerCase().trim()] ?? -1,
-                    raw: fl
-                };
-            }).filter(d => d.lote !== '');
-
-            if (datosCompletos.length === 0) throw new Error("No se encontraron registros válidos (columna 'lote' vacía o mal escrita).");
-
-            cambiarVariable(variableActual);
-            console.log("✅ Datos procesados:", datosCompletos.length, "registros.");
-        })
-        .catch(err => {
-            console.error("Error detallado:", err);
-            alert("⚠️ ERROR DE CONEXIÓN\n\nEl visor no pudo leer el Excel.\nDetalle: " + err.message + "\n\nSugerencia: Refresca la página en 1 minuto.");
-        });
+    cambiarVariable(variableActual);
 });
+    
     function cambiarVariable(nombre) {
         variableActual = nombre;
         const config = planesConfig[nombre];
