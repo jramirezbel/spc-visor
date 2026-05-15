@@ -115,10 +115,11 @@
     let variableActual = "Consumo agua recuperada";
     
     // Traductor mejorado para los meses del CSV
-    const traductorMeses = {
-        'Jan':0,'Feb':1,'Mar':2,'Apr':3,'May':4,'Jun':5,'Jul':6,'Aug':7,'Sep':8,'Oct':9,'Nov':10,'Dec':11,
-    };
-
+const traductorMeses = {
+    'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,
+    'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11,
+    'ene':0,'abr':3,'ago':7,'dic':11  // por si están en español
+};
     async function cargarDatosMaestros() {
         try {
             console.log("Iniciando carga de datos...");
@@ -272,7 +273,15 @@
             cargarDatosMaestros(); // Recargar para ver el punto azul
         }
     }
-
+async function cargarDatosMaestros() {
+    try {
+        const { data, error } = await _supabase.from('produccion').select('*');
+        if (error) throw error;
+        
+        // AGREGA ESTO TEMPORALMENTE
+        console.log("Muestra fila 0 raw:", data[0]);
+        console.log("Columnas disponibles:", Object.keys(data[0]));
+        
     function cancelarRegistro() { 
         document.getElementById('contenidoPlan').style.display = 'none'; 
         document.getElementById('mensajePlaceholder').style.display = 'flex'; 
