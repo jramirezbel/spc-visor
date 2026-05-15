@@ -226,36 +226,27 @@ body{
     height:calc(100vh - 230px);
     overflow:hidden;
 }
-
-.visor-container{
-    flex:1;
-    background:white;
-    overflow:hidden;
-    position:relative;
-    min-width:0;
-}
     
-.panel-lateral{
-    width:340px;
-    min-width:340px;
-    max-width:340px;
+.visor-container{
+    flex:7;
     background:white;
-    border-left:1px solid #e2e8f0;
-    padding:20px;
-    overflow-y:auto;
-    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
 }
 
 .canvas-scroll{
-    width:100%;
-    height:100%;
+    flex:1;
     overflow-x:auto;
     overflow-y:hidden;
+    width:100%;
+    position:relative;
+    white-space:nowrap;
 }
-    
+
 #myDiv{
-    height:520px;
+    height:100%;
 }
+
 /* PANEL */
 
 .panel-lateral{
@@ -845,22 +836,20 @@ async function dibujarGrafica(datos){
 
     };
 
-const layout = {
+    const layout = {
 
-    autosize:false,
+        xaxis:{
+            type:'multicategory',
+            fixedrange:true
+        },
 
-    xaxis:{
-        type:'multicategory',
-        tickangle:-90
-    },
-yaxis:{
-    range:[
-        0,
-        Math.max(...datos.map(d=>d.y), config.ucl) * 1.2
-    ],
-    fixedrange:true
-},
-    
+        yaxis:{
+            range:[
+                0,
+                Math.max(...datos.map(d=>d.y), config.ucl) * 1.2
+            ],
+            fixedrange:true
+        },
 
         margin:{
             t:30,
@@ -917,79 +906,24 @@ yaxis:{
 
     const div = document.getElementById('myDiv');
 
-const anchoDinamico = Math.max(datos.length * 95, 2200);
-    
+const anchoDinamico = Math.max(datos.length * 90, 1400);
+
 div.style.width = anchoDinamico + "px";
-div.style.minWidth = "100%";
 
-Plotly.newPlot(
-    div,
-    [trace],
-    layout,
-    {
-        scrollZoom:true,
-        responsive:true
-    }
-);
-
-div.on('plotly_click', function(data){
-
-    const punto = data.points[0];
-
-    const index = punto.pointIndex;
-
-    const seleccionado = datos[index];
-
-    if(seleccionado.y <= config.ucl) return;
-
-    abrirPlanReaccion(seleccionado);
-
-});
-
-    const punto = data.points[0];
-
-    const index = punto.pointIndex;
-
-    const seleccionado = datos[index];
-
-    if(seleccionado.y <= config.ucl) return;
-
-    abrirPlanReaccion(seleccionado);
-
-});
+    Plotly.newPlot(
+        div,
+        [trace],
+        layout,
+        {
+            responsive:false,
+            displayModeBar:false
+        }
     );
 
 }
 
 /* PANEL */
-function abrirPlanReaccion(dato){
 
-    datoSeleccionado = dato;
-
-    document.getElementById('contenidoPlan').style.display = 'block';
-
-    document.getElementById('mensajePlaceholder').style.display = 'none';
-
-    document.getElementById('infoLote').innerHTML = `
-        Lote ${dato.lote}<br>
-        Valor: ${dato.y}
-    `;
-
-    const pasos =
-        planesConfig[variableActual].pasos;
-
-    document.getElementById('checklist-pasos').innerHTML =
-        pasos.map((p,i)=>`
-            <label class="step">
-                <input
-                    type="checkbox"
-                    onchange="validarPasos()">
-                ${p}
-            </label>
-        `).join('');
-
-}
-    
 function cancelarRegistro(){
 
     document.getElementById('contenidoPlan').style.display = 'none';
