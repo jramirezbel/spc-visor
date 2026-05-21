@@ -293,6 +293,19 @@ body{
     display:none;
 }
 
+.plan-disabled{
+    opacity:0.45;
+    pointer-events:none;
+    filter:grayscale(0.3);
+    transition:0.25s;
+}
+
+.plan-enabled{
+    opacity:1;
+    pointer-events:auto;
+    filter:none;
+}
+
 </style>
 </head>
 
@@ -407,7 +420,7 @@ body{
         </div>
 
         <div class="panel-lateral">
-            <div id="contenidoPlan" class="contenido-oculto">
+            <div id="contenidoPlan" class="plan-disabled">
                 <h3>Plan de reacción</h3>
                 <div id="infoLote" class="badge-lote"></div>
 
@@ -434,10 +447,6 @@ body{
                 <button class="btn-cancelar" onclick="cancelarRegistro()">
                     Cancelar
                 </button>
-            </div>
-
-            <div id="mensajePlaceholder" class="placeholder-text">
-                Haz clic en un punto rojo para gestionar el plan.
             </div>
         </div>
     </div>
@@ -648,12 +657,40 @@ async function dibujarGrafica(datos){
         abrirPlanReaccion(dato);
     });
 }
+    
 function cancelarRegistro(){
-    document.getElementById('contenidoPlan').style.display = 'none';
-    document.getElementById('mensajePlaceholder').style.display = 'block';
-}
 
+    document.getElementById('contenidoPlan').classList.remove('plan-enabled');
+    document.getElementById('contenidoPlan').classList.add('plan-disabled');
+
+    document.getElementById('infoLote').innerHTML = `
+        Esperando desviación SPC
+    `;
+
+    document.getElementById('operador').value = '';
+    document.getElementById('accionExtra').value = '';
+
+    document.getElementById('checklist-pasos').innerHTML = `
+        <div style="
+            text-align:center;
+            padding:40px 10px;
+            color:#64748b;
+            font-size:14px;
+        ">
+            Seleccione un punto fuera de especificación para habilitar el plan de reacción.
+        </div>
+    `;
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.classList.remove('active');
+}
+    
 function abrirPlanReaccion(dato){
+
+    document.getElementById('contenidoPlan').classList.remove('plan-disabled');
+document.getElementById('contenidoPlan').classList.add('plan-enabled');
+    
     datoSeleccionado = dato;
     document.getElementById('contenidoPlan').style.display = 'block';
     document.getElementById('mensajePlaceholder').style.display = 'none';
