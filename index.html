@@ -222,10 +222,10 @@ body{
     background:white;
 }
 
-#myDiv{
-    height:100%; /* Deja que Plotly herede el alto del contenedor flex */
+#myDiv {
+    width: 100%;
+    height: 100%;
 }
-
 /* PANEL */
 
 .panel-lateral{
@@ -608,32 +608,36 @@ async function dibujarGrafica(datos){
         ]
     };
 
-    const div = document.getElementById('myDiv');
+const div = document.getElementById('myDiv');
     const containerVisor = document.querySelector('.visor-container');
     
-    // 1. Calculamos el ancho dinámico basado en la cantidad de lotes filtrados
-    const anchoDinamico = Math.max(datos.length * 65, containerVisor.offsetWidth);
-        
-    // 2. Le asignamos los tamaños al div contenedor
-    div.style.minWidth = anchoDinamico + "px";
-    div.style.width = anchoDinamico + "px"; // Asegura que el contenedor estire el canvas-scroll
+    // 1. Quitamos anchos manuales: el div medirá el 100% de la zona asignada
+    div.style.minWidth = "100%";
+    div.style.width = "100%";
     div.style.height = "100%";
     
-    // 3. Renderizamos Plotly pasándole las dimensiones explícitas
+    // 2. Renderizamos con autosize en TRUE para que use el espacio actual
     Plotly.newPlot(
         div,
         [trace],
         {
             ...layout,
-            autosize: false,          // <-- Volvemos a false para que respete los valores numéricos de abajo
-            width: anchoDinamico,     // <-- Forzamos el ancho calculado por los lotes
-            height: containerVisor.offsetHeight // <-- Mantiene el alto exacto del contenedor flex sin romper la pantalla
+            autosize: true // Permite que Plotly llene el 100% del bloque de forma dinámica
         },
         {
             responsive: true,
             displayModeBar: false
         }
     );
+
+    // 3. Opcional: Si el volumen de datos es muy alto, ajustamos el tamaño del texto 
+    // de las etiquetas de los ejes para que no se traslapen en filtros mensuales.
+    if (datos.length > 30) {
+        Plotly.relayout(div, {
+            'xaxis.tickangle': -45, // Inclina los lotes si son demasiados
+            'texttemplate': '%{y:.1f}' // Mantiene limpio el texto flotante
+        });
+    }
 
     // Ajustamos el scroll al inicio al cargar nuevos datos
     document.querySelector('.canvas-scroll').scrollLeft = 0;
