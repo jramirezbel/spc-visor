@@ -581,65 +581,59 @@ async function dibujarGrafica(datos){
 
     datos.sort((a,b)=>parseInt(a.lote)-parseInt(b.lote));
 
-    const trace = {
-        x: [datos.map(d=>d.dia), datos.map(d=>d.lote)],
-        y: datos.map(d=>d.y),
-        mode: 'lines+markers+text',
-        text: datos.map(d=>d.y),
-        textposition: 'top center',
-        line: { color:'#2d3748', width:2 },
+const trace = {
+        x: [
+            datos.map(d => d.dia),
+            datos.map(d => d.lote)
+        ],
+        y: datos.map(d => d.y),
+        
+        // CAMBIO: Quitamos 'text' de mode para limpiar el amontonamiento visual
+        mode: 'lines+markers', 
+        
+        // Configuración para el cartel flotante al pasar el mouse
+        hovertemplate: `<b>Lote:</b> %{x[1]}<br><b>Día:</b> %{x[0]}<br><b>Valor:</b> %{y}<extra></extra>`,
+
+        line: { color: '#2d3748', width: 2 },
         marker: {
-            size: 10,
-            color: datos.map(d=>{
-                const gestionado = bd.some(r=> String(r.lote_id) === d.lote && r.variable === variableActual);
+            size: 8, // Un poco más pequeño para mejorar la claridad visual cuando hay muchos puntos
+            color: datos.map(d => {
+                const gestionado = bd.some(r => String(r.lote_id) === d.lote && r.variable === variableActual);
                 return d.y > config.ucl ? (gestionado ? '#3182ce' : 'red') : '#2d3748';
             })
         }
     };
-
-    const layout = {
+    
+const layout = {
         autosize: true,
-        xaxis: { type:'multicategory', fixedrange:true },
-        yaxis: { range:[0, Math.max(...datos.map(d=>d.y), config.ucl) * 1.2], fixedrange:true },
-        margin: { t:30, b:60, l:50, r:20 },
+        xaxis: { 
+            type: 'multicategory', 
+            fixedrange: true,
+            // Fuerza a Plotly a ocultar etiquetas de forma inteligente si van a chocar
+            tickmode: 'auto', 
+            nticks: datos.length > 40 ? 20 : undefined // Si hay más de 40 datos, limita las marcas visibles
+        },
+        yaxis: { 
+            range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
+            fixedrange: true 
+        },
+        margin: { t: 30, b: 60, l: 50, r: 20 },
         shapes: [
-            { type:'rect', xref:'paper', yref:'y', x0:0, x1:1, y0:0, y1:config.ucl, fillcolor:'rgba(144,238,144,0.15)', line:{width:0}, layer:'below' },
-            { type:'rect', xref:'paper', yref:'y', x0:0, x1:1, y0:config.ucl, y1:1000, fillcolor:'rgba(255,90,90,0.1)', line:{width:0}, layer:'below' }
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: config.ucl, fillcolor: 'rgba(144,238,144,0.15)', line: { width: 0 }, layer: 'below' },
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.1)', line: { width: 0 }, layer: 'below' }
         ]
     };
-
 const div = document.getElementById('myDiv');
-    const containerVisor = document.querySelector('.visor-container');
     
-    // 1. Quitamos anchos manuales: el div medirá el 100% de la zona asignada
     div.style.minWidth = "100%";
     div.style.width = "100%";
     div.style.height = "100%";
     
-    // 2. Renderizamos con autosize en TRUE para que use el espacio actual
-    Plotly.newPlot(
-        div,
-        [trace],
-        {
-            ...layout,
-            autosize: true // Permite que Plotly llene el 100% del bloque de forma dinámica
-        },
-        {
-            responsive: true,
-            displayModeBar: false
-        }
-    );
+    Plotly.newPlot(div, [trace], layout, {
+        responsive: true,
+        displayModeBar: false
+    });
 
-    // 3. Opcional: Si el volumen de datos es muy alto, ajustamos el tamaño del texto 
-    // de las etiquetas de los ejes para que no se traslapen en filtros mensuales.
-    if (datos.length > 30) {
-        Plotly.relayout(div, {
-            'xaxis.tickangle': -45, // Inclina los lotes si son demasiados
-            'texttemplate': '%{y:.1f}' // Mantiene limpio el texto flotante
-        });
-    }
-
-    // Ajustamos el scroll al inicio al cargar nuevos datos
     document.querySelector('.canvas-scroll').scrollLeft = 0;
         
     div.on('plotly_click', function(evento){
