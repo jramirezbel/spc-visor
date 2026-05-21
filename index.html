@@ -584,14 +584,18 @@ async function dibujarGrafica(datos){
 
     datos.sort((a,b)=>parseInt(a.lote)-parseInt(b.lote));
 
-const trace = {
-        x: [
-            datos.map(d => d.dia),
-            datos.map(d => d.lote)
-        ],
+// 1. Asegurar el orden ascendente por lote antes de mapear el eje X
+    datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
+
+    // 2. Mapeamos un único array de texto combinando Día y Lote de forma clara
+    const etiquetasX = datos.map(d => `Día ${d.dia} - Lote ${d.lote}`);
+
+    const trace = {
+        x: etiquetasX, // Ahora es una categoría simple y directa
         y: datos.map(d => d.y),
         mode: 'lines+markers', 
-        hovertemplate: `<b>Lote:</b> %{x[1]}<br><b>Día:</b> %{x[0]}<br><b>Valor:</b> %{y}<extra></extra>`,
+        // Ajustamos el hovertemplate para que extraiga los datos limpios de nuestro objeto original
+        hovertemplate: datos.map(d => `<b>Lote:</b> ${d.lote}<br><b>Día:</b> ${d.dia}<br><b>Valor:</b> %{y}<extra></extra>`),
         line: { color: '#2d3748', width: 2 },
         marker: {
             size: 8,
@@ -605,20 +609,18 @@ const trace = {
     const layout = {
         autosize: true,
         xaxis: { 
-            type: 'multicategory', 
+            type: 'category', // Cambiado de 'multicategory' a 'category'
             fixedrange: true,
-            tickmode: 'auto',
-            tickangle: -45, // Inclinación limpia para que el texto fluya diagonal y quepa el día
-            nticks: datos.length > 40 ? 20 : undefined
+            tickangle: -45,   // Mantiene la inclinación limpia que querías
+            automargin: true  // Permite que Plotly ajuste el espacio automáticamente sin romper el contenedor
         },
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
             fixedrange: true 
         },
-        // Aumentamos el margen inferior 'b' a 130 para alojar perfectamente las dos filas de texto (Día y Lote)
         margin: { 
             t: 20, 
-            b: 130, 
+            b: 100, // Se puede reducir ligeramente ya que 'automargin: true' se encarga del trabajo pesado
             l: 50, 
             r: 20 
         },
@@ -627,8 +629,8 @@ const trace = {
             { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.1)', line: { width: 0 }, layer: 'below' }
         ]
     };
-    
-const div = document.getElementById('myDiv');
+
+    const div = document.getElementById('myDiv');
     
     div.style.width = "100%";
     div.style.height = "100%";
@@ -640,19 +642,16 @@ const div = document.getElementById('myDiv');
 
     document.querySelector('.canvas-scroll').scrollLeft = 0;
         
+    // 3. Modificación del evento de clic para interactuar correctamente con el nuevo formato del eje X
     div.on('plotly_click', function(evento){
         const punto = evento.points[0];
-        const lote = punto.x[1];
-        const valor = punto.y;
+        const indice = punto.pointIndex; // Usamos el índice del punto cliqueado
+        const dato = datos[indice];     // Recuperamos el objeto original directo del array ordenado
 
-        if(valor <= config.ucl) return;
-
-        const dato = datos.find(d => d.lote === lote);
-        if(!dato) return;
+        if(!dato || dato.y <= config.ucl) return;
 
         abrirPlanReaccion(dato);
     });
-}
 
 function cancelarRegistro(){
     document.getElementById('contenidoPlan').style.display = 'none';
