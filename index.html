@@ -197,34 +197,37 @@ body{
 
 /* MAIN LAYOUT */
 
-.layout-principal{
-    display:flex;
-    width:100%;
-    height:calc(100% - 215px); /* Toma dinámicamente el espacio restante real */
-    overflow:hidden;
-    min-width:0;
+.layout-principal {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 225px); /* Ajuste dinámico basado en el viewport exacto */
+    overflow: hidden;
+    min-width: 0;
 }
     
-.visor-container{
-    flex:1;
-    min-width:0;
-    height:100%;
-    background:white;
-    overflow:hidden;
-    display:flex;
+.visor-container {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    background: white;
+    overflow: hidden;
+    display: flex;
 }
     
-/* Asegura que el contenedor de la gráfica aproveche el alto disponible */
+/* Ajuste definitivo para estirar la gráfica horizontalmente sin huecos */
 .canvas-scroll {
-    overflow-x: hidden; /* Ya no necesitamos scroll horizontal */
-    overflow-y: hidden; /* Evita que aparezcan barras secundarias */
+    width: 100%; /* Forzamos a que use todo el ancho asignado */
+    height: 100%;
+    overflow: hidden;
     display: flex;
     align-items: stretch;
+    flex: 1;
 }
 
 #myDiv {
     width: 100%;
     height: 100%;
+    flex: 1;
 }
 /* PANEL */
 
@@ -587,16 +590,11 @@ const trace = {
             datos.map(d => d.lote)
         ],
         y: datos.map(d => d.y),
-        
-        // CAMBIO: Quitamos 'text' de mode para limpiar el amontonamiento visual
         mode: 'lines+markers', 
-        
-        // Configuración para el cartel flotante al pasar el mouse
         hovertemplate: `<b>Lote:</b> %{x[1]}<br><b>Día:</b> %{x[0]}<br><b>Valor:</b> %{y}<extra></extra>`,
-
         line: { color: '#2d3748', width: 2 },
         marker: {
-            size: 8, // Un poco más pequeño para mejorar la claridad visual cuando hay muchos puntos
+            size: 8,
             color: datos.map(d => {
                 const gestionado = bd.some(r => String(r.lote_id) === d.lote && r.variable === variableActual);
                 return d.y > config.ucl ? (gestionado ? '#3182ce' : 'red') : '#2d3748';
@@ -604,24 +602,23 @@ const trace = {
         }
     };
     
-const layout = {
+    const layout = {
         autosize: true,
         xaxis: { 
             type: 'multicategory', 
             fixedrange: true,
             tickmode: 'auto',
-            // Reducimos la inclinación a 45° para que ocupe menos espacio vertical y sea legible
-            tickangle: -45, 
+            tickangle: -45, // Inclinación limpia para que el texto fluya diagonal y quepa el día
             nticks: datos.length > 40 ? 20 : undefined
         },
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
             fixedrange: true 
         },
-        // CAMBIO CRÍTICO: Subimos el margen inferior 'b' a 90 para rescatar las etiquetas cortadas
+        // Aumentamos el margen inferior 'b' a 130 para alojar perfectamente las dos filas de texto (Día y Lote)
         margin: { 
             t: 20, 
-            b: 90, 
+            b: 130, 
             l: 50, 
             r: 20 
         },
