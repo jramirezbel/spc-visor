@@ -611,17 +611,23 @@ async function dibujarGrafica(datos){
     const div = document.getElementById('myDiv');
     const containerVisor = document.querySelector('.visor-container');
     
+    // 1. Calculamos el ancho dinámico basado en la cantidad de lotes filtrados
     const anchoDinamico = Math.max(datos.length * 65, containerVisor.offsetWidth);
         
+    // 2. Le asignamos los tamaños al div contenedor
     div.style.minWidth = anchoDinamico + "px";
+    div.style.width = anchoDinamico + "px"; // Asegura que el contenedor estire el canvas-scroll
+    div.style.height = "100%";
     
-    // Dejamos que Plotly herede la altura del layout principal de forma automática
+    // 3. Renderizamos Plotly pasándole las dimensiones explícitas
     Plotly.newPlot(
         div,
         [trace],
         {
             ...layout,
-            autosize: true
+            autosize: false,          // <-- Volvemos a false para que respete los valores numéricos de abajo
+            width: anchoDinamico,     // <-- Forzamos el ancho calculado por los lotes
+            height: containerVisor.offsetHeight // <-- Mantiene el alto exacto del contenedor flex sin romper la pantalla
         },
         {
             responsive: true,
@@ -629,6 +635,7 @@ async function dibujarGrafica(datos){
         }
     );
 
+    // Ajustamos el scroll al inicio al cargar nuevos datos
     document.querySelector('.canvas-scroll').scrollLeft = 0;
         
     div.on('plotly_click', function(evento){
