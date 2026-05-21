@@ -449,6 +449,8 @@ border-bottom:1px solid #e2e8f0;
 
 <div class="layout-principal">
 
+    <!-- PANEL IZQUIERDO -->
+
     <div class="panel-lateral">
 
         <div id="contenidoPlan" class="contenido-oculto">
@@ -458,20 +460,40 @@ border-bottom:1px solid #e2e8f0;
             <div id="infoLote" class="badge-lote"></div>
 
             <input
-            type="text"
-            id="operador"
-            placeholder="Nombre operador..."
-            oninput="validarPasos()"
-            style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;">
+                type="text"
+                id="operador"
+                placeholder="Nombre operador..."
+                oninput="validarPasos()"
+                style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;"
+            >
 
             <div id="checklist-pasos"></div>
 
             <textarea
-            id="accionExtra"
-            placeholder="Observaciones..."
-            style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"></textarea>
+                id="accionExtra"
+                placeholder="Observaciones..."
+                style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"
+            ></textarea>
 
-<div class="visor-container">
+            <button id="btnEnviar" onclick="enviarReporte()" disabled>
+                Registrar Plan
+            </button>
+
+            <button class="btn-cancelar" onclick="cancelarRegistro()">
+                Cancelar
+            </button>
+
+        </div>
+
+        <div id="mensajePlaceholder" class="placeholder-text">
+            Haz clic en un punto rojo para gestionar el plan.
+        </div>
+
+    </div>
+
+    <!-- GRÁFICA -->
+
+    <div class="visor-container">
 
         <div class="canvas-scroll">
             <div id="myDiv"></div>
