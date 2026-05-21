@@ -701,10 +701,13 @@ async function dibujarGrafica(datos){
     fixedrange:true,
     tickangle:90,
     automargin:true
+    showgrid:false
 },
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
             fixedrange: true 
+            showgrid:true,
+            gridcolor:'rgba(0,0,0,0.05)'
         },
         margin: { 
             t: 20, 
