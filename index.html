@@ -380,6 +380,7 @@ textarea:disabled{
 
         <div class="filtro-group">
             <label>Desde</label>
+        
             <input type="date" id="fechaDesde">
         </div>
 
@@ -642,10 +643,7 @@ function filtrarPorFechas() {
 
     const config = planesConfig[variableActual];
     const filtrados = datosCompletos
-        .filter(d => {
-            if (!d.fechaReal || isNaN(d.fechaReal)) return false;
-            return d.fechaReal >= desde && d.fechaReal <= hasta;
-        })
+        .filter(d => true)
         .map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) }))
         .filter(d => !isNaN(d.y));
 
