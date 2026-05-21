@@ -226,6 +226,7 @@ body{
     height:calc(100vh - 230px);
     overflow:hidden;
     min-width:0;
+    align-items:stretch;
 }
     
 .visor-container{
@@ -246,7 +247,7 @@ body{
 }
 
 #myDiv{
-    height:520px;
+    height:100%;
 
 }
 
@@ -453,15 +454,6 @@ border-bottom:1px solid #e2e8f0;
 
 <div class="layout-principal">
 
-    <!-- VISOR -->
-
-    <div class="visor-container">
-
-        <div class="canvas-scroll">
-            <div id="myDiv"></div>
-        </div>
-
-    </div>
 
     <!-- PANEL -->
 
@@ -928,20 +920,24 @@ async function dibujarGrafica(datos){
 
     const div = document.getElementById('myDiv');
     
-const anchoDinamico = Math.max(
-    datos.length * 65,
-    document.querySelector('.visor-container').offsetWidth
-);
+const anchoContenedor =
+    document.querySelector('.visor-container').offsetWidth;
+
+const anchoDinamico =
+    datos.length > 25
+        ? datos.length * 65
+        : anchoContenedor;
+
+div.style.width = anchoDinamico + "px";
+
     
-div.style.minWidth = anchoDinamico + "px";
 div.style.height = "100%";
-    Plotly.newPlot(
+Plotly.newPlot(
     div,
     [trace],
     {
         ...layout,
-        autosize:false,
-        height:520
+        autosize:true
     },
     {
         responsive:true,
