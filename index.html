@@ -581,10 +581,12 @@ async function dibujarGrafica(datos){
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
     // 2. Mapeamos un único array de texto combinando Día y Lote de forma clara
-    const etiquetasX = datos.map(d => `Día ${d.dia} - Lote ${d.lote}`);
 
     const trace = {
-        x: etiquetasX, // Ahora es una categoría simple y directa
+         x: [
+        datos.map(d => `Día ${d.dia}`),
+        datos.map(d => d.lote)
+    ],
         y: datos.map(d => d.y),
         mode: 'lines+markers', 
         // Ajustamos el hovertemplate para que extraiga los datos limpios de nuestro objeto original
@@ -601,19 +603,22 @@ async function dibujarGrafica(datos){
     
     const layout = {
         autosize: true,
-        xaxis: { 
-            type: 'category', // Cambiado de 'multicategory' a 'category'
-            fixedrange: true,
-            tickangle: -45,   // Mantiene la inclinación limpia que querías
-            automargin: true  // Permite que Plotly ajuste el espacio automáticamente sin romper el contenedor
-        },
+        xaxis:{
+    type:'multicategory',
+    fixedrange:true,
+    tickangle:90,
+    showgrid:true,
+    gridcolor:'#d1d5db',
+    gridwidth:1,
+    automargin:true
+},
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
             fixedrange: true 
         },
         margin: { 
             t: 20, 
-            b: 100, // Se puede reducir ligeramente ya que 'automargin: true' se encarga del trabajo pesado
+            b: 140, // Se puede reducir ligeramente ya que 'automargin: true' se encarga del trabajo pesado
             l: 50, 
             r: 20 
         },
