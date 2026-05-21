@@ -224,39 +224,46 @@ body{
     display:flex;
     width:100%;
     height:calc(100vh - 230px);
-    overflow:auto;
+    overflow:hidden;
+    min-width:0;
 }
     
 .visor-container{
-    flex:6;
+    flex:1;
+    min-width:0;
     background:white;
     display:flex;
     flex-direction:column;
+    overflow:hidden;
 }
 
 .canvas-scroll{
     flex:1;
-    width:100%;
     overflow-x:auto;
-    overflow-y:auto;
+    overflow-y:hidden;
+    width:100%;
+    position:relative;
     background:white;
 }
 
 #myDiv{
     height:100%;
+    min-width:100%;
+
 }
 
 /* PANEL */
 
 .panel-lateral{
-    flex:4;
-    min-width:320px;
+    width:420px;
+    min-width:420px;
+    max-width:420px;
     background:white;
     border-left:1px solid #e2e8f0;
     padding:20px;
     overflow-y:auto;
 }
-
+    
 .badge-lote{
     background:#e53e3e;
     color:white;
@@ -923,8 +930,8 @@ async function dibujarGrafica(datos){
     };
 
     const div = document.getElementById('myDiv');
-const anchoDinamico = Math.max(datos.length * 55, 900);
-
+const anchoDinamico = Math.max(datos.length * 85, window.innerWidth - 450);
+    
 div.style.minWidth = anchoDinamico + "px";
 div.style.height = "100%";
     Plotly.newPlot(
