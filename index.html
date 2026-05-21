@@ -584,7 +584,7 @@ async function dibujarGrafica(datos){
 
     const trace = {
          x: [
-        datos.map(d => `Día ${d.dia}`),
+        datos.map(d => d.dia),
         datos.map(d => d.lote)
     ],
         y: datos.map(d => d.y),
@@ -607,9 +607,6 @@ async function dibujarGrafica(datos){
     type:'multicategory',
     fixedrange:true,
     tickangle:90,
-    showgrid:true,
-    gridcolor:'#d1d5db',
-    gridwidth:1,
     automargin:true
 },
         yaxis: { 
