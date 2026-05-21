@@ -20,9 +20,9 @@ body{
     font-family:'Segoe UI',sans-serif;
     background:#f4f7f6;
     color:#1e293b;
-    overflow: hidden; /* Evita cualquier scroll global en la página */
+    overflow-x:hidden;
+    overflow-y:auto;
 }
-
 /* HEADER */
 
 .header-container{
@@ -198,36 +198,29 @@ body{
 /* MAIN LAYOUT */
 
 .layout-principal {
-    display: flex;
-    width: 100%;
-    height: calc(100vh - 225px); /* Ajuste dinámico basado en el viewport exacto */
-    overflow: hidden;
-    min-width: 0;
+    display:flex;
+    width:100%;
+    min-width:0;
+    align-items:stretch;
 }
     
-.visor-container {
-    flex: 1;
-    min-width: 0;
-    height: 100%;
-    background: white;
-    overflow: hidden;
-    display: flex;
+.visor-container{
+    flex:1;
+    min-width:0;
+    background:white;
+    display:flex;
 }
     
 /* Ajuste definitivo para estirar la gráfica horizontalmente sin huecos */
-.canvas-scroll {
-    width: 100%; /* Forzamos a que use todo el ancho asignado */
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    align-items: stretch;
-    flex: 1;
+.canvas-scroll{
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
 }
-
-#myDiv {
-    width: 100%;
-    height: 100%;
-    flex: 1;
+    
+#myDiv{
+    width:100%;
+    min-height:600px;
 }
 /* PANEL */
 
