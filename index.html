@@ -566,6 +566,7 @@ function inicializarFechasMesActual(){
 async function cargarDatosMaestros(){
     try{
         const {data,error} = await _supabase.from('produccion').select('*');
+        console.log(data[data.length - 1]);
         console.log(data);
         if(error) throw error;
 
