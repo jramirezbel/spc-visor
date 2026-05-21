@@ -454,11 +454,96 @@ const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const planesConfig = {
-    "Consumo agua recuperada":{ ucl:90, columna:"consumo agua recuperada", homeId:"home-recuperada-percent", pasos:["Paso 1: Cerrar manualmente la válvula de empuje y de las bombas inmediatamente después de finalizar la descarga del tercer tanque", "Paso 2: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada. - Dirigirse al tanque de agua recuperada ubicado en la terraza de producción. - Confirmar los niveles de agua disponibles antes de iniciar la operación","Ajustar germinador"] },
-    "Consumo agua potable":{ ucl:18, columna:"consumo agua potable", homeId:"home-potable-percent", pasos:["Notificar descarga","Limpiar filtros","Verificar flujo"] },
-    "Pasamalla Malta":{ ucl:2, columna:"pasamalla malta", homeId:"home-malta-percent", pasos:["Limpiar mallas","Revisar flujo"] },
-    "Pasamalla Cebada":{ ucl:2.8, columna:"pasamalla cebada", homeId:"home-cebada-percent", pasos:["Limpiar LM-05","Reducir flujo"] },
-    "Malta en germen":{ ucl:1, columna:"malta en germen", homeId:"home-germen-percent", pasos:["Revisar desgerminadora","Ajustar damper"] }
+    "Consumo agua recuperada":{
+        ucl:90,
+        columna:"consumo agua recuperada",
+        homeId:"home-recuperada-percent",
+        pasos:[
+            "Paso 1: Cerrar manualmente la válvula de empuje y las bombas inmediatamente después de finalizar la descarga del tercer tanque (TK).",
+
+            `Paso 2: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada.
+- Dirigirse al tanque de agua recuperada ubicado en la terraza de producción.
+- Confirmar los niveles de agua disponibles antes de iniciar la operación.`,
+
+            "Paso 3: Realizar la limpieza de la línea antes de iniciar y al finalizar el descargue de remojo.",
+
+            "Paso 4: Acomodar y ajustar las conexiones tipo “Y” de todo el germinador.",
+
+            "Paso 5: Detener en el sistema supervisorio la ejecución instantánea de cargue de primera y segunda agua de la misma línea.",
+
+            `Paso 6: Poner en 0% la válvula principal de ingreso de agua potable a los grupos. Abrir la válvula de ingreso de agua de uno de los tanques vacíos y verificar si registra flujo.
+En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marque 0 m³/h.`,
+
+            "Paso 7: Verificar que el flujo de agua recuperada sea mayor a 50 m³/h. Flujos inferiores indican baja presión o agotamiento de agua recuperada, lo que podría causar atascamientos.",
+
+            `Paso 8: Si el flujo desciende por debajo de 50 m³/h o los sensores de nivel de agua recuperada aparecen en estado gris:
+- Suplir con agua potable a un caudal de 60 m³/h.
+- Una vez la descarga se realice completamente con agua potable, suspender la bomba y cerrar la válvula de agua recuperada.
+- Graduar el flujo de agua potable según las necesidades operativas.`
+        ]
+    },
+
+    "Consumo agua potable":{
+        ucl:18,
+        columna:"consumo agua potable",
+        homeId:"home-potable-percent",
+        pasos:[
+            "Paso 1: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada y dirigirse al tanque de agua recuperada en la terraza de producción para confirmar los niveles disponibles.",
+
+            `Paso 2: Realizar limpieza de la línea antes de iniciar el descargue.
+Si se observan residuos o acumulación de grano en el germinador, realizar limpieza de las conexiones tipo “Y”.`,
+
+            "Paso 3: Ajustar la conexión de la tubería de descarga tipo “Y” para evitar pérdidas de presión en la línea que puedan generar atascamientos durante la descarga por aluvión.",
+
+            `Paso 4: Poner en 0% la válvula principal de ingreso de agua potable a los grupos. Abrir la válvula de ingreso de agua de uno de los tanques vacíos y verificar si registra flujo.
+En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marque 0 m³/h.`,
+
+            "Paso 5: Verificar que el flujo de agua recuperada sea mayor a 50 m³/h. Flujos inferiores indican baja presión o agotamiento de agua recuperada, lo que podría causar atascamientos."
+        ]
+    },
+
+    "Pasamalla Malta":{
+        ucl:2,
+        columna:"pasamalla malta",
+        homeId:"home-malta-percent",
+        pasos:[
+            "Paso 1: Ingresar a las limpiadoras de malta y retirar manualmente los residuos acumulados en las mallas si se evidencia acumulación de material.",
+
+            "Paso 2: Ajustar el flujo de alimentación de grano a 7 toneladas/hora por cada limpiadora.",
+
+            "Paso 3: Reparar las mallas rotas o reemplazar remaches en mal estado."
+        ]
+    },
+
+    "Pasamalla Cebada":{
+        ucl:2.8,
+        columna:"pasamalla cebada",
+        homeId:"home-cebada-percent",
+        pasos:[
+            "Paso 1: Ejecutar limpieza inmediata de la malla de la limpiadora LM-05 si se evidencia acumulación de material. Utilizar las herramientas de limpieza definidas en el SOP.",
+
+            "Paso 2: Reducir el flujo de cebada desde el área de recibo ajustando manualmente los volantes de cierre en el sótano TC-01 para mejorar la eficiencia de limpieza.",
+
+            "Paso 3: Retirar atascamientos en los ductos de ingreso a la tarara y ajustar el damper de extracción."
+        ]
+    },
+
+    "Malta en germen":{
+        ucl:1,
+        columna:"malta en germen",
+        homeId:"home-germen-percent",
+        pasos:[
+            "Paso 1: Revisar físicamente las mallas de las limpiadoras de malta y retirar residuos acumulados. Posteriormente, abrir o desmontar las desgerminadoras y realizar limpieza interna si se evidencian obstrucciones.",
+
+            "Paso 2: Ejecutar limpieza inmediata de las mallas si se observan residuos o acumulación de material grueso.",
+
+            "Paso 3: Realizar inspección de las desgerminadoras, incluyendo mallas y cauchos de aletas. Reemplazar o ajustar componentes si se evidencian desgastes, deformaciones o fugas.",
+
+            "Paso 4: Ajustar manualmente el damper de aspiración del equipo correspondiente utilizando el indicador de vacío o el nivel de aspiración requerido para la variedad procesada.",
+
+            "Paso 5: Realizar inspección visual de las tolvas de germen y coordinar la recuperación de grano con el líder de equipo y el ingeniero de proceso."
+        ]
+    }
 };
 
 let datosCompletos = [];
