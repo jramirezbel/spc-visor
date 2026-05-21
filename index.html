@@ -566,12 +566,18 @@ function inicializarFechasMesActual(){
 
 async function cargarDatosMaestros(){
     try{
-        const {data,error} = await _supabase
-    .from('produccion')
-    .select('*')
-    .range(0, 5000);
-        console.log(data[data.length - 1]);
-        console.log(data);
+        // MODIFICACIÓN CRÍTICA: Añadimos un .order() para que ordene por la id o por la fecha de creación.
+        // Si tu tabla tiene una columna autoincremental como 'id', la ordenamos al revés (desc) 
+        // para asegurarnos de que el 21, 20, 19 de mayo entren de primeros en el paquete de datos.
+        const {data, error} = await _supabase
+            .from('produccion')
+            .select('*')
+            .order('id', { ascending: false }) // Trae lo más nuevo primero. Si no tienes 'id', usa la columna de fecha que crees en Supabase
+            .range(0, 2000); // 2000 registros, pero ahora los más nuevos tienen prioridad absoluta
+            
+        console.log("Cantidad de registros recuperados:", data.length);
+        console.log("Último dato capturado en el Frontend:", data[0]); // El primero ahora será el más nuevo
+        
         if(error) throw error;
 
         datosCompletos = data.map(f=>{
@@ -590,12 +596,22 @@ async function cargarDatosMaestros(){
                 'jul':6, 'aug':7, 'ago':7, 'sep':8, 'oct':9, 'nov':10, 'dec':11, 'dic':11
             };
 
+            const mesTexto = String(fl['mes'] || '').trim().toLowerCase();
+            const diaNum = parseInt(fl['dia']);
+            const mesNum = traductorMeses[mesTexto];
+
+            let fechaCalculada = new Date();
+            if (mesNum !== undefined && !isNaN(diaNum)) {
+                // Mantenemos la creación del objeto de fecha en hora local
+                fechaCalculada = new Date(new Date().getFullYear(), mesNum, diaNum);
+            }
+
             return {
                 lote: String(fl['lote'] || '').trim(),
                 dia: String(fl['dia'] || '').trim(),
-                mesTexto: String(fl['mes'] || '').trim().toLowerCase(),
-                mesNum: traductorMeses[String(fl['mes'] || '').trim().toLowerCase()],
-                fechaReal: new Date(new Date().getFullYear(), traductorMeses[String(fl['mes'] || '').trim().toLowerCase()], parseInt(fl['dia'])),
+                mesTexto: mesTexto,
+                mesNum: mesNum,
+                fechaReal: fechaCalculada,
                 raw: fl
             };
         }).filter(d=>d.lote);
@@ -603,10 +619,10 @@ async function cargarDatosMaestros(){
         actualizarCumplimientoHome();
     }catch(err){
         console.error(err);
-        alert("Error cargando datos");
+        alert("Error cargando datos de Supabase");
     }
 }
-
+    
 function actualizarCumplimientoHome(){
     Object.keys(planesConfig).forEach(key=>{
         const conf = planesConfig[key];
