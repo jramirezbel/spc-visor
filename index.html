@@ -224,7 +224,7 @@ body{
     display:flex;
     width:100%;
     height:calc(100vh - 230px);
-    overflow:hidden;
+    overflow:auto;
 }
     
 .visor-container{
@@ -236,11 +236,10 @@ body{
 
 .canvas-scroll{
     flex:1;
-    overflow-x:auto;
-    overflow-y:hidden;
     width:100%;
-    position:relative;
-    white-space:nowrap;
+    overflow-x:auto;
+    overflow-y:auto;
+    background:white;
 }
 
 #myDiv{
@@ -449,7 +448,17 @@ border-bottom:1px solid #e2e8f0;
 
 <div class="layout-principal">
 
-    <!-- PANEL IZQUIERDO -->
+    <!-- VISOR -->
+
+    <div class="visor-container">
+
+        <div class="canvas-scroll">
+            <div id="myDiv"></div>
+        </div>
+
+    </div>
+
+    <!-- PANEL -->
 
     <div class="panel-lateral">
 
@@ -490,6 +499,8 @@ border-bottom:1px solid #e2e8f0;
         </div>
 
     </div>
+
+</div>
 
     <!-- GRÁFICA -->
 
@@ -842,6 +853,9 @@ async function dibujarGrafica(datos){
 
     const layout = {
 
+        autosize:true,
+        height:650,
+
         xaxis:{
             type:'multicategory',
             fixedrange:true
@@ -909,11 +923,10 @@ async function dibujarGrafica(datos){
     };
 
     const div = document.getElementById('myDiv');
+const anchoDinamico = Math.max(datos.length * 55, 900);
 
-const anchoDinamico = Math.max(datos.length * 90, 1400);
-
-div.style.width = anchoDinamico + "px";
-
+div.style.minWidth = anchoDinamico + "px";
+div.style.height = "100%";
     Plotly.newPlot(
         div,
         [trace],
@@ -924,6 +937,8 @@ div.style.width = anchoDinamico + "px";
         }
     );
 
+document.querySelector('.canvas-scroll').scrollLeft = 0;
+    
 div.on('plotly_click', function(evento){
 
     const punto = evento.points[0];
