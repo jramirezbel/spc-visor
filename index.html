@@ -693,7 +693,6 @@ async function enviarReporte(){
             operador: document.getElementById('operador').value,
             observacion: document.getElementById('accionExtra').value,
             pasos: pasosRealizados.join(" | "),
-            fecha: new Date().toISOString()
         };
 
         const {error} = await _supabase.from('planes_reaccion').insert([payload]);
