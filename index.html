@@ -692,7 +692,6 @@ async function enviarReporte(){
             valor: datoSeleccionado.y,
             operador: document.getElementById('operador').value,
             comentario: document.getElementById('accionExtra').value,
-            pasos: pasosRealizados.join(" | "),
         };
 
         const {error} = await _supabase.from('planes_reaccion').insert([payload]);
