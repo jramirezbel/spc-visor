@@ -228,7 +228,7 @@ body{
 }
     
 .visor-container{
-    flex:7;
+    flex:6;
     background:white;
     display:flex;
     flex-direction:column;
@@ -250,7 +250,7 @@ body{
 /* PANEL */
 
 .panel-lateral{
-    flex:2;
+    flex:4;
     min-width:320px;
     background:white;
     border-left:1px solid #e2e8f0;
@@ -447,15 +447,47 @@ border-bottom:1px solid #e2e8f0;
 
     </div>
 
-    <div class="layout-principal">
+<div class="layout-principal">
 
-        <div class="visor-container">
+    <div class="panel-lateral">
 
-            <div class="canvas-scroll">
-                <div id="myDiv"></div>
-            </div>
+        <div id="contenidoPlan" class="contenido-oculto">
+
+            <h3>Plan de reacción</h3>
+
+            <div id="infoLote" class="badge-lote"></div>
+
+            <input
+            type="text"
+            id="operador"
+            placeholder="Nombre operador..."
+            oninput="validarPasos()"
+            style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;">
+
+            <div id="checklist-pasos"></div>
+
+            <textarea
+            id="accionExtra"
+            placeholder="Observaciones..."
+            style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"></textarea>
+
+            <button id="btnEnviar" onclick="enviarReporte()" disabled>
+                Registrar Plan
+            </button>
+
+            <button class="btn-cancelar" onclick="cancelarRegistro()">
+                Cancelar
+            </button>
 
         </div>
+
+        <div id="mensajePlaceholder" class="placeholder-text">
+            Haz clic en un punto rojo para gestionar el plan.
+        </div>
+
+    </div>
+
+    <div class="visor-container">
 
         <div class="panel-lateral">
 
@@ -920,6 +952,24 @@ div.style.width = anchoDinamico + "px";
         }
     );
 
+div.on('plotly_click', function(evento){
+
+    const punto = evento.points[0];
+
+    const lote = punto.x[1];
+
+    const valor = punto.y;
+
+    if(valor <= config.ucl) return;
+
+    const dato = datos.find(d => d.lote === lote);
+
+    if(!dato) return;
+
+    abrirPlanReaccion(dato);
+
+});
+    
 }
 
 /* PANEL */
@@ -932,6 +982,41 @@ function cancelarRegistro(){
 
 }
 
+function abrirPlanReaccion(dato){
+
+    datoSeleccionado = dato;
+
+    document.getElementById('contenidoPlan').style.display = 'block';
+
+    document.getElementById('mensajePlaceholder').style.display = 'none';
+
+    document.getElementById('infoLote').innerHTML = `
+        Lote ${dato.lote}<br>
+        Valor: ${dato.y}
+    `;
+
+    document.getElementById('operador').value = '';
+
+    document.getElementById('accionExtra').value = '';
+
+    const pasos =
+        planesConfig[variableActual].pasos;
+
+    document.getElementById('checklist-pasos').innerHTML =
+        pasos.map((p,i)=>`
+            <label class="step">
+                <input
+                    type="checkbox"
+                    onchange="validarPasos()"
+                    id="paso${i}">
+                ${p}
+            </label>
+        `).join('');
+
+    validarPasos();
+
+}
+    
 function validarPasos(){
 
     const total =
@@ -958,7 +1043,53 @@ function validarPasos(){
 
 async function enviarReporte(){
 
-    alert("Plan registrado");
+    try{
+
+        const checks = [
+            ...document.querySelectorAll('#checklist-pasos input')
+        ];
+
+        const pasosRealizados = checks
+            .filter(c=>c.checked)
+            .map(c=>c.parentElement.innerText.trim());
+
+        const payload = {
+
+            lote_id:datoSeleccionado.lote,
+
+            variable:variableActual,
+
+            valor:datoSeleccionado.y,
+
+            operador:document.getElementById('operador').value,
+
+            observacion:document.getElementById('accionExtra').value,
+
+            pasos:pasosRealizados,
+
+            fecha:new Date().toISOString()
+
+        };
+
+        const {error} = await _supabase
+        .from('planes_reaccion')
+        .insert([payload]);
+
+        if(error) throw error;
+
+        alert("Plan registrado correctamente");
+
+        cancelarRegistro();
+
+        filtrarPorFechas();
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Error registrando plan");
+
+    }
 
 }
 
