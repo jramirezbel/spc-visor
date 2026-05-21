@@ -458,7 +458,7 @@ const SUPABASE_KEY = 'sb_publishable_hhKa3cUXqc6w2-3NmoKQ9g_ixC3S7u6';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const planesConfig = {
-    "Consumo agua recuperada":{ ucl:90, columna:"consumo agua recuperada", homeId:"home-recuperada-percent", pasos:["Cerrar válvulas","Verificar flujo","Ajustar germinador"] },
+    "Consumo agua recuperada":{ ucl:90, columna:"consumo agua recuperada", homeId:"home-recuperada-percent", pasos:["Paso 1: Cerrar manualmente la válvula de empuje y de las bombas inmediatamente después de finalizar la descarga del tercer tanque", "Paso 2: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada. - Dirigirse al tanque de agua recuperada ubicado en la terraza de producción. - Confirmar los niveles de agua disponibles antes de iniciar la operación","Ajustar germinador"] },
     "Consumo agua potable":{ ucl:18, columna:"consumo agua potable", homeId:"home-potable-percent", pasos:["Notificar descarga","Limpiar filtros","Verificar flujo"] },
     "Pasamalla Malta":{ ucl:2, columna:"pasamalla malta", homeId:"home-malta-percent", pasos:["Limpiar mallas","Revisar flujo"] },
     "Pasamalla Cebada":{ ucl:2.8, columna:"pasamalla cebada", homeId:"home-cebada-percent", pasos:["Limpiar LM-05","Reducir flujo"] },
