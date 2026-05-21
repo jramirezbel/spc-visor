@@ -643,7 +643,10 @@ function filtrarPorFechas() {
 
     const config = planesConfig[variableActual];
     const filtrados = datosCompletos
-        .filter(d => true)
+        .filter(d => {
+    if (!d.fechaReal || isNaN(d.fechaReal)) return false;
+    return d.fechaReal >= desde && d.fechaReal <= hasta;
+})
         .map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) }))
         .filter(d => !isNaN(d.y));
 
