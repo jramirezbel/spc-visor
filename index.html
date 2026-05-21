@@ -293,19 +293,13 @@ body{
     display:none;
 }
 
-.plan-disabled{
-    opacity:0.45;
-    pointer-events:none;
-    filter:grayscale(0.3);
-    transition:0.25s;
+input:disabled,
+textarea:disabled{
+    background:#f1f5f9;
+    cursor:not-allowed;
+    opacity:0.8;
 }
-
-.plan-enabled{
-    opacity:1;
-    pointer-events:auto;
-    filter:none;
-}
-
+    
 </style>
 </head>
 
@@ -660,50 +654,62 @@ async function dibujarGrafica(datos){
     
 function cancelarRegistro(){
 
-    document.getElementById('contenidoPlan').classList.remove('plan-enabled');
-    document.getElementById('contenidoPlan').classList.add('plan-disabled');
+    datoSeleccionado = {};
 
     document.getElementById('infoLote').innerHTML = `
-        Esperando desviación SPC
-    `;
-
-    document.getElementById('operador').value = '';
-    document.getElementById('accionExtra').value = '';
-
-    document.getElementById('checklist-pasos').innerHTML = `
-        <div style="
-            text-align:center;
-            padding:40px 10px;
-            color:#64748b;
-            font-size:14px;
-        ">
-            Seleccione un punto fuera de especificación para habilitar el plan de reacción.
+        <div style="color:#64748b;">
+            Sin lote seleccionado
         </div>
     `;
 
+    document.getElementById('operador').value = '';
+    document.getElementById('operador').disabled = true;
+
+    document.getElementById('accionExtra').value = '';
+    document.getElementById('accionExtra').disabled = true;
+
+    const pasos = planesConfig[variableActual]?.pasos || [];
+
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>`
+        <label class="step">
+            <input type="checkbox" disabled id="paso${i}">
+            ${p}
+        </label>
+    `).join('');
+
     const btn = document.getElementById('btnEnviar');
+
     btn.disabled = true;
     btn.classList.remove('active');
 }
     
 function abrirPlanReaccion(dato){
 
-    document.getElementById('contenidoPlan').classList.remove('plan-disabled');
-document.getElementById('contenidoPlan').classList.add('plan-enabled');
-    
     datoSeleccionado = dato;
-    document.getElementById('contenidoPlan').style.display = 'block';
-    document.getElementById('mensajePlaceholder').style.display = 'none';
-    document.getElementById('infoLote').innerHTML = `Lote ${dato.lote}<br>Valor: ${dato.y}`;
+
+    document.getElementById('infoLote').innerHTML = `
+        Lote ${dato.lote}<br>
+        Valor: ${dato.y}
+    `;
+
+    document.getElementById('operador').disabled = false;
+    document.getElementById('accionExtra').disabled = false;
+
     document.getElementById('operador').value = '';
     document.getElementById('accionExtra').value = '';
 
     const pasos = planesConfig[variableActual].pasos;
+
     document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>`
         <label class="step">
-            <input type="checkbox" onchange="validarPasos()" id="paso${i}">
+            <input 
+                type="checkbox"
+                onchange="validarPasos()"
+                id="paso${i}"
+            >
             ${p}
-        </label>`).join('');
+        </label>
+    `).join('');
 
     validarPasos();
 }
