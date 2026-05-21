@@ -692,12 +692,16 @@ async function enviarReporte(){
             valor: datoSeleccionado.y,
             operador: document.getElementById('operador').value,
             observacion: document.getElementById('accionExtra').value,
-            pasos: pasosRealizados,
+            pasos: pasosRealizados.join(" | "),
             fecha: new Date().toISOString()
         };
 
         const {error} = await _supabase.from('planes_reaccion').insert([payload]);
-        if(error) throw error;
+        if(error){
+    console.error(error);
+    alert(error.message);
+    return;
+}
 
         alert("Plan registrado correctamente");
         cancelarRegistro();
