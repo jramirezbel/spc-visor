@@ -114,6 +114,39 @@ body{
     min-height: calc(100vh - 71px);
 }
 
+<div id="bibliotecaScreen" style="display:none; padding:30px;">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:25px;
+    ">
+
+        <h1 style="margin:0;">
+            Biblioteca de planes de reacción
+        </h1>
+
+        <button class="btn-volver" onclick="volverHome()">
+            ← Volver
+        </button>
+
+    </div>
+
+    <!-- BOTONES PROCESOS -->
+    <div id="procesosContainer" style="
+        display:flex;
+        gap:15px;
+        flex-wrap:wrap;
+        margin-bottom:30px;
+    ">
+    </div>
+
+    <!-- TABLA -->
+    <div id="tablaPlanes"></div>
+
+</div>
+    
 /* FILTROS */
 
 .filtros-fecha{
@@ -313,6 +346,51 @@ textarea:disabled{
 
 <body>
 
+    <div id="modalPlan" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:999;
+    justify-content:center;
+    align-items:center;
+">
+
+    <div style="
+        background:white;
+        width:90%;
+        max-width:900px;
+        border-radius:18px;
+        padding:30px;
+        max-height:85vh;
+        overflow-y:auto;
+        position:relative;
+    ">
+
+        <button
+            onclick="cerrarModalPlan()"
+            style="
+                position:absolute;
+                top:20px;
+                right:20px;
+                border:none;
+                background:#e53e3e;
+                color:white;
+                width:36px;
+                height:36px;
+                border-radius:50%;
+                cursor:pointer;
+                font-weight:bold;
+            "
+        >
+            X
+        </button>
+
+        <div id="contenidoModalPlan"></div>
+
+    </div>
+
+</div>
 <div class="header-container">
     <div class="header-title">
         Visor SPC - Maltería
@@ -328,6 +406,15 @@ textarea:disabled{
         <h1>SISTEMA SPC</h1>
         <p>Seleccione un indicador</p>
     </div>
+
+    <div class="indicator-card" onclick="abrirBiblioteca()">
+    <h3>Biblioteca de planes</h3>
+
+    <div class="mini-stat">
+        <span>📚</span>
+        <small>Procesos</small>
+    </div>
+</div>
 
     <div class="cards-container">
         <div class="indicator-card" onclick="abrirIndicador('Consumo agua recuperada')">
@@ -670,8 +757,156 @@ function abrirIndicador(nombre){
 }
 
 function volverHome(){
+
     document.getElementById('dashboardScreen').style.display = 'none';
+
+    document.getElementById('bibliotecaScreen').style.display = 'none';
+
     document.getElementById('homeScreen').style.display = 'block';
+}
+    
+function abrirBiblioteca(){
+
+    document.getElementById('homeScreen').style.display = 'none';
+
+    document.getElementById('dashboardScreen').style.display = 'none';
+
+    document.getElementById('bibliotecaScreen').style.display = 'block';
+
+    renderProcesosBiblioteca();
+}
+
+function renderProcesosBiblioteca(){
+
+    const container = document.getElementById('procesosContainer');
+
+    container.innerHTML = '';
+
+    Object.keys(bibliotecaPlanes).forEach(proceso => {
+
+        container.innerHTML += `
+            <button
+                onclick="mostrarProceso('${proceso}')"
+                style="
+                    padding:14px 22px;
+                    border:none;
+                    border-radius:12px;
+                    background:#3182ce;
+                    color:white;
+                    font-weight:bold;
+                    cursor:pointer;
+                    font-size:15px;
+                "
+            >
+                ${proceso}
+            </button>
+        `;
+    });
+}
+
+function mostrarProceso(nombreProceso){
+
+    const planes = bibliotecaPlanes[nombreProceso];
+
+    const tabla = document.getElementById('tablaPlanes');
+
+    tabla.innerHTML = `
+
+        <div style="
+            background:white;
+            border-radius:16px;
+            overflow:hidden;
+            border:1px solid #e2e8f0;
+        ">
+
+            <div style="
+                padding:20px;
+                border-bottom:1px solid #e2e8f0;
+                font-size:24px;
+                font-weight:bold;
+            ">
+                ${nombreProceso}
+            </div>
+
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+            ">
+
+                <thead style="
+                    background:#f8fafc;
+                ">
+                    <tr>
+
+                        <th style="padding:14px;text-align:left;">#</th>
+
+                        <th style="padding:14px;text-align:left;">
+                            Disparador
+                        </th>
+
+                        <th style="padding:14px;text-align:left;">
+                            Causa
+                        </th>
+
+                        <th style="padding:14px;text-align:center;">
+                            Acción
+                        </th>
+
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${planes.map(plan => `
+
+                        <tr style="
+                            border-top:1px solid #edf2f7;
+                        ">
+
+                            <td style="padding:14px;">
+                                ${plan.id}
+                            </td>
+
+                            <td style="padding:14px;">
+                                ${plan.disparador}
+                            </td>
+
+                            <td style="padding:14px;">
+                                ${plan.causa}
+                            </td>
+
+                            <td style="
+                                padding:14px;
+                                text-align:center;
+                            ">
+
+                                <button
+                                    onclick="verPlan('${nombreProceso}', ${plan.id})"
+                                    style="
+                                        padding:10px 14px;
+                                        border:none;
+                                        border-radius:8px;
+                                        background:#38a169;
+                                        color:white;
+                                        font-weight:bold;
+                                        cursor:pointer;
+                                    "
+                                >
+                                    Ver plan
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    `).join('')}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
 }
 
 function cambiarVariable(nombre){
@@ -984,6 +1219,60 @@ info.innerHTML = `
     btn.classList.remove('active');
 
     btn.innerText = 'Reporte ya registrado';
+}
+
+function verPlan(proceso, id){
+
+    const plan = bibliotecaPlanes[proceso]
+        .find(p => p.id === id);
+
+    document.getElementById('contenidoModalPlan').innerHTML = `
+
+        <h2 style="margin-top:0;">
+            ${proceso} — Caso ${plan.id}
+        </h2>
+
+        <div style="margin-top:25px;">
+
+            <h3 style="color:#3182ce;">
+                Disparador
+            </h3>
+
+            <p>
+                ${plan.disparador}
+            </p>
+
+            <h3 style="color:#d69e2e;">
+                Causa
+            </h3>
+
+            <p>
+                ${plan.causa}
+            </p>
+
+            <h3 style="color:#38a169;">
+                Acción reactiva
+            </h3>
+
+            <div style="
+                background:#f8fafc;
+                padding:20px;
+                border-radius:12px;
+                white-space:pre-line;
+                line-height:1.7;
+            ">
+                ${plan.accion}
+            </div>
+
+        </div>
+    `;
+
+    document.getElementById('modalPlan').style.display = 'flex';
+}
+
+function cerrarModalPlan(){
+
+    document.getElementById('modalPlan').style.display = 'none';
 }
     
     
