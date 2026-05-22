@@ -563,28 +563,26 @@ function inicializarFechasMesActual(){
     document.getElementById('fechaDesde').value = primero.toISOString().split('T')[0];
     document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
 }
+
 async function cargarDatosMaestros(){
-    try{
-        // Usamos 'lote' para ordenar, asegurando que los números más altos (más nuevos) entren primero
-        const {data, error} = await _supabase
-            .from('produccion')
-            .select('*')
-            .order('lote', { ascending: false }) 
-            .range(0, 2500); 
-            
-        if(error) {
-            console.error("Error detallado de Supabase:", error);
-            throw error;
-        }
+    try {
+        // Hacemos múltiples peticiones consecutivas para saltarnos el límite de 1000 de Supabase
+        // Petición 1: registros del 0 al 1000
+        const p1 = _supabase.from('produccion').select('*').order('lote', { ascending: false }).range(0, 999);
+        // Petición 2: registros del 1000 al 2000
+        const p2 = _supabase.from('produccion').select('*').order('lote', { ascending: false }).range(1000, 1999);
+        // Petición 3: registros del 2000 al 3000 (Aquí rescatamos a Enero)
+        const p3 = _supabase.from('produccion').select('*').order('lote', { ascending: false }).range(2000, 2999);
 
-        if(!data || data.length === 0) {
-            console.warn("Supabase respondió con éxito, pero la tabla está vacía.");
-            datosCompletos = [];
-            return;
-        }
+        // Ejecutamos las tres consultas al tiempo para que no sea lento
+        const [res1, res2, res3] = await Promise.all([p1, p2, p3]);
 
-        console.log("¡Éxito! Registros recuperados:", data.length);
-        console.log("Primer registro recibido (debe ser el lote más alto):", data[0]);
+        if(res1.error) throw res1.error;
+        
+        // Unimos los resultados de todas las páginas en un solo gran array
+        const data = [...(res1.data || []), ...(res2.data || []), ...(res3.data || [])];
+        
+        console.log("Total de datos combinados (Enero a Mayo):", data.length);
 
         datosCompletos = data.map(f=>{
             const fl = {};
@@ -622,11 +620,12 @@ async function cargarDatosMaestros(){
         }).filter(d=>d.lote);
 
         actualizarCumplimientoHome();
-    }catch(err){
-        console.error("Error atrapado en el catch:", err);
-        alert("Error cargando datos de Supabase. Revisa la consola del navegador (F12) para ver el motivo real.");
+    } catch(err) {
+        console.error("Error en paginación masiva:", err);
+        alert("Error cargando el histórico completo de Supabase");
     }
 }
+    
     
 function actualizarCumplimientoHome(){
     Object.keys(planesConfig).forEach(key=>{
