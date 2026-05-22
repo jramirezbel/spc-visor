@@ -862,9 +862,32 @@ async function cargarDatosMaestros(){
         const p3 = _supabase.from('produccion').select('*').order('lote', { ascending: false }).range(2000, 2999);
 
         // Ejecutamos las tres consultas al tiempo para que no sea lento
-        const [res1, res2, res3] = await Promise.all([p1, p2, p3]);
+        const resultados = await Promise.allSettled([p1, p2, p3]);
 
-        if(res1.error) throw res1.error;
+const data = [];
+
+resultados.forEach((resultado, index) => {
+
+    if(resultado.status === 'fulfilled'){
+
+        const res = resultado.value;
+
+        if(res.error){
+            console.warn(`Error en página ${index + 1}:`, res.error);
+            return;
+        }
+
+        data.push(...(res.data || []));
+
+    } else {
+
+        console.warn(`Promise falló en página ${index + 1}:`, resultado.reason);
+
+    }
+
+});
+
+console.log("Total de datos combinados:", data.length);
         
         // Unimos los resultados de todas las páginas en un solo gran array
         const data = [...(res1.data || []), ...(res2.data || []), ...(res3.data || [])];
