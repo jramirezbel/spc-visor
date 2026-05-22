@@ -980,12 +980,26 @@ async function cargarDatosMaestros(){
     
     
 function actualizarCumplimientoHome(){
+
     Object.keys(planesConfig).forEach(key=>{
+
         const conf = planesConfig[key];
-        const vals = datosCompletos.map(d=>parseFloat(d.raw[conf.columna])).filter(v=>!isNaN(v));
+
+        const vals = datosCompletos
+            .map(d=>parseFloat(d.raw[conf.columna]))
+            .filter(v=>!isNaN(v));
+
         if(vals.length){
+
             const ok = vals.filter(v=>v <= conf.ucl).length;
-            document.getElementById(conf.homeId).innerText = Math.round((ok / vals.length)*100) + "%";
+
+            const el = document.getElementById(conf.homeId);
+
+            if(el){
+
+                el.innerText =
+                    Math.round((ok / vals.length)*100) + "%";
+            }
         }
     });
 }
