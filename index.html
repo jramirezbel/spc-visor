@@ -198,50 +198,50 @@ body{
 
 /* MAIN LAYOUT */
 
+/* 1. Aseguramos que el contenedor de la gráfica y el panel compartan la misma altura disponible */
 .layout-principal {
-    display:flex;
-    width:100%;
-    min-width:0;
-    align-items:flex-start;
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: stretch; /* Esto estira ambos paneles verticalmente por igual */
+    height: calc(100vh - 170px); /* Ajusta este valor para que llene el espacio inferior de la pantalla sin scroll general */
 }
     
-.visor-container{
-    flex:1;
-    min-width:0;
-    background:white;
-    display:flex;
+.visor-container {
+    flex: 1;
+    min-width: 0;
+    background: white;
+    display: flex;
+    height: 100%;
 }
+
+.canvas-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+#myDiv {
+    width: 100%;
+    height: 100%; /* Deja que Plotly herede la altura del contenedor */
+    min-height: 500px;
+}
+
+/* 2. Modificamos el panel lateral para que use el 100% de la altura de su padre sin romperse */
+.panel-lateral {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    padding: 20px;
     
-/* Ajuste definitivo para estirar la gráfica horizontalmente sin huecos */
-.canvas-scroll{
-    width:100%;
-    overflow-x:auto;
-    overflow-y:hidden;
-}
+    /* CAMBIO CLAVE AQUÍ: */
+    height: 100%; /* En lugar de un calc estático, toma el 100% de .layout-principal */
     
-#myDiv{
-    width:100%;
-    min-height:600px;
-}
-/* PANEL */
-
-.panel-lateral{
-    width:420px;
-    min-width:420px;
-    max-width:420px;
-
-    background:white;
-    border-left:1px solid #e2e8f0;
-
-    padding:20px;
-
-    height:calc(100vh - 170px);
-
-    overflow-y:auto;
-    overflow-x:hidden;
-
-    position:sticky;
-    top:0;
+    overflow-y: auto; /* Mantiene el scroll interno para los pasos del checklist */
+    overflow-x: hidden;
 }
     
 .badge-lote{
