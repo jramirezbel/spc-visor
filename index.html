@@ -826,6 +826,20 @@ xaxis:{
 
         if(!dato || dato.y <= config.ucl) return;
 
+const reporteExistente = bd.find(r =>
+    String(r.lote_id) === dato.lote &&
+    r.variable === variableActual
+);
+
+if(reporteExistente){
+
+    verReporteExistente(reporteExistente);
+
+} else {
+
+    abrirPlanReaccion(dato);
+}
+
         abrirPlanReaccion(dato);
     });
 }
@@ -859,6 +873,7 @@ function cancelarRegistro(){
 
     btn.disabled = true;
     btn.classList.remove('active');
+    btn.innerText = 'Registrar Plan';
 }
     
 function abrirPlanReaccion(dato){
@@ -891,6 +906,51 @@ function abrirPlanReaccion(dato){
 
     validarPasos();
 }
+
+    function verReporteExistente(reporte){
+
+    document.getElementById('infoLote').innerHTML = `
+        Lote ${reporte.lote_id}<br>
+        Gestionado por: <b>${reporte.operador}</b>
+    `;
+
+    document.getElementById('operador').value = reporte.operador || '';
+    document.getElementById('accionExtra').value = reporte.comentario || '';
+
+    document.getElementById('operador').disabled = true;
+    document.getElementById('accionExtra').disabled = true;
+
+    const pasos = planesConfig[variableActual].pasos;
+
+    const realizados = reporte.pasos_realizados || [];
+
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>{
+
+        const ejecutado = realizados.some(r => r.paso === (i+1));
+
+        return `
+            <label class="step" style="
+                background:${ejecutado ? '#ebf8ff' : '#f8fafc'};
+                border-color:${ejecutado ? '#90cdf4' : '#edf2f7'};
+            ">
+                <input
+                    type="checkbox"
+                    ${ejecutado ? 'checked' : ''}
+                    disabled
+                >
+                ${p}
+            </label>
+        `;
+    }).join('');
+
+    const btn = document.getElementById('btnEnviar');
+
+    btn.disabled = true;
+    btn.classList.remove('active');
+
+    btn.innerText = 'Reporte ya registrado';
+}
+    
     
 function validarPasos(){
     const total = document.querySelectorAll('#checklist-pasos input').length;
