@@ -736,9 +736,8 @@ const trace = {
 
             const fecha = d.fechas[variableActual];
 
-            return fecha.toLocaleDateString('es-CO',{
-                day:'2-digit',
-                month:'short'
+            return fecha.getDate();
+
             });
 
         }),
