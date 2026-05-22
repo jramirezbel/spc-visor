@@ -728,7 +728,6 @@ async function dibujarGrafica(datos){
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
     // 2. Mapeamos un único array de texto combinando Día y Lote de forma clara
-
 const trace = {
 
     x: [
@@ -747,17 +746,24 @@ const trace = {
 
     mode: 'lines+markers',
 
-    hovertemplate: datos.map(d => {
+    customdata: datos.map(d => {
 
         const fecha = d.fechas[variableActual];
 
-        const fechaTexto = fecha.toLocaleDateString('es-CO',{
-            day:'2-digit',
-            month:'short'
-        });
-
-        return `<b>Lote:</b> ${d.lote}<br><b>Fecha:</b> ${fechaTexto}<br><b>Valor:</b> %{y}<extra></extra>`;
+        return [
+            d.lote,
+            fecha.toLocaleDateString('es-CO',{
+                day:'2-digit',
+                month:'short'
+            })
+        ];
     }),
+
+    hovertemplate:
+        '<b>Lote:</b> %{customdata[0]}' +
+        '<br><b>Fecha:</b> %{customdata[1]}' +
+        '<br><b>Valor:</b> %{y}' +
+        '<extra></extra>',
 
     line: {
         color: '#2d3748',
@@ -780,6 +786,9 @@ const trace = {
         })
     }
 };
+
+
+    
     const layout = {
         autosize: true,
         dragmode:false,
