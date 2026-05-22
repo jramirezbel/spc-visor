@@ -412,24 +412,18 @@ textarea:disabled{
 
 </div>
     
+<div class="cards-container">
+
     <div class="indicator-card" onclick="abrirBiblioteca()">
-    <h3>Biblioteca de planes</h3>
+        <h3>Biblioteca de planes</h3>
 
-    <div class="mini-stat">
-        <span>📚</span>
-        <small>Procesos</small>
-    </div>
-</div>
-
-    <div class="cards-container">
-        <div class="indicator-card" onclick="abrirIndicador('Consumo agua recuperada')">
-            <h3>Consumo agua recuperada</h3>
-            <div class="mini-stat">
-                <span id="home-recuperada-percent">--%</span>
-                <small>Cumplimiento</small>
-            </div>
+        <div class="mini-stat">
+            <span>📚</span>
+            <small>Procesos</small>
         </div>
+    </div>
 
+        
         <div class="indicator-card" onclick="abrirIndicador('Consumo agua potable')">
             <h3>Consumo agua potable</h3>
             <div class="mini-stat">
@@ -657,6 +651,155 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
     }
 };
 
+const bibliotecaPlanes = {
+    "Remojo": [
+        {
+            id: 1,
+            disparador: "Atraso > 1 hora respecto a lo planeado",
+            causa: "Retrasos en germinación o secado que impiden la transferencia de grano.",
+            accion: "Para el lote en espera: si aún se encuentra en etapa de succión, notificar inmediatamente al maltero y al supervisor de turno para evaluar una extensión de 1 o 2 horas. En caso de autorizarse, garantizar la extracción continua de CO2."
+        },
+        {
+            id: 2,
+            disparador: "Falla en la aplicación de ácido giberélico (AG)",
+            causa: "Olvido de adición o falla en la dilución del compuesto.",
+            accion: "1. Por olvido o incertidumbre en la adición al inicio de la segunda agua: notificar al maltero para ajustar el protocolo de maltaje en germinación.\n2. Por mala dilución (presencia de partículas de AG en suspensión al adicionar alcohol): avisar al supervisor de turno y verificar de inmediato los volúmenes añadidos de agua y alcohol."
+        },
+        {
+            id: 3,
+            disparador: "Atraso > 2 horas respecto a lo planeado",
+            causa: "Retrasos en germinación o tostación que bloquean la descarga de las tinas de remojo.",
+            accion: "Consultar al maltero o al gerente de producción según el tiempo de desfase. Solicitar el ajuste del protocolo al jefe de producción o maltero (completar la etapa de segundo inundado, escurrir tanques hasta que el germinador esté disponible y proceder con la descarga durante el tercer inundado)."
+        },
+        {
+            id: 4,
+            disparador: "> 30 minutos sin extracción de CO2",
+            causa: "Avería en un extractor de CO2 o daño en el damper del equipo.",
+            accion: "Informar de inmediato al ingeniero de procesos. Realizar un monitoreo estricto de la temperatura bajo capa de los tanques de remojo mientras se corrige la falla del extractor."
+        },
+        {
+            id: 5,
+            disparador: "Incumplimiento en la etapa de escurrido",
+            causa: "Falla en las válvulas de escurrido o en el sistema de automatismo.",
+            accion: "Operar la válvula de escurrido en modo manual. Si el proceso ya se encuentra en fase de succión, extender el tiempo de esta según el lapso acordado con el ingeniero de procesos."
+        },
+        {
+            id: 6,
+            disparador: "Falla en etapa de succión (o extensión de la misma) por error en ingreso de segunda agua",
+            causa: "Falla mecánica o de automatismo en válvulas de succión, extractor o sistemas de control.",
+            accion: "Registrar la desviación en las observaciones del archivo de control, bitácora de turno y Suite 360.\n\nSi continúa en segunda agua:\na. Monitorear temperaturas sobre y bajo capa. Si el promedio supera los 25 °C, realizar un escurrido de 10 minutos y recuperar agua para enfriar el grano (repetir hasta bajar de 25 °C).\nb. Mantener la aireación continua durante toda la segunda agua.\n\nSi ya se encuentra en germinación:\na. Programar doble batida, tomar muestra y realizar análisis de punteo, humedad e índice de remojo.\nb. Configurar el damper en manual: al 100% si la temperatura ambiente supera los 17 °C, o al 50% si es inferior."
+        },
+        {
+            id: 7,
+            disparador: "Incumplimiento en la etapa de inmersión por falta de agua potable",
+            causa: "Falla operativa en las bombas de nivel del tanque elevado (WTPA).",
+            accion: "Registrar la novedad en el archivo de control, bitácora y Suite 360.\n\nPara tanques en primera agua:\na. Verificar que el grano permanezca sumergido y aireado; extender la etapa de primera agua por 1 hora.\nb. Coordinar con el ingeniero de procesos el protocolo para un solo inundado.\n\nPara tanques en succión:\na. Extender la etapa de succión por 1 hora manteniendo los extractores encendidos.\nb. Registrar la temperatura de succión en Suite 360 cada hora.\nc. Al restablecerse el suministro, bombear agua directamente desde el tanque elevado a las tinas en succión."
+        }
+    ],
+
+    "Germinación": [
+        {
+            id: 1,
+            disparador: "Humedad de descarga en remojo > 43% (por drenaje deficiente)",
+            causa: "Retención de agua por vaciado incompleto de las tinas.",
+            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción."
+        },
+        {
+            id: 2,
+            disparador: "Humedad de descarga en remojo > 43% (por exceso de inmersión)",
+            causa: "Tiempo de inmersión mayor al establecido en el programa.",
+            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción."
+        },
+        {
+            id: 3,
+            disparador: "Falla en primer o segundo inundado de remojo (grano seco)",
+            causa: "Tiempo de inmersión corto o drenaje anticipado que genera baja humedad.",
+            accion: "Informar al maltero para validar y reajustar el flujo de riegos en el germinador. Las modificaciones se basarán en las características organolépticas detectadas, resultados analíticos de laboratorio e inspección física del germinador."
+        },
+        {
+            id: 4,
+            disparador: "Desviación de humedad durante el seguimiento de germinación",
+            causa: "Lecturas analíticas atípicas sin desviación real en la línea de proceso.",
+            accion: "Verificar la calibración y correcto funcionamiento del determinador de humedad. Aplicar la regla interna de verificación de lecturas. En caso de persistir la duda, acudir al laboratorio de calidad para validar la muestra mediante el método NIR."
+        },
+        {
+            id: 5,
+            disparador: "Diferencial de temperatura (entrada/salida de aire) > 5 °C",
+            causa: "Incremento térmico crítico en las capas bajo y sobre el lecho de grano.",
+            accion: "Verificar la operación del ventilador y el estado de las correas del motor. Validar la temperatura ambiente y abrir manualmente la compuerta local para ingresar aire fresco. Inspeccionar el sistema de saturación para asegurar que el aire humedezca correctamente la cebada (evitando su resecamiento) y comprobar la apertura de válvulas de agua. Validar la ejecución de las batidas según protocolo."
+        },
+        {
+            id: 6,
+            disparador: "Pérdida crítica de humedad en el lecho",
+            causa: "Flujo de aire inadecuado a través de la cebada o falla en la bomba de saturación.",
+            accion: "Regular el flujo de aire al lecho de germinación para mantener los niveles óptimos de humedad y verificar el correcto funcionamiento mecánico y eléctrico de la bomba de saturación."
+        },
+        {
+            id: 7,
+            disparador: "Desfase > 5% en el tiempo de germinación planificado",
+            causa: "Avería mecánica que impide transferir el grano al secador, o indisponibilidad de este por retrasos previos.",
+            accion: "1. Una vez cumplido el tiempo del protocolo, extender la etapa de regulación térmica bajando los setpoints a 12 °C en el aire de entrada y 15 °C en el de salida.\n2. Si el tiempo de reparación estimado supera las 2 horas, programar batidas completas (ida y vuelta) para evitar la compactación del grano."
+        },
+        {
+            id: 8,
+            disparador: "Tiempo de descarga de remojo > 1.5 horas",
+            causa: "Obstrucción o atascamiento durante la descarga de las tinas.",
+            accion: "Iniciar la ventilación SIN HUMECTACIÓN para prevenir un choque térmico. Al finalizar la transferencia, arrancar la germinación con temperaturas de 1 a 2 °C por encima de la receta estándar para estimular la metabolización del agua libre, y ejecutar batida.\n\nNotificar al maltero o al gerente de producción para ajustar según la variedad de la cebada:\n- Hora del primer riego (si aplica).\n- Temperaturas de germinación y curvas de secado.\n- Frecuencia de ventiladores (incremento de caudal) y ciclos de la cámara de saturación.\n- Dosificación de Laminex y caudales de riego."
+        },
+        {
+            id: 9,
+            disparador: "Falla crítica en el sistema de ventilación",
+            causa: "Avería en el motor principal o rotura de las correas de transmisión.",
+            accion: "1. Registrar de inmediato el evento en las observaciones de control, bitácora y Suite 360.\n2. Coordinar soporte prioritario con los técnicos mecánicos y electricistas de turno (evaluar el canibalismo de componentes/motor de un germinador desocupado).\n3. Abrir el damper de aire fresco al 100% en modo manual.\n4. Programar una doble batida.\n5. Tomar muestras inmediatas para analizar los niveles de humedad y avance de punteo."
+        }
+    ],
+
+    "Tostación": [
+        {
+            id: 1,
+            disparador: "Tiempo de transferencia de malta verde > 5 horas",
+            causa: "Rotura en la cadena del transportador Redler.",
+            accion: "En Tostación: Asegurar una ventilación continua fijando la temperatura del aire de entrada a 40 °C para proteger el grano alojado.\n\nEn Germinación:\n1. Reiniciar los sistemas de humectación y ventilación.\n2. Aplicar ciclos de batida de ida y vuelta.\n3. Evaluar el acróspiro: si más del 70% del grano se encuentra entre 3/4 y 1, reducir las temperaturas de entrada y salida a 15 °C (validar previamente con el maltero o gerente).\n4. Si el desarrollo de la malta no cumple este criterio clínico (>60% modificado), definir con la jefatura los parámetros de secado libre y curado.\n*Nota:* Si la reparación excede 1 hora, apagar el tostador y reanudar en la última etapa activa o coordinar el cambio de piso para la Malta Verde."
+        },
+        {
+            id: 2,
+            disparador: "Paro del sistema de secado > 30 minutos sin ventilación",
+            causa: "Falla mecánica/eléctrica en un ventilador o interrupción del suministro de energía térmica (falla en caldera).",
+            accion: "Solicitar asistencia inmediata al personal de mantenimiento y calderas. Asegurar el reinicio del secado exactamente en la etapa donde se interrumpió, evitando saltos automáticos de rampa por temperatura sin cumplir las condiciones físicas reales. Controlar la rampa térmica en el aire de entrada junto a calderas.\n\nSi el paro ocurre en Rampa 4 (Calentamiento y recirculación):\nDetener el tostador, reiniciar el secado omitiendo la Rampa 1, configurar la Rampa 2 a 1 hora y continuar en modo automático.\n\nSi el paro ocurre en Rampa 5 (Curado):\nDetener el tostador, omitir la Rampa 1 y configurar las Rampas 2 y 4 a 1 hora cada una, garantizando un tiempo mínimo estricto de 2 horas de curado."
+        },
+        {
+            id: 3,
+            disparador: "Tiempo de tostación acumulado > 14.2 horas",
+            causa: "Bajo rendimiento térmico por radiadores sucios o distribución irregular (cama no uniforme) en bandejas.",
+            accion: "Verificar el historial de limpieza de radiadores y el cumplimiento del plan de mantenimiento (PML). Inspeccionar el patrón de extendido en las bandejas; una cama no uniforme prolonga los tiempos de secado. Auditar la curva de tostación para identificar desviaciones (saltos de etapa prematuros, fallas en el programa de compuertas, caídas de presión en calderas o fluctuación en variadores). Registrar los hallazgos en la columna de observaciones."
+        },
+        {
+            id: 4,
+            disparador: "Llenado de la primera capa > 2 horas",
+            causa: "Falla operativa o desalineación en los mecanismos extendedores.",
+            accion: "Operar la máquina en modo manual para nivelar las acumulaciones de grano y reextender la masa uniformemente, mitigando retrasos térmicos en el ciclo de tostación."
+        },
+        {
+            id: 5,
+            disparador: "Compuertas bloqueadas en 0% (Retornos no operan) en Rampa 4 de Tostación",
+            causa: "Bloqueo mecánico o lógico por cruce físico de compuertas de retorno y recirculación.",
+            accion: "Registrar la desviación en observaciones, bitácora y Suite 360. Controlar las compuertas en manual bajo la siguiente secuencia:\n1. Fijar 50% Retornos y 50% Frescos hasta que la humedad relativa (HR) caiga al 60% o la temperatura sobre capa supere los 45 °C.\n2. Configurar Retornos al 80% (75% en T4) y cerrar Frescos a 0% hasta que la HR llegue al 50% o la temperatura sobre capa supere los 55 °C.\n3. Ajustar Retornos al 85% (90% en T4) y mantener Frescos en 0% hasta consolidar una HR del 10%."
+        },
+        {
+            id: 6,
+            disparador: "Alta humedad relativa (> 65%) al activar retornos totales (Frescos 0%, Retornos 85%) en Rampa 4",
+            causa: "Defectos en el extendido del grano, fugas de aire en el tostador o salto erróneo de la Rampa 2 a la 4.",
+            accion: "Registrar en los archivos de control, bitácora y Suite 360. Manipular compuertas en manual:\n1. Ajustar los retornos al 75% y abrir los frescos al 25% hasta estabilizar la HR en 50% o alcanzar una temperatura sobre capa de 60 °C.\n2. Restablecer el sistema de compuertas de retorno y frescos a modo automático."
+        },
+        {
+            id: 7,
+            disparador: "Segunda etapa flexible prolongada (> 1h en T1/T2; > 30 min en T3/T4)",
+            causa: "Fugas físicas en la estructura del tostador o saturación de humedad oculta para los sensores.",
+            accion: "Registrar la incidencia en el archivo de control, bitácora y Suite 360. Ajustar compuertas en manual:\n1. Configurar los retornos al 75% y abrir los frescos al 25% hasta que la temperatura sobre capa registre 62 °C.\n2. Devolver el control de retornos y frescos a modo automático."
+        }
+    ]
+};
+    
 let datosCompletos = [];
 let variableActual = "";
 let datoSeleccionado = {};
