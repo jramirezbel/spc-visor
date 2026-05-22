@@ -108,46 +108,18 @@ body{
 }
 
 /* DASHBOARD */
-
 #dashboardScreen{
     display:none;
     min-height: calc(100vh - 71px);
 }
 
-<div id="bibliotecaScreen" style="display:none; padding:30px;">
+#bibliotecaScreen{
+    display:none;
+    padding:30px;
+    min-height: calc(100vh - 70px);
+}
 
-    <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
-    ">
-
-        <h1 style="margin:0;">
-            Biblioteca de planes de reacción
-        </h1>
-
-        <button class="btn-volver" onclick="volverHome()">
-            ← Volver
-        </button>
-
-    </div>
-
-    <!-- BOTONES PROCESOS -->
-    <div id="procesosContainer" style="
-        display:flex;
-        gap:15px;
-        flex-wrap:wrap;
-        margin-bottom:30px;
-    ">
-    </div>
-
-    <!-- TABLA -->
-    <div id="tablaPlanes"></div>
-
-</div>
-    
-/* FILTROS */
+    /* FILTROS */
 
 .filtros-fecha{
     display:flex;
@@ -407,6 +379,39 @@ textarea:disabled{
         <p>Seleccione un indicador</p>
     </div>
 
+    <div id="bibliotecaScreen">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:25px;
+    ">
+
+        <h1 style="margin:0;">
+            Biblioteca de planes de reacción
+        </h1>
+
+        <button class="btn-volver" onclick="volverHome()">
+            ← Volver
+        </button>
+
+    </div>
+
+    <!-- BOTONES -->
+    <div id="procesosContainer" style="
+        display:flex;
+        gap:15px;
+        flex-wrap:wrap;
+        margin-bottom:30px;
+    ">
+    </div>
+
+    <!-- TABLA -->
+    <div id="tablaPlanes"></div>
+
+</div>
+    
     <div class="indicator-card" onclick="abrirBiblioteca()">
     <h3>Biblioteca de planes</h3>
 
