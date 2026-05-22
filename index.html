@@ -563,22 +563,28 @@ function inicializarFechasMesActual(){
     document.getElementById('fechaDesde').value = primero.toISOString().split('T')[0];
     document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
 }
-
 async function cargarDatosMaestros(){
     try{
-        // MODIFICACIÓN CRÍTICA: Añadimos un .order() para que ordene por la id o por la fecha de creación.
-        // Si tu tabla tiene una columna autoincremental como 'id', la ordenamos al revés (desc) 
-        // para asegurarnos de que el 21, 20, 19 de mayo entren de primeros en el paquete de datos.
+        // Usamos 'lote' para ordenar, asegurando que los números más altos (más nuevos) entren primero
         const {data, error} = await _supabase
             .from('produccion')
             .select('*')
-            .order('id', { ascending: false }) // Trae lo más nuevo primero. Si no tienes 'id', usa la columna de fecha que crees en Supabase
-            .range(0, 2000); // 2000 registros, pero ahora los más nuevos tienen prioridad absoluta
+            .order('lote', { ascending: false }) 
+            .range(0, 2500); 
             
-        console.log("Cantidad de registros recuperados:", data.length);
-        console.log("Último dato capturado en el Frontend:", data[0]); // El primero ahora será el más nuevo
-        
-        if(error) throw error;
+        if(error) {
+            console.error("Error detallado de Supabase:", error);
+            throw error;
+        }
+
+        if(!data || data.length === 0) {
+            console.warn("Supabase respondió con éxito, pero la tabla está vacía.");
+            datosCompletos = [];
+            return;
+        }
+
+        console.log("¡Éxito! Registros recuperados:", data.length);
+        console.log("Primer registro recibido (debe ser el lote más alto):", data[0]);
 
         datosCompletos = data.map(f=>{
             const fl = {};
@@ -602,7 +608,6 @@ async function cargarDatosMaestros(){
 
             let fechaCalculada = new Date();
             if (mesNum !== undefined && !isNaN(diaNum)) {
-                // Mantenemos la creación del objeto de fecha en hora local
                 fechaCalculada = new Date(new Date().getFullYear(), mesNum, diaNum);
             }
 
@@ -618,8 +623,8 @@ async function cargarDatosMaestros(){
 
         actualizarCumplimientoHome();
     }catch(err){
-        console.error(err);
-        alert("Error cargando datos de Supabase");
+        console.error("Error atrapado en el catch:", err);
+        alert("Error cargando datos de Supabase. Revisa la consola del navegador (F12) para ver el motivo real.");
     }
 }
     
