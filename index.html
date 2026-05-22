@@ -636,10 +636,6 @@ Object.keys(planesConfig).forEach(nombreIndicador => {
     fechasProcesadas[nombreIndicador] = fecha;
 });
 
-            let fechaCalculada = new Date();
-            if (mesNum !== undefined && !isNaN(diaNum)) {
-                fechaCalculada = new Date(new Date().getFullYear(), mesNum, diaNum);
-            }
 
 return {
     lote: String(fl['lote'] || '').trim(),
@@ -733,31 +729,60 @@ async function dibujarGrafica(datos){
 
     // 2. Mapeamos un único array de texto combinando Día y Lote de forma clara
 
-    const trace = {
-         x: [
+const trace = {
+
+    x: [
         datos.map(d => {
-    const fecha = d.fechas[variableActual];
-    return fecha.toLocaleDateString('es-CO',{
-        day:'2-digit',
-        month:'short'
-    });
-})
+
+            const fecha = d.fechas[variableActual];
+
+            return fecha.toLocaleDateString('es-CO',{
+                day:'2-digit',
+                month:'short'
+            });
+
+        }),
+
         datos.map(d => d.lote)
     ],
-        y: datos.map(d => d.y),
-        mode: 'lines+markers', 
-        // Ajustamos el hovertemplate para que extraiga los datos limpios de nuestro objeto original
-        hovertemplate: datos.map(d => `<b>Lote:</b> ${d.lote}<br><b>Día:</b> ${d.dia}<br><b>Valor:</b> %{y}<extra></extra>`),
-        line: { color: '#2d3748', width: 2 },
-        marker: {
-            size: 8,
-            color: datos.map(d => {
-                const gestionado = bd.some(r => String(r.lote_id) === d.lote && r.variable === variableActual);
-                return d.y > config.ucl ? (gestionado ? '#3182ce' : 'red') : '#2d3748';
-            })
-        }
-    };
-    
+
+    y: datos.map(d => d.y),
+
+    mode: 'lines+markers',
+
+    hovertemplate: datos.map(d => {
+
+        const fecha = d.fechas[variableActual];
+
+        const fechaTexto = fecha.toLocaleDateString('es-CO',{
+            day:'2-digit',
+            month:'short'
+        });
+
+        return `<b>Lote:</b> ${d.lote}<br><b>Fecha:</b> ${fechaTexto}<br><b>Valor:</b> %{y}<extra></extra>`;
+    }),
+
+    line: {
+        color: '#2d3748',
+        width: 2
+    },
+
+    marker: {
+        size: 8,
+
+        color: datos.map(d => {
+
+            const gestionado = bd.some(r =>
+                String(r.lote_id) === d.lote &&
+                r.variable === variableActual
+            );
+
+            return d.y > config.ucl
+                ? (gestionado ? '#3182ce' : 'red')
+                : '#2d3748';
+        })
+    }
+};
     const layout = {
         autosize: true,
         dragmode:false,
