@@ -888,9 +888,16 @@ function abrirPlanReaccion(dato){
     datoSeleccionado = dato;
 
     document.getElementById('infoLote').innerHTML = `
+    <div style="
+        background:#e53e3e;
+        color:white;
+        padding:10px;
+        border-radius:8px;
+    ">
         Lote ${dato.lote}<br>
         Valor: ${dato.y}
-    `;
+    </div>
+`;
 
     document.getElementById('operador').disabled = false;
     document.getElementById('accionExtra').disabled = false;
@@ -917,9 +924,16 @@ function abrirPlanReaccion(dato){
     function verReporteExistente(reporte){
 
     document.getElementById('infoLote').innerHTML = `
+    <div style="
+        background:#3182ce;
+        color:white;
+        padding:10px;
+        border-radius:8px;
+    ">
         Lote ${reporte.lote_id}<br>
         Gestionado por: <b>${reporte.operador}</b>
-    `;
+    </div>
+`;
 
     document.getElementById('operador').value = reporte.operador || '';
     document.getElementById('accionExtra').value = reporte.comentario || '';
