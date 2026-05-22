@@ -682,24 +682,37 @@ function cambiarVariable(nombre){
 }
 
 function filtrarPorFechas() {
-    const desde = new Date(document.getElementById('fechaDesde').value);
-    const hasta = new Date(document.getElementById('fechaHasta').value);
-    hasta.setHours(23,59,59,999);
+
+    const desdeInput = document.getElementById('fechaDesde').value;
+    const hastaInput = document.getElementById('fechaHasta').value;
+
+    const [añoD, mesD, diaD] = desdeInput.split('-').map(Number);
+    const [añoH, mesH, diaH] = hastaInput.split('-').map(Number);
+
+    const desde = new Date(añoD, mesD - 1, diaD, 0, 0, 0);
+    const hasta = new Date(añoH, mesH - 1, diaH, 23, 59, 59);
 
     const config = planesConfig[variableActual];
+
     const filtrados = datosCompletos
         .filter(d => {
-const fechaIndicador = d.fechas[variableActual];
-if (!fechaIndicador || isNaN(fechaIndicador)) return false;
-return fechaIndicador >= desde && fechaIndicador <= hasta;
-            
-})
-        .map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) }))
+
+            const fechaIndicador = d.fechas[variableActual];
+
+            if (!fechaIndicador || isNaN(fechaIndicador)) return false;
+
+            return fechaIndicador >= desde && fechaIndicador <= hasta;
+
+        })
+        .map(d => ({
+            ...d,
+            y: parseFloat(d.raw[config.columna])
+        }))
         .filter(d => !isNaN(d.y));
 
     dibujarGrafica(filtrados);
 }
-
+    
 async function dibujarGrafica(datos){
     if(!datos.length){
         document.getElementById('myDiv').innerHTML = `
