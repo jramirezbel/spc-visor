@@ -382,14 +382,6 @@ textarea:disabled{
         <p>Seleccione un indicador</p>
     </div>
     
-    <!-- BOTONES DE PROCESOS -->
-    <div id="procesosContainer" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:30px;">
-    </div>
-
-    <!-- TABLA DE PLANES -->
-    <div id="tablaPlanes"></div>
-
-    <!-- CONTENEDOR DE TARJETAS (Ahora vive correctamente dentro del Home) -->
     <div class="cards-container">
 
         <div class="indicator-card" onclick="abrirBiblioteca()">
@@ -431,185 +423,20 @@ textarea:disabled{
                 <small>Cumplimiento</small>
             </div>
         </div>
-    </div> <!-- Cierre de cards-container -->
-</div> <!-- Cierre correcto de homeScreen -->
+    </div> 
+</div> 
 
 
-<!-- 2. PANTALLA DE BIBLIOTECA (Cerrada correctamente) -->
 <div id="bibliotecaScreen">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
         <h1 style="margin:0;">Biblioteca de planes de reacción</h1>
         <button class="btn-volver" onclick="volverHome()">← Volver</button>
     </div>
-    <!-- Aquí puedes renderizar el contenido dinámico de la biblioteca si es necesario -->
-</div> <!-- ¡Este cierre faltaba! -->
 
-
-<!-- 3. PANTALLA DE DASHBOARD (Totalmente independiente) -->
-<div id="dashboardScreen">
-    <div id="tituloIndicadorActual" style="padding:20px 25px; background:white; font-size:28px; font-weight:bold; border-bottom:1px solid #e2e8f0;"></div>
-
-    <div class="filtros-fecha">
-        <button class="btn-volver" onclick="volverHome()">← Volver</button>
-
-        <div class="filtro-group">
-            <label>Desde</label>
-            <input type="date" id="fechaDesde">
+    <div id="procesosContainer" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:30px;">
         </div>
 
-        <div class="filtro-group">
-            <label>Hasta</label>
-            <input type="date" id="fechaHasta">
-        </div>
-
-        <button class="btn-filtrar" onclick="filtrarPorFechas()">Filtrar</button>
-    </div>
-
-    <div id="stats-bar">
-        <div class="stat-card">
-            <span class="stat-label">Total registros</span>
-            <span class="stat-value" id="stat-total">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Dentro de spec</span>
-            <span class="stat-value" id="stat-ok" style="color:#10b981;">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">% Cumplimiento</span>
-            <span class="stat-value" id="stat-percent">0%</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Pendientes</span>
-            <span class="stat-value" id="stat-pending" style="color:#ef4444;">0</span>
-        </div>
-    </div>
-
-    <div class="layout-principal">
-        <div class="visor-container">
-            <div class="canvas-scroll">
-                <div id="myDiv"></div>
-            </div>
-        </div>
-
-        <div class="panel-lateral">
-            <div id="contenidoPlan" class="plan-disabled">
-                <h3>Plan de reacción</h3>
-                <div id="infoLote" class="badge-lote"></div>
-
-                <input type="text" id="operador" placeholder="Nombre operador..." oninput="validarPasos()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;">
-
-                <div id="checklist-pasos"></div>
-
-                <textarea id="accionExtra" placeholder="Observaciones..." style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"></textarea>
-
-                <button id="btnEnviar" onclick="enviarReporte()" disabled>Registrar Plan</button>
-                <button class="btn-cancelar" onclick="cancelarRegistro()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-    
- <div id="bibliotecaScreen">
-
-    <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
-    ">
-
-        <h1 style="margin:0;">
-            Biblioteca de planes de reacción
-        </h1>
-
-        <button class="btn-volver" onclick="volverHome()">
-            ← Volver
-        </button>
-
-    </div>
-
-<div id="dashboardScreen">
-    <div id="tituloIndicadorActual" style="padding:20px 25px; background:white; font-size:28px; font-weight:bold; border-bottom:1px solid #e2e8f0;"></div>
-
-    <div class="filtros-fecha">
-        <button class="btn-volver" onclick="volverHome()">
-            ← Volver
-        </button>
-
-        <div class="filtro-group">
-            <label>Desde</label>
-        
-            <input type="date" id="fechaDesde">
-        </div>
-
-        <div class="filtro-group">
-            <label>Hasta</label>
-            <input type="date" id="fechaHasta">
-        </div>
-
-        <button class="btn-filtrar" onclick="filtrarPorFechas()">
-            Filtrar
-        </button>
-    </div>
-
-    <div id="stats-bar">
-        <div class="stat-card">
-            <span class="stat-label">Total registros</span>
-            <span class="stat-value" id="stat-total">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Dentro de spec</span>
-            <span class="stat-value" id="stat-ok" style="color:#10b981;">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">% Cumplimiento</span>
-            <span class="stat-value" id="stat-percent">0%</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Pendientes</span>
-            <span class="stat-value" id="stat-pending" style="color:#ef4444;">0</span>
-        </div>
-    </div>
-
-    <div class="layout-principal">
-        <div class="visor-container">
-            <div class="canvas-scroll">
-                <div id="myDiv"></div>
-            </div>
-        </div>
-
-        <div class="panel-lateral">
-            <div id="contenidoPlan" class="plan-disabled">
-                <h3>Plan de reacción</h3>
-                <div id="infoLote" class="badge-lote"></div>
-
-                <input
-                    type="text"
-                    id="operador"
-                    placeholder="Nombre operador..."
-                    oninput="validarPasos()"
-                    style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:15px;"
-                >
-
-                <div id="checklist-pasos"></div>
-
-                <textarea
-                    id="accionExtra"
-                    placeholder="Observaciones..."
-                    style="width:100%;height:70px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:10px;"
-                ></textarea>
-
-                <button id="btnEnviar" onclick="enviarReporte()" disabled>
-                    Registrar Plan
-                </button>
-
-                <button class="btn-cancelar" onclick="cancelarRegistro()">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
+    <div id="tablaPlanes"></div>
 </div>
             
 <script>
