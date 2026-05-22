@@ -467,6 +467,8 @@ const planesConfig = {
         ucl:90,
         columna:"consumo agua recuperada",
         homeId:"home-recuperada-percent",
+        fechaDia:"dia",
+        fechaMes:"mes",
         pasos:[
             "Paso 1: Cerrar manualmente la válvula de empuje y las bombas inmediatamente después de finalizar la descarga del tercer tanque (TK).",
 
@@ -496,6 +498,8 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         ucl:18,
         columna:"consumo agua potable",
         homeId:"home-potable-percent",
+        fechaDia:"dia",
+        fechaMes:"mes",
         pasos:[
             "Paso 1: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada y dirigirse al tanque de agua recuperada en la terraza de producción para confirmar los niveles disponibles.",
 
@@ -515,6 +519,8 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         ucl:2,
         columna:"pasamalla malta",
         homeId:"home-malta-percent",
+        fechaDia:"dia_malta",
+        fechaMes:"mes_malta",
         pasos:[
             "Paso 1: Ingresar a las limpiadoras de malta y retirar manualmente los residuos acumulados en las mallas si se evidencia acumulación de material.",
 
@@ -528,6 +534,8 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         ucl:2.8,
         columna:"pasamalla cebada",
         homeId:"home-cebada-percent",
+        fechaDia:"dia",
+        fechaMes:"mes",
         pasos:[
             "Paso 1: Ejecutar limpieza inmediata de la malla de la limpiadora LM-05 si se evidencia acumulación de material. Utilizar las herramientas de limpieza definidas en el SOP.",
 
@@ -541,6 +549,8 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         ucl:1,
         columna:"malta en germen",
         homeId:"home-germen-percent",
+        fechaDia:"dia_malta",
+        fechaMes:"mes_malta",
         pasos:[
             "Paso 1: Revisar físicamente las mallas de las limpiadoras de malta y retirar residuos acumulados. Posteriormente, abrir o desmontar las desgerminadoras y realizar limpieza interna si se evidencian obstrucciones.",
 
@@ -602,23 +612,40 @@ async function cargarDatosMaestros(){
                 'jul':6, 'aug':7, 'ago':7, 'sep':8, 'oct':9, 'nov':10, 'dec':11, 'dic':11
             };
 
-            const mesTexto = String(fl['mes'] || '').trim().toLowerCase();
-            const diaNum = parseInt(fl['dia']);
-            const mesNum = traductorMeses[mesTexto];
+// Guardamos TODAS las posibles fechas
+const fechasProcesadas = {};
+
+Object.keys(planesConfig).forEach(nombreIndicador => {
+
+    const conf = planesConfig[nombreIndicador];
+
+    const colDia = conf.fechaDia || 'dia';
+    const colMes = conf.fechaMes || 'mes';
+
+    const dia = parseInt(fl[colDia]);
+    const mesTexto = String(fl[colMes] || '').trim().toLowerCase();
+
+    const mesNum = traductorMeses[mesTexto];
+
+    let fecha = null;
+
+    if (mesNum !== undefined && !isNaN(dia)) {
+        fecha = new Date(new Date().getFullYear(), mesNum, dia);
+    }
+
+    fechasProcesadas[nombreIndicador] = fecha;
+});
 
             let fechaCalculada = new Date();
             if (mesNum !== undefined && !isNaN(diaNum)) {
                 fechaCalculada = new Date(new Date().getFullYear(), mesNum, diaNum);
             }
 
-            return {
-                lote: String(fl['lote'] || '').trim(),
-                dia: String(fl['dia'] || '').trim(),
-                mesTexto: mesTexto,
-                mesNum: mesNum,
-                fechaReal: fechaCalculada,
-                raw: fl
-            };
+return {
+    lote: String(fl['lote'] || '').trim(),
+    fechas: fechasProcesadas,
+    raw: fl
+};
         }).filter(d=>d.lote);
 
         actualizarCumplimientoHome();
@@ -666,8 +693,10 @@ function filtrarPorFechas() {
     const config = planesConfig[variableActual];
     const filtrados = datosCompletos
         .filter(d => {
-    if (!d.fechaReal || isNaN(d.fechaReal)) return false;
-    return d.fechaReal >= desde && d.fechaReal <= hasta;
+const fechaIndicador = d.fechas[variableActual];
+if (!fechaIndicador || isNaN(fechaIndicador)) return false;
+return fechaIndicador >= desde && fechaIndicador <= hasta;
+            
 })
         .map(d => ({ ...d, y: parseFloat(d.raw[config.columna]) }))
         .filter(d => !isNaN(d.y));
@@ -706,7 +735,13 @@ async function dibujarGrafica(datos){
 
     const trace = {
          x: [
-        datos.map(d => d.dia),
+        datos.map(d => {
+    const fecha = d.fechas[variableActual];
+    return fecha.toLocaleDateString('es-CO',{
+        day:'2-digit',
+        month:'short'
+    });
+})
         datos.map(d => d.lote)
     ],
         y: datos.map(d => d.y),
