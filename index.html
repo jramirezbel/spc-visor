@@ -898,22 +898,30 @@ function validarPasos(){
     const op = document.getElementById('operador').value.trim() !== "";
     const btn = document.getElementById('btnEnviar');
 
-    btn.disabled = !(checks === total && op);
-    btn.classList.toggle('active', checks === total && op);
+    btn.disabled = !op;
+    btn.classList.toggle('active', op);
 }
 
 async function enviarReporte(){
     try{
         const checks = [...document.querySelectorAll('#checklist-pasos input')];
-        const pasosRealizados = checks.filter(c=>c.checked).map(c=>c.parentElement.innerText.trim());
+        const pasosRealizados = checks
+    .map((c, index) => ({
+        paso: index + 1,
+        descripcion: c.parentElement.innerText.trim(),
+        realizado: c.checked
+    }))
+    .filter(p => p.realizado);
 
         const payload = {
-            lote_id: datoSeleccionado.lote,
-            variable: variableActual,
-            valor: datoSeleccionado.y,
-            operador: document.getElementById('operador').value,
-            comentario: document.getElementById('accionExtra').value,
-        };
+    lote_id: datoSeleccionado.lote,
+    variable: variableActual,
+    valor: datoSeleccionado.y,
+    operador: document.getElementById('operador').value,
+    comentario: document.getElementById('accionExtra').value,
+
+    pasos_realizados: pasosRealizados
+};
 
         const {error} = await _supabase.from('planes_reaccion').insert([payload]);
         if(error){
