@@ -889,10 +889,6 @@ resultados.forEach((resultado, index) => {
 
 console.log("Total de datos combinados:", data.length);
         
-        // Unimos los resultados de todas las páginas en un solo gran array
-        const data = [...(res1.data || []), ...(res2.data || []), ...(res3.data || [])];
-        
-        console.log("Total de datos combinados (Enero a Mayo):", data.length);
 
         datosCompletos = data.map(f=>{
             const fl = {};
