@@ -855,11 +855,16 @@ function cancelarRegistro(){
 
     datoSeleccionado = {};
 
-    document.getElementById('infoLote').innerHTML = `
-        <div style="color:#64748b;">
-            Sin lote seleccionado
-        </div>
-    `;
+    const info = document.getElementById('infoLote');
+
+info.style.background = '#e2e8f0';
+info.style.color = '#64748b';
+
+info.innerHTML = `
+    <div>
+        Sin lote seleccionado
+    </div>
+`;
 
     document.getElementById('operador').value = '';
     document.getElementById('operador').disabled = true;
@@ -887,16 +892,14 @@ function abrirPlanReaccion(dato){
 
     datoSeleccionado = dato;
 
-    document.getElementById('infoLote').innerHTML = `
-    <div style="
-        background:#e53e3e;
-        color:white;
-        padding:10px;
-        border-radius:8px;
-    ">
-        Lote ${dato.lote}<br>
-        Valor: ${dato.y}
-    </div>
+    const info = document.getElementById('infoLote');
+
+info.style.background = '#e53e3e';
+info.style.color = 'white';
+
+info.innerHTML = `
+    Lote ${dato.lote}<br>
+    Valor: ${dato.y}
 `;
 
     document.getElementById('operador').disabled = false;
@@ -923,16 +926,14 @@ function abrirPlanReaccion(dato){
 
     function verReporteExistente(reporte){
 
-    document.getElementById('infoLote').innerHTML = `
-    <div style="
-        background:#3182ce;
-        color:white;
-        padding:10px;
-        border-radius:8px;
-    ">
-        Lote ${reporte.lote_id}<br>
-        Gestionado por: <b>${reporte.operador}</b>
-    </div>
+    const info = document.getElementById('infoLote');
+
+info.style.background = '#3182ce';
+info.style.color = 'white';
+
+info.innerHTML = `
+    Lote ${reporte.lote_id}<br>
+    Gestionado por: <b>${reporte.operador}</b>
 `;
 
     document.getElementById('operador').value = reporte.operador || '';
