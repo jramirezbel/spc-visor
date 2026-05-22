@@ -233,7 +233,7 @@ body{
     border-left:1px solid #e2e8f0;
     padding:20px;
 
-    height:calc(100vh - 225px);
+    max-height:calc(100vh - 170px);
 
     overflow-y:auto;
     overflow-x:hidden;
@@ -257,9 +257,6 @@ body{
     border-radius:8px;
     border:1px solid #edf2f7;
     font-size:13px;
-
-    max-height:140px;
-    overflow-y:auto;
 }
 #btnEnviar{
     width:100%;
@@ -723,11 +720,13 @@ async function dibujarGrafica(datos){
     
     const layout = {
         autosize: true,
-        xaxis:{
+        dragmode:false,
+xaxis:{
     type:'multicategory',
     fixedrange:true,
     tickangle:90,
-    automargin:true
+    automargin:true,
+    showgrid:false
 },
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
