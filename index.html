@@ -1813,10 +1813,15 @@ function verReporteExistente(reporte){
     const pasos = planesConfig[variableActual].pasos;
     const realizados = reporte.pasos_realizados || [];
     
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p, i)=>{
-        // SOLUCIÓN AL ERROR: Buscamos si en la BD existe un registro cuyo 'paso' sea igual al texto largo 'p' 
-        // Y que además la propiedad 'completado' sea explícitamente true.
-        const ejecutado = realizados.some(r => r.paso === p && r.completado === true);
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p)=>{
+        // LIMPIEZA Y COMPARACIÓN STRICTA DE STRINGS:
+        // Limpiamos espacios y quitamos saltos de línea para asegurar un match perfecto
+        const textoLimpioConfig = p.replace(/\s+/g, ' ').trim();
+        
+        const ejecutado = realizados.some(r => {
+            const textoLimpioBD = String(r.paso).replace(/\s+/g, ' ').trim();
+            return textoLimpioBD === textoLimpioConfig && r.completado === true;
+        });
         
         return `
             <label class="step" style="
@@ -1834,10 +1839,8 @@ function verReporteExistente(reporte){
     }).join('');
     
     const btn = document.getElementById('btnEnviar');
-    
     btn.disabled = true;
     btn.classList.remove('active');
-    
     btn.innerText = 'Reporte ya registrado';
 }
     
