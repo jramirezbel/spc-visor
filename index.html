@@ -457,6 +457,14 @@ textarea:disabled{
                 <small>SUITE360</small>
             </div> 
         </div> 
+
+<div class="indicator-card" onclick="abrirIndicador('Tiempo de Germinación')">
+            <h3>Tiempo de Germinación</h3>
+            <div class="mini-stat">
+                <span>⏱️🌱</span>
+                <small>SUITE360</small>
+            </div> 
+        </div> 
         
 <div class="indicator-card" onclick="abrirIndicador('Tiempo de transporte de Malta Verde')">
             <h3>Tiempo de transporte de Malta Verde</h3>
@@ -722,6 +730,15 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
             "Paso 2: Revisar estado de helicoides una vez se termina descargue y solicitar a mecánico cambio si es necesario.",
             "Paso 3: Realizar tensión de cadena redler trasportadores de malta verde (TC-20 al TC-24)",
             "Paso 4: Lubricar el carro wincher antes de iniciar operación. Aplicar grasa o lubricante si se observa resequedad o falta de engrase en rieles o ejes móviles."
+]
+    },
+
+        "Tiempo de Germinación":{
+        tipo: "imagen",
+        imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(7).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
+        pasos: [
+            "Paso 1: Cuando el tiempo del lote supere las 78 horas de germinación, reducir la temperatura del germinador a 14 °C (Configurar temperatura bajo capa en SCADA)",
+            "Paso 2: Ajustar la dosis de ácido giberélico (AG) en los lotes en curso, según el nivel de atraso identificado en el programa, consultando con el supervisor de proceso."
 ]
     },
     
@@ -1340,22 +1357,15 @@ function validarManual(){
 }
     
 function volverHome(){
-
     document.getElementById('dashboardScreen').style.display = 'none';
-
     document.getElementById('bibliotecaScreen').style.display = 'none';
-
     document.getElementById('homeScreen').style.display = 'block';
 }
     
 function abrirBiblioteca(){
-
     document.getElementById('homeScreen').style.display = 'none';
-
     document.getElementById('dashboardScreen').style.display = 'none';
-
     document.getElementById('bibliotecaScreen').style.display = 'block';
-
     renderProcesosBiblioteca();
 }
 
