@@ -1048,6 +1048,8 @@ function abrirIndicador(nombreIndicador) {
         checklistPasos.innerHTML = htmlChecklist;
         
         // 3. Validar el estado del botón de envío
+        document.getElementById('manualLote').oninput = validarPasos;
+        document.getElementById('manualValor').oninput = validarPasos;
         validarPasos();
         
     } else {
@@ -1646,26 +1648,27 @@ document.getElementById('camposManual')
 }
     
 function cancelarRegistro() {
-    // Volver al Home
-    document.getElementById('homeScreen').style.display = 'block';
-    document.getElementById('dashboardScreen').style.display = 'none';
-    
-    // Dejar el panel listo para el siguiente ingreso base (SPC)
-    document.getElementById('infoLote').style.display = 'block';
-    document.getElementById('infoLote').innerText = "Sin lote seleccionado";
-    document.getElementById('camposManual').style.display = 'none';
-    
-    // Vaciar inputs
-    document.getElementById('manualLote').value = "";
-    document.getElementById('manualValor').value = "";
+    // Limpieza de campos comunes
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
+    
+    // Limpieza específica de campos manuales si existen
+    const manualLote = document.getElementById('manualLote');
+    const manualValor = document.getElementById('manualValor');
+    if (manualLote) manualLote.value = "";
+    if (manualValor) manualValor.value = "";
+    
+    // Ocultar el contenido y resetear estados
+    document.getElementById('infoLote').innerHTML = "Sin lote seleccionado";
     document.getElementById('checklist-pasos').innerHTML = "";
     
-    document.getElementById('btnEnviar').disabled = true;
-    document.getElementById('btnEnviar').classList.remove('active');
-    
     datoSeleccionado = null;
+    
+    const btn = document.getElementById('btnEnviar');
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.remove('active');
+    }
 }
     
 function abrirPlanReaccion(dato){
@@ -1809,32 +1812,44 @@ function cerrarModalPlan(){
     
     
 function validarPasos() {
-    const btn = document.getElementById('btnRegistrarPlan');
+    // CAMBIO CLAVE: Usamos 'btnEnviar' que es el ID real en tu HTML
+    const btn = document.getElementById('btnEnviar'); 
+    if (!btn) return;
+
     const config = planesConfig[variableActual];
     const esManual = (config && config.tipo === "imagen");
 
     if (esManual) {
-        // En el módulo manual, el botón depende de que se llenen los campos obligatorios
-        const lote = document.getElementById('manualLote').value.trim();
-        const valor = document.getElementById('manualValor').value.trim();
+        // En el módulo manual, validamos que los inputs existan y tengan texto
+        const loteInput = document.getElementById('manualLote');
+        const valorInput = document.getElementById('manualValor');
         
-        // Si tiene lote y valor escrito, se habilita (sin importar cuántos checkboxes marcó)
+        const lote = loteInput ? loteInput.value.trim() : "";
+        const valor = valorInput ? valorInput.value.trim() : "";
+        
+        // El botón se habilita si ambos campos obligatorios tienen datos escrito
         if (lote !== "" && valor !== "") {
             btn.disabled = false;
+            btn.classList.add('active'); // Añade la clase verde que tienes en tus estilos
         } else {
             btn.disabled = true;
-        }
+            btn.classList.remove('active');
     } else {
-        // En los módulos SPC estándar (gráficas), mantenemos que marque todo o al menos uno
-        // Si prefieres que en SPC tampoco obligue a marcar todo, cambia .every por .some o déjalo en false
+        // En los módulos SPC estándar (gráficas)
         const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
         if (checkboxes.length === 0) {
             btn.disabled = true;
+            btn.classList.remove('active');
             return;
         }
-        // Para alertas SPC, exige que al menos se marque una acción tomada
+        // Exige que al menos se marque una acción tomada
         const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
         btn.disabled = !alMenosUno;
+        if (alMenosUno) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     }
 }
 
