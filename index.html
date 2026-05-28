@@ -312,6 +312,34 @@ textarea:disabled{
     cursor:not-allowed;
     opacity:0.8;
 }
+
+/* --- NUEVOS ESTILOS PARA IMÁGENES FIJAS --- */
+.card-img-fija {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.canvas-imagen-fija {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #fafbfc;
+}
+
+.imagen-fija-visor {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
     
 </style>
 </head>
@@ -432,6 +460,33 @@ textarea:disabled{
                 <small>Cumplimiento</small>
             </div>
         </div>
+
+
+<div class="indicator-card" onclick="abrirModuloImagen('Control de Fugas Sección A', 'fugas_a.png')">
+            <h3>Control de Fugas Sección A</h3>
+            <img src="assets/fugas_a.png" class="card-img-fija" alt="Fugas Sección A" onerror="this.src='https://placehold.co/400x200?text=Fugas+Sección+A'">
+        </div>
+
+        <div class="indicator-card" onclick="abrirModuloImagen('Control de Fugas Sección B', 'fugas_b.png')">
+            <h3>Control de Fugas Sección B</h3>
+            <img src="assets/fugas_b.png" class="card-img-fija" alt="Fugas Sección B" onerror="this.src='https://placehold.co/400x200?text=Fugas+Sección+B'">
+        </div>
+
+        <div class="indicator-card" onclick="abrirModuloImagen('Inspección de Tolvas', 'inspeccion_tolvas.png')">
+            <h3>Inspección de Tolvas</h3>
+            <img src="assets/inspeccion_tolvas.png" class="card-img-fija" alt="Inspección Tolvas" onerror="this.src='https://placehold.co/400x200?text=Inspección+Tolvas'">
+        </div>
+
+        <div class="indicator-card" onclick="abrirModuloImagen('Estado de Filtros', 'estado_filtros.png')">
+            <h3>Estado de Filtros</h3>
+            <img src="assets/estado_filtros.png" class="card-img-fija" alt="Estado Filtros" onerror="this.src='https://placehold.co/400x200?text=Estado+Filtros'">
+        </div>
+
+        <div class="indicator-card" onclick="abrirModuloImagen('Chequeo de Transportadores', 'transportadores.png')">
+            <h3>Chequeo de Transportadores</h3>
+            <img src="assets/transportadores.png" class="card-img-fija" alt="Transportadores" onerror="this.src='https://placehold.co/400x200?text=Transportadores'">
+        </div>
+        
     </div> 
 </div> 
 
@@ -700,6 +755,12 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
     }
 };
 
+    "Control de Fugas Sección A": { pasos: ["Paso 1: Identificar componente afectado en el plano visual.", "Paso 2: Reportar orden de mantenimiento correctivo en Suite 360.", "Paso 3: Aplicar ajuste físico primario de estanqueidad."] },
+    "Control de Fugas Sección B": { pasos: ["Paso 1: Inspeccionar sellos mecánicos periféricos.", "Paso 2: Detener línea si la rata de fuga compromete la seguridad alimentaria.", "Paso 3: Documentar bitácora de turno."] },
+    "Inspección de Tolvas": { pasos: ["Paso 1: Verificar acumulación estática de grano en paredes cónicas.", "Paso 2: Confirmar apertura correcta de compuertas neumáticas.", "Paso 3: Limpiar sensores de nivel."] },
+    "Estado de Filtros": { pasos: ["Paso 1: Medir la caída de presión diferencial (ΔP).", "Paso 2: Programar ciclo de limpieza por pulsos si supera el límite de control.", "Paso 3: Inspeccionar mangas rotas."] },
+    "Chequeo de Transportadores": { pasos: ["Paso 1: Validar alineación y tensión en transportador Redler.", "Paso 2: Verificar ruidos anómalos en rodamiento motriz.", "Paso 3: Inspeccionar tolvas de descarga para descartar atascamientos."] }
+    
 const bibliotecaPlanes = {
     "Remojo": [
         {
@@ -1026,6 +1087,62 @@ function volverHome(){
     document.getElementById('bibliotecaScreen').style.display = 'none';
 
     document.getElementById('homeScreen').style.display = 'block';
+}
+
+
+function abrirModuloImagen(nombreModulo, archivoImagen) {
+    // 1. Alternar pantallas
+    document.getElementById('homeScreen').style.display = 'none';
+    document.getElementById('dashboardScreen').style.display = 'block';
+    document.getElementById('tituloIndicadorActual').innerText = nombreModulo;
+    
+    // 2. Reemplazar temporalmente el área del gráfico por la imagen fija
+    const contenedorVisor = document.getElementById('myDiv').parentElement;
+    contenedorVisor.innerHTML = `
+        <div class="canvas-imagen-fija">
+            <img src="assets/${archivoImagen}" class="imagen-fija-visor" alt="${nombreModulo}" onerror="this.src='https://placehold.co/800x500?text=${nombreModulo.replace(/ /g, '+')}'">
+        </div>
+    `;
+    
+    // 3. Inicializar el panel de control lateral con sus respectivos pasos
+    inicializarPanelLateral(nombreModulo);
+}
+
+// Modificación para asegurar que cuando regreses a un indicador gráfico, el div original se restaure
+const originalAbrirIndicador = abrirIndicador; 
+abrirIndicador = function(nombreIndicador) {
+    const contenedorVisor = document.querySelector('.canvas-scroll');
+    if (contenedorVisor) {
+        contenedorVisor.innerHTML = '<div id="myDiv"></div>'; // Restaura el contenedor de Plotly si venías de una imagen
+    }
+    originalAbrirIndicador(nombreIndicador);
+    inicializarPanelLateral(nombreIndicador); // Abre el panel para los indicadores normales también
+}
+
+function inicializarPanelLateral(nombreKey) {
+    const config = planesConfig[nombreKey];
+    const infoLote = document.getElementById('infoLote');
+    const checklistDiv = document.getElementById('checklist-pasos');
+    
+    if(infoLote) infoLote.innerText = `REGISTRO: ${nombreKey.toUpperCase()}`;
+    if(checklistDiv) {
+        checklistDiv.innerHTML = '';
+        document.getElementById('operador').disabled = false;
+        document.getElementById('accionExtra').disabled = false;
+        
+        if(config && config.pasos) {
+            config.pasos.forEach((paso) => {
+                const label = document.createElement('label');
+                label.className = 'step';
+                label.innerHTML = `
+                    <input type="checkbox" class="chk-paso" onchange="validarPasos()" style="margin-right: 10px;">
+                    ${paso.replace(/\n/g, '<br>')}
+                `;
+                checklistDiv.appendChild(label);
+            });
+        }
+    }
+    validarPasos();
 }
     
 function abrirBiblioteca(){
