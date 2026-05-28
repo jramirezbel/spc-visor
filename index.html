@@ -1813,9 +1813,9 @@ function verReporteExistente(reporte){
     const pasos = planesConfig[variableActual].pasos;
     const realizados = reporte.pasos_realizados || [];
     
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p, i) => {
-        // CORRECCIÓN CRÍTICA: Buscamos si el paso (i+1) existe en la BD Y si fue guardado como 'realizado: true'
-        const ejecutado = realizados.some(r => r.paso === (i + 1) && r.realizado === true);
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>{
+        // CORRECCIÓN CRÍTICA: Evalúa si el paso coincide Y si fue guardado con cualquiera de los dos formatos (realizado o completado)
+        const ejecutado = realizados.some(r => r.paso === (i+1) && (r.realizado === true || r.completado === true));
         
         return `
             <label class="step" style="
