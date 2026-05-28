@@ -1085,14 +1085,15 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
 
         validarPasos(); 
- } else {
+} else {
         // --- MÓDULO SPC ESTÁNDAR ---
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
         
-        // AQUÍ VA TU CÓDIGO: El banner arranca en rojo nativo y con texto limpio
+        // CAMBIO AQUÍ: Al cambiar de gráfica, el banner arranca en GRIS por defecto
         if (infoLote) {
-            infoLote.style.background = '#e53e3e'; 
+            infoLote.style.background = '#64748b'; 
+            infoLote.style.color = 'white';
             infoLote.innerText = 'Sin lote seleccionado';
         }
         
@@ -1709,15 +1710,15 @@ function cancelarRegistro() {
             cb.disabled = false;
         });
     } else {
-        // ============================================================
-        // MÓDULO SPC: RESETEAR EL BANNER A ROJO Y MANDAR AL MODO GRIS
-        // ============================================================
+
         if (inputOperador) inputOperador.disabled = true;
         if (inputComentario) inputComentario.disabled = true;
 
+        // CAMBIO AQUÍ: Ahora cuando se cancela o no hay lote, se pone GRIS (#64748b)
         const infoLote = document.getElementById('infoLote');
         if (infoLote) {
-            infoLote.style.background = '#e53e3e'; 
+            infoLote.style.background = '#64748b'; 
+            infoLote.style.color = 'white';
             infoLote.innerText = 'Sin lote seleccionado';
         }
         
