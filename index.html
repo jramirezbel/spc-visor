@@ -1001,97 +1001,69 @@ function actualizarCumplimientoHome(){
     });
 }
 
-// Para los de TIPO 1: Gráficas SPC
-// Para los de TIPO 1: Gráficas SPC
-function abrirIndicador(nombre) {
-    variableActual = nombre;
+function abrirIndicador(nombreIndicador) {
+    variableActual = nombreIndicador;
+    const config = planesConfig[nombreIndicador];
     
-    const config = planesConfig[nombre];
     if (!config) {
-        console.error("No se encontró configuración para: " + nombre);
+        alert("Configuración no encontrada para: " + nombreIndicador);
         return;
     }
-
+    
     // Cambiar de pantalla hacia el Dashboard
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
+    document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
     
-    // Resetear textos y limpiar estados del botón
-    document.getElementById('operador').value = "";
-    document.getElementById('accionExtra').value = "";
-    document.getElementById('btnEnviar').disabled = true;
-    document.getElementById('btnEnviar').classList.remove('active');
-
-    const chartDiv = document.getElementById('myDiv');
-
+    // Obtener los contenedores clave
+    const visorContainer = document.querySelector('.visor-container');
+    const camposManual = document.getElementById('camposManual');
+    const infoLote = document.getElementById('infoLote');
+    
+    // Resetear datos previos
+    datoSeleccionado = null;
+    
+    // EVALUAR EL TIPO DE MÓDULO
     if (config.tipo === "imagen") {
-        // --- 🟩 FLUJO MÓDULO MANUAL OPERATIVO ---
-        document.getElementById('stats-bar').style.display = 'none';
-        document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'none');
-        document.querySelector('.btn-filtrar').style.display = 'none';
+        // --- MÓDULO MANUAL / IMAGEN ---
+        // 1. Mostrar campos de entrada manual y ocultar el badge SPC
+        camposManual.style.style.display = 'block';
+        infoLote.style.display = 'none';
         
-        // Forzar visibilidad de la caja de captura de datos manual
-        document.getElementById('infoLote').style.display = 'none'; 
-        document.getElementById('camposManual').style.display = 'block';
-        document.getElementById('manualLote').value = "";
-        document.getElementById('manualValor').value = "";
-
-        // Renderizar el contenedor con tu plano/imagen técnica
-        chartDiv.innerHTML = `
-            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; min-height: 450px;">
-                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; max-width: 100%;">
-                    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px;">Plano de Inspección Activo: ${nombre}</h3>
-                    <div style="margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        <img src="${config.imagen}" alt="Plano ${nombre}" style="width: 100%; height: auto; display: block; object-fit: contain;">
-                    </div>
-                    <div style="display: inline-block; background: #2f855a; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase;">
-                        Ubicación: ${config.imagen}
-                    </div>
-                </div>
+        // 2. Reemplazar el contenedor por la imagen del plano
+        visorContainer.innerHTML = `
+            <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
+                <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
             </div>
         `;
-    } else {
-        // --- 🟦 FLUJO MÓDULO SPC GRÁFICO ---
-        document.getElementById('stats-bar').style.display = 'flex';
-        document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'flex');
-        document.querySelector('.btn-filtrar').style.display = 'block';
         
-        document.getElementById('infoLote').style.display = 'block';
-        document.getElementById('infoLote').innerText = "Sin lote seleccionado (Haz clic en un punto del gráfico)";
-        document.getElementById('camposManual').style.display = 'none';
-
-        chartDiv.innerHTML = ""; // Limpiar para que Plotly tome el control
-    }
-
-    // CORRECCIÓN AQUÍ: Eliminamos la función fantasma y renderizamos nativamente el checklist por default
-    if (config.pasos && config.pasos.length > 0) {
-        // Si es manual (imagen), pintamos el checklist de una vez por default
-        if (config.tipo === "imagen") {
-            document.getElementById('checklist-pasos').innerHTML = config.pasos.map((p, i) => `
-                <label class="step">
-                    <input 
-                        type="checkbox"
-                        onchange="validarPasos()"
-                        id="paso${i}"
-                    >
-                    ${p}
-                </label>
-            `).join('');
-        } else {
-            // Si es SPC (gráfico), se debe mantener vacío o con la instrucción hasta que hagan clic en un punto fuera de límites
-            document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic; padding:10px;">Selecciona un punto en el gráfico para activar el plan.</p>`;
-        }
+        // 3. Renderizar su checklist correspondiente
+        renderChecklist(config.pasos);
+        validarPasos();
+        
     } else {
-        document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic; padding:10px;">No hay pasos configurados.</p>`;
-    }
-
-    document.getElementById('tituloIndicadorActual').innerText = nombre;
-
-    // Solo si es SPC, disparamos la consulta asíncrona a Supabase
-    if (config.tipo !== "imagen") {
-        setTimeout(() => {
-            filtrarPorFechas();
-        }, 50);
+        // --- MÓDULO SPC ESTÁNDAR ---
+        // 1. Ocultar campos manuales y mostrar el badge SPC
+        camposManual.style.display = 'none';
+        infoLote.style.display = 'block';
+        infoLote.innerText = "Sin lote seleccionado";
+        
+        // 2. Restaurar la estructura original para Plotly por si veníamos de una imagen
+        visorContainer.innerHTML = `
+            <div class="canvas-scroll">
+                <div id="myDiv"></div>
+            </div>
+        `;
+        
+        // 3. Cargar datos desde Supabase e imprimir la gráfica
+        const hoy = new Date();
+        const haceMes = new Date();
+        haceMes.setDate(hoy.getDate() - 30);
+        
+        document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
+        document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
+        
+        filtrarPorFechas();
     }
 }
 // Para los de TIPO 2: Módulos Manuales / Operativos
