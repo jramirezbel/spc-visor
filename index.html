@@ -433,8 +433,8 @@ textarea:disabled{
             </div>
         </div>
         
-      <div class="indicator-card" onclick="abrirIndicador('Control de Fugas Sección A')">
-    <div class="indicator-title">Control de Fugas Sección A</div>
+      <div class="indicator-card" onclick="abrirIndicador('Tiempo de Tostación')">
+    <div class="indicator-title">Tiempo de Tostación</div>
     <div class="indicator-value">Módulo Manual</div>
 </div>
         
@@ -671,25 +671,24 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         fechaMes:"mes_malta",
         pasos:[
             "Paso 1: Revisar físicamente las mallas de las limpiadoras de malta y retirar residuos acumulados. Posteriormente, abrir o desmontar las desgerminadoras y realizar limpieza interna si se evidencian obstrucciones.",
-
             "Paso 2: Ejecutar limpieza inmediata de las mallas si se observan residuos o acumulación de material grueso.",
-
             "Paso 3: Realizar inspección de las desgerminadoras, incluyendo mallas y cauchos de aletas. Reemplazar o ajustar componentes si se evidencian desgastes, deformaciones o fugas.",
-
             "Paso 4: Ajustar manualmente el damper de aspiración del equipo correspondiente utilizando el indicador de vacío o el nivel de aspiración requerido para la variedad procesada.",
-
             "Paso 5: Realizar inspección visual de las tolvas de germen y coordinar la recuperación de grano con el líder de equipo y el ingeniero de proceso."
 ]
     },
     
-"Control de Fugas Sección A": {
+"Tiempo de Tostación": {
         tipo: "imagen",
-        imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/plano_fugas_a.png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
+        imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(5).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
-            "1. Identificar visualmente el punto crítico en el plano.",
-            "2. Evaluar nivel de estanqueidad (Bajo / Medio / Crítico).",
-            "3. Registrar obligatoriamente el Lote afectado y la pérdida estimada.",
-            "4. Aplicar empaque de estanqueidad o generar aviso de mantenimiento."
+            "Paso 1. Limpiar manualmente el ducto entre tostador y transportador antes de iniciar la descarga para evitar atraso por atascamiento",
+            "Paso 2. Activar/desactivarlas compuertas desde el HMI para confirmar que operan en automático correctamente. Corregir posición de apertura y cierre (retorno y fresco)",
+            "Paso 3. Registrar la altura de la cama de grano al cargar cada variedad nuevas motonaves para evaluar comportamiento de ocupación en la bandeja de los tostadores",
+            "Paso 4. Revisar aseo de radiadores, se debe retirar totalmente obstrucción de adentro hacia fuera y viceversa por parte de contratista",
+            "Paso 5. Cuando se presente daño en válvula tres vías, controlar válvulas manuales y bombas de mezcla y avance",
+            "Paso 6. Revisar extendido de grano en cada bandeja antes de descargar, si se observa un hueco corregir inmediatamente la malla con el mecánico una vez descargado",
+            "Paso 7. Tapar huecos con felpa en el contorno de las bandejas"
         ]
     }
 };
