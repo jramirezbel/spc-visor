@@ -312,34 +312,6 @@ textarea:disabled{
     cursor:not-allowed;
     opacity:0.8;
 }
-
-/* --- NUEVOS ESTILOS PARA IMÁGENES FIJAS --- */
-.card-img-fija {
-    width: 100%;
-    height: 140px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-top: 10px;
-    border: 1px solid #e2e8f0;
-}
-
-.canvas-imagen-fija {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    background: #fafbfc;
-}
-
-.imagen-fija-visor {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-}
     
 </style>
 </head>
@@ -460,32 +432,17 @@ textarea:disabled{
                 <small>Cumplimiento</small>
             </div>
         </div>
+        <div class="indicator-card"
+     onclick="abrirIndicador('Control de Fugas Sección A')">
 
+    <h3>Control de Fugas</h3>
 
-<div class="indicator-card" onclick="abrirModuloImagen('Control de Fugas Sección A', 'fugas_a.png')">
-            <h3>Control de Fugas Sección A</h3>
-            <img src="assets/fugas_a.png" class="card-img-fija" alt="Fugas Sección A" onerror="this.src='https://placehold.co/400x200?text=Fugas+Sección+A'">
-        </div>
+    <div class="mini-stat">
+        <span>🛠️</span>
+        <small>Inspección</small>
+    </div>
 
-        <div class="indicator-card" onclick="abrirModuloImagen('Control de Fugas Sección B', 'fugas_b.png')">
-            <h3>Control de Fugas Sección B</h3>
-            <img src="assets/fugas_b.png" class="card-img-fija" alt="Fugas Sección B" onerror="this.src='https://placehold.co/400x200?text=Fugas+Sección+B'">
-        </div>
-
-        <div class="indicator-card" onclick="abrirModuloImagen('Inspección de Tolvas', 'inspeccion_tolvas.png')">
-            <h3>Inspección de Tolvas</h3>
-            <img src="assets/inspeccion_tolvas.png" class="card-img-fija" alt="Inspección Tolvas" onerror="this.src='https://placehold.co/400x200?text=Inspección+Tolvas'">
-        </div>
-
-        <div class="indicator-card" onclick="abrirModuloImagen('Estado de Filtros', 'estado_filtros.png')">
-            <h3>Estado de Filtros</h3>
-            <img src="assets/estado_filtros.png" class="card-img-fija" alt="Estado Filtros" onerror="this.src='https://placehold.co/400x200?text=Estado+Filtros'">
-        </div>
-
-        <div class="indicator-card" onclick="abrirModuloImagen('Chequeo de Transportadores', 'transportadores.png')">
-            <h3>Chequeo de Transportadores</h3>
-            <img src="assets/transportadores.png" class="card-img-fija" alt="Transportadores" onerror="this.src='https://placehold.co/400x200?text=Transportadores'">
-        </div>
+</div>
         
     </div> 
 </div> 
@@ -751,51 +708,32 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
             "Paso 4: Ajustar manualmente el damper de aspiración del equipo correspondiente utilizando el indicador de vacío o el nivel de aspiración requerido para la variedad procesada.",
 
             "Paso 5: Realizar inspección visual de las tolvas de germen y coordinar la recuperación de grano con el líder de equipo y el ingeniero de proceso."
-        ]
-
-,
-    "Control de Fugas Sección A": {
-        pasos: [
-            "Paso 1: Identificar componente afectado en el plano visual.",
-            "Paso 2: Reportar orden de mantenimiento correctivo en Suite 360.",
-            "Paso 3: Aplicar ajuste físico primario de estanqueidad."
-        ]
+]
     },
+    
+    "Control de Fugas Sección A":{
+    tipo:"imagen",
+    imagen:"fugas_a.png",
 
-    "Control de Fugas Sección B": {
-        pasos: [
-            "Paso 1: Inspeccionar sellos mecánicos periféricos.",
-            "Paso 2: Detener línea si la rata de fuga compromete la seguridad alimentaria.",
-            "Paso 3: Documentar bitácora de turno."
-        ]
-    },
+    pasos:[
+        "Paso 1: Verificar sello mecánico.",
+        "Paso 2: Revisar válvulas.",
+        "Paso 3: Registrar hallazgo."
+    ]
+},
 
-    "Inspección de Tolvas": {
-        pasos: [
-            "Paso 1: Verificar acumulación estática de grano en paredes cónicas.",
-            "Paso 2: Confirmar apertura correcta de compuertas neumáticas.",
-            "Paso 3: Limpiar sensores de nivel."
-        ]
-    },
+"Estado de Filtros":{
+    tipo:"imagen",
+    imagen:"filtros.png",
 
-    "Estado de Filtros": {
-        pasos: [
-            "Paso 1: Medir la caída de presión diferencial (ΔP).",
-            "Paso 2: Programar ciclo de limpieza por pulsos si supera el límite de control.",
-            "Paso 3: Inspeccionar mangas rotas."
-        ]
-    },
-
-    "Chequeo de Transportadores": {
-        pasos: [
-            "Paso 1: Validar alineación y tensión en transportador Redler.",
-            "Paso 2: Verificar ruidos anómalos en rodamiento motriz.",
-            "Paso 3: Inspeccionar tolvas de descarga para descartar atascamientos."
+    pasos:[
+        "Paso 1: Verificar ΔP.",
+        "Paso 2: Revisar mangas.",
+        "Paso 3: Validar limpieza."
         ]
     }
 };
 
-            
 const bibliotecaPlanes = {
     "Remojo": [
         {
@@ -1115,56 +1053,6 @@ function abrirIndicador(nombre){
     cambiarVariable(nombre);
 }
 
-function abrirModuloImagen(nombreIndicador, nombreImagen) {
-    // 1. Ocultar Home y mostrar Dashboard
-    document.getElementById('homeScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
-    
-    // 2. Colocar el título del indicador seleccionado
-    document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
-    
-    // 3. Reemplazar el contenedor de la gráfica de Plotly por la imagen correspondiente
-    const visorContainer = document.querySelector('.visor-container');
-    visorContainer.innerHTML = `
-        <div class="canvas-imagen-fija">
-            <img src="assets/${nombreImagen}" class="imagen-fija-visor" alt="${nombreIndicador}" onerror="this.src='https://placehold.co/600x400?text=${nombreIndicador.replace(/ /g, '+')}'">
-        </div>
-    `;
-    
-    // 4. Configurar el panel lateral con la información del indicador estático
-    document.getElementById('infoLote').innerText = "MÓDULO DE INSPECCIÓN";
-    document.getElementById('infoLote').style.background = "#3182ce"; // Color azul informativo
-    
-    // Habilitar campos
-    document.getElementById('operador').disabled = false;
-    document.getElementById('accionExtra').disabled = false;
-    document.getElementById('operador').value = "";
-    document.getElementById('accionExtra').value = "";
-    
-    // 5. Cargar y renderizar el checklist de pasos correspondientes
-    const config = planesConfig[nombreIndicador];
-    const checklistDiv = document.getElementById('checklist-pasos');
-    checklistDiv.innerHTML = "";
-    
-    if (config && config.pasos) {
-        config.pasos.forEach((paso, index) => {
-            const label = document.createElement('label');
-            label.className = 'step';
-            label.innerHTML = `<input type="checkbox" onchange="validarPasos()" style="margin-right:10px;"> ${paso}`;
-            checklistDiv.appendChild(label);
-        });
-    }
-    
-    // Resetear el botón de enviar
-    const btn = document.getElementById('btnEnviar');
-    btn.disabled = true;
-    btn.classList.remove('active');
-    
-    // Guardar una referencia del estado actual de la variable por si se envía el reporte
-    variableActual = nombreIndicador;
-    datoSeleccionado = { lote: "INSPECCION_FIJA", y: 1 }; // Valores por defecto para la estructura de tu Supabase
-}
-
 function volverHome(){
 
     document.getElementById('dashboardScreen').style.display = 'none';
@@ -1172,62 +1060,6 @@ function volverHome(){
     document.getElementById('bibliotecaScreen').style.display = 'none';
 
     document.getElementById('homeScreen').style.display = 'block';
-}
-
-
-function abrirModuloImagen(nombreModulo, archivoImagen) {
-    // 1. Alternar pantallas
-    document.getElementById('homeScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
-    document.getElementById('tituloIndicadorActual').innerText = nombreModulo;
-    
-    // 2. Reemplazar temporalmente el área del gráfico por la imagen fija
-    const contenedorVisor = document.getElementById('myDiv').parentElement;
-    contenedorVisor.innerHTML = `
-        <div class="canvas-imagen-fija">
-            <img src="assets/${archivoImagen}" class="imagen-fija-visor" alt="${nombreModulo}" onerror="this.src='https://placehold.co/800x500?text=${nombreModulo.replace(/ /g, '+')}'">
-        </div>
-    `;
-    
-    // 3. Inicializar el panel de control lateral con sus respectivos pasos
-    inicializarPanelLateral(nombreModulo);
-}
-
-// Modificación para asegurar que cuando regreses a un indicador gráfico, el div original se restaure
-const originalAbrirIndicador = abrirIndicador; 
-abrirIndicador = function(nombreIndicador) {
-    const contenedorVisor = document.querySelector('.canvas-scroll');
-    if (contenedorVisor) {
-        contenedorVisor.innerHTML = '<div id="myDiv"></div>'; // Restaura el contenedor de Plotly si venías de una imagen
-    }
-    originalAbrirIndicador(nombreIndicador);
-    inicializarPanelLateral(nombreIndicador); // Abre el panel para los indicadores normales también
-}
-
-function inicializarPanelLateral(nombreKey) {
-    const config = planesConfig[nombreKey];
-    const infoLote = document.getElementById('infoLote');
-    const checklistDiv = document.getElementById('checklist-pasos');
-    
-    if(infoLote) infoLote.innerText = `REGISTRO: ${nombreKey.toUpperCase()}`;
-    if(checklistDiv) {
-        checklistDiv.innerHTML = '';
-        document.getElementById('operador').disabled = false;
-        document.getElementById('accionExtra').disabled = false;
-        
-        if(config && config.pasos) {
-            config.pasos.forEach((paso) => {
-                const label = document.createElement('label');
-                label.className = 'step';
-                label.innerHTML = `
-                    <input type="checkbox" class="chk-paso" onchange="validarPasos()" style="margin-right: 10px;">
-                    ${paso.replace(/\n/g, '<br>')}
-                `;
-                checklistDiv.appendChild(label);
-            });
-        }
-    }
-    validarPasos();
 }
     
 function abrirBiblioteca(){
@@ -1375,12 +1207,25 @@ function mostrarProceso(nombreProceso){
 }
 
 function cambiarVariable(nombre){
-    variableActual = nombre;
-    document.getElementById('tituloIndicadorActual').innerText = nombre;
-    cancelarRegistro();
-    filtrarPorFechas();
-}
 
+    variableActual = nombre;
+
+    document.getElementById('tituloIndicadorActual').innerText = nombre;
+
+    cancelarRegistro();
+
+    const config = planesConfig[nombre];
+
+    if(config.tipo === "imagen"){
+
+        mostrarImagenFija(nombre);
+
+    }else{
+
+        filtrarPorFechas();
+    }
+}
+    
 function filtrarPorFechas() {
 
     const desdeInput = document.getElementById('fechaDesde').value;
@@ -1563,6 +1408,66 @@ if(reporteExistente){
 }
     }); 
 } 
+
+function mostrarImagenFija(nombreIndicador){
+
+    const config = planesConfig[nombreIndicador];
+
+    const div = document.getElementById('myDiv');
+
+    div.innerHTML = `
+        <div style="
+            width:100%;
+            height:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#f8fafc;
+            padding:20px;
+        ">
+
+            <img
+                src="assets/${config.imagen}"
+                style="
+                    max-width:100%;
+                    max-height:100%;
+                    object-fit:contain;
+                    border-radius:12px;
+                    box-shadow:0 4px 18px rgba(0,0,0,0.12);
+                "
+            >
+
+        </div>
+    `;
+
+    document.getElementById('stat-total').innerText = '-';
+    document.getElementById('stat-ok').innerText = '-';
+    document.getElementById('stat-percent').innerText = '-';
+    document.getElementById('stat-pending').innerText = '-';
+
+    cancelarRegistro();
+
+    document.getElementById('infoLote').innerHTML = `
+        Seleccione una acción del checklist
+    `;
+
+    document.getElementById('operador').disabled = false;
+    document.getElementById('accionExtra').disabled = false;
+
+    const pasos = config.pasos || [];
+
+    document.getElementById('checklist-pasos').innerHTML =
+        pasos.map((p,i)=>`
+            <label class="step">
+                <input
+                    type="checkbox"
+                    onchange="validarPasos()"
+                    id="paso${i}"
+                >
+                ${p}
+            </label>
+        `).join('');
+}
     
 function cancelarRegistro(){
 
@@ -1747,8 +1652,12 @@ function validarPasos(){
     const op = document.getElementById('operador').value.trim() !== "";
     const btn = document.getElementById('btnEnviar');
 
-    btn.disabled = !op;
-    btn.classList.toggle('active', op);
+    btn.disabled = !(op && checks === total);
+
+btn.classList.toggle(
+    'active',
+    op && checks === total
+);
 }
 
 async function enviarReporte(){
@@ -1763,9 +1672,9 @@ async function enviarReporte(){
     .filter(p => p.realizado);
 
         const payload = {
-    lote_id: datoSeleccionado.lote,
+    lote_id: datoSeleccionado?.lote || null,
     variable: variableActual,
-    valor: datoSeleccionado.y,
+    valor: datoSeleccionado?.y || null,
     operador: document.getElementById('operador').value,
     comentario: document.getElementById('accionExtra').value,
 
