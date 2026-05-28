@@ -1715,20 +1715,19 @@ function cancelarRegistro() {
         if (inputOperador) inputOperador.disabled = true;
         if (inputComentario) inputComentario.disabled = true;
 
-        // AQUÍ VA TU CÓDIGO: Devuelve el fondo rojo original y limpia el texto
         const infoLote = document.getElementById('infoLote');
         if (infoLote) {
             infoLote.style.background = '#e53e3e'; 
             infoLote.innerText = 'Sin lote seleccionado';
         }
         
-        // Volvemos a pintar los pasos en modo lectura (gris/disabled)
+        // Volvemos a pintar los pasos en modo lectura inicial (gris/disabled)
         const checklistPasos = document.getElementById('checklist-pasos');
         if (config && config.pasos) {
             let htmlGris = "";
             config.pasos.forEach(pasoText => {
                 htmlGris += `
-                    <label class="step-row" style="display:block; opacity:0.5; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px; cursor:not-allowed; color:#94a3b8;">
+                    <label class="step" style="opacity:0.5; cursor:not-allowed; background:#f1f5f9;">
                         <input type="checkbox" disabled style="margin-right:10px;">
                         <span>${pasoText}</span>
                     </label>
@@ -1738,14 +1737,14 @@ function cancelarRegistro() {
         }
     }
 
-    // 3. RESTABLECER VARIABLES Y BOTÓN AL ESTADO INICIAL
+    // 3. RESTABLECER VARIABLES Y TEXTO DEL BOTÓN
     datoSeleccionado = null;
 
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
         btn.classList.remove('active');
-        btn.innerText = 'Registrar Inspección / Plan'; // <--- AQUÍ QUEDA AGREGADO EL CAMBIO
+        btn.innerText = 'Registrar Inspección / Plan'; 
     }
 }
     
@@ -1788,11 +1787,12 @@ function abrirPlanReaccion(dato) {
     // RESTABLECER TEXTO DEL BOTÓN PARA EL NUEVO REGISTRO
     const btn = document.getElementById('btnEnviar');
     if (btn) {
-        btn.innerText = 'Registrar Inspección / Plan'; // Pon aquí el texto original que usa tu botón
+        btn.innerText = 'Registrar Inspección / Plan';
     }
     
     validarPasos();
 }
+    
 function verReporteExistente(reporte){
     const info = document.getElementById('infoLote');
     
@@ -1813,8 +1813,9 @@ function verReporteExistente(reporte){
     const pasos = planesConfig[variableActual].pasos;
     const realizados = reporte.pasos_realizados || [];
     
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>{
-        const ejecutado = realizados.some(r => r.paso === (i+1));
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p, i) => {
+        // CORRECCIÓN CRÍTICA: Buscamos si el paso (i+1) existe en la BD Y si fue guardado como 'realizado: true'
+        const ejecutado = realizados.some(r => r.paso === (i + 1) && r.realizado === true);
         
         return `
             <label class="step" style="
@@ -1832,7 +1833,6 @@ function verReporteExistente(reporte){
     }).join('');
     
     const btn = document.getElementById('btnEnviar');
-    
     btn.disabled = true;
     btn.classList.remove('active');
     btn.innerText = 'Reporte ya registrado';
