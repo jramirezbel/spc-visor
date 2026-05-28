@@ -1018,6 +1018,7 @@ function abrirIndicador(nombreIndicador) {
     const visorContainer = document.querySelector('.visor-container');
     const camposManual = document.getElementById('camposManual');
     const infoLote = document.getElementById('infoLote');
+    const checklistPasos = document.getElementById('checklist-pasos'); // Contenedor del checklist 
     
     // Resetear datos previos del punto seleccionado
     datoSeleccionado = null;
@@ -1027,15 +1028,26 @@ function abrirIndicador(nombreIndicador) {
         camposManual.style.display = 'block'; 
         infoLote.style.display = 'none';
         
-        // Inyectamos la imagen directamente en el contenedor limpio
+        // 1. Inyectamos la imagen en el visor izquierdo
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
                 <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
             </div>
         `;
         
-        // CORRECCIÓN AQUÍ: Asegurar que el nombre sea "generarChecklist"
-        generarChecklist(config.pasos);
+        // 2. Generamos el Checklist directamente en el panel derecho 
+        let htmlChecklist = "";
+        config.pasos.forEach((pasoText, index) => {
+            htmlChecklist += `
+                <label class="step" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #edf2f7; font-size:13px; cursor:pointer;">
+                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
+                    <span>${pasoText}</span>
+                </label>
+            `;
+        });
+        checklistPasos.innerHTML = htmlChecklist;
+        
+        // 3. Validar el estado del botón de envío
         validarPasos();
         
     } else {
@@ -1044,20 +1056,23 @@ function abrirIndicador(nombreIndicador) {
         infoLote.style.display = 'block';
         infoLote.innerText = "Sin lote seleccionado";
         
-        // Restaurar la estructura HTML limpia para que Plotly pueda dibujar sin interferencias
+        // Restaurar la estructura HTML limpia para Plotly [cite: 28]
         visorContainer.innerHTML = `
             <div class="canvas-scroll">
                 <div id="myDiv"></div>
             </div>
         `;
         
-        // AJUSTE CLAVE: Las fechas y la consulta a Supabase SOLO ocurren si es SPC
+        // Configurar fechas por defecto
         const hoy = new Date();
         const haceMes = new Date();
         haceMes.setDate(hoy.getDate() - 30);
         
         document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
         document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
+        
+        // Limpiar el checklist anterior si veníamos del módulo de imágenes
+        checklistPasos.innerHTML = '<p class="placeholder-text" style="color:#94a3b8; text-align:center; margin-top:20px;">Seleccione un punto en la gráfica para ver el plan de reacción.</p>';
         
         // Ejecutar la consulta gráfica únicamente aquí
         filtrarPorFechas();
