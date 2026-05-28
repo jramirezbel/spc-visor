@@ -1813,9 +1813,12 @@ function verReporteExistente(reporte){
     const pasos = planesConfig[variableActual].pasos;
     const realizados = reporte.pasos_realizados || [];
     
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>{
-        // CORRECCIÓN CRÍTICA: Evalúa si el paso coincide Y si fue guardado con cualquiera de los dos formatos (realizado o completado)
-        const ejecutado = realizados.some(r => r.paso === (i+1) && (r.realizado === true || r.completado === true));
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p)=>{
+        // COMPARACIÓN STRICTA: Busca el texto idéntico del paso en el JSON guardado
+        const registroPaso = realizados.find(r => r.paso === p);
+        
+        // Evalúa si se encontró y si la propiedad 'completado' es verdadera
+        const ejecutado = registroPaso ? (registroPaso.completado === true) : false;
         
         return `
             <label class="step" style="
@@ -1943,48 +1946,47 @@ async function enviarReporte() {
         const config = planesConfig[variableActual];
         const esManual = (config && config.tipo === "imagen");
         
-        // Determinar de dónde provienen el lote y el valor
-        const loteFinal = esManual 
-            ? document.getElementById('manualLote').value.trim()
-            : (datoSeleccionado?.lote || null);
-            
-        const valorFinal = esManual 
-            ? parseFloat(document.getElementById('manualValor').value)
-            : (datoSeleccionado?.y || null);
-            
-        // Validación para campos obligatorios en el módulo manual
-        if (esManual && (!loteFinal || isNaN(valorFinal))) {
-            alert("Por favor, ingrese un número de lote válido y el valor de la inspección.");
-            return;
-        }
-            
-        // Capturar checklist de forma segura para cualquier tipo de módulo
-        const pasosRealizados = [];
-        document.querySelectorAll('#checklist-pasos .step').forEach(element => {
-            const cb = element.querySelector('input[type="checkbox"]');
-            if (cb) {
-                // Buscamos un span interno, si no existe, tomamos el texto del contenedor completo
-                const spanElement = element.querySelector('span');
-                const texto = spanElement ? spanElement.innerText.trim() : element.innerText.trim();
-                
-                pasosRealizados.push({
-                    paso: texto,
-                    completado: cb.checked
-                });
-            }
-        });
+        let loteFinal = "";
+        let valorFinal = 0;
         
-        // Construir Payload de inserción (sin la columna tipo_modulo ausente)
+        if (esManual) {
+            loteFinal = document.getElementById('manualLote').value.trim();
+            valorFinal = parseFloat(document.getElementById('manualValor').value);
+            if (!loteFinal || isNaN(valorFinal)) {
+                alert("Por favor ingrese Lote y Valor válidos.");
+                return;
+            }
+        } else {
+            if (!datoSeleccionado) {
+                alert("No hay ningún punto seleccionado en la gráfica.");
+                return;
+            }
+            loteFinal = datoSeleccionado.lote;
+            valorFinal = datoSeleccionado.y;
+        }
+
+        // ============================================================
+        // UNIFICACIÓN DEL PAYLOAD: Guardar el texto completo y 'completado'
+        // ============================================================
+        const checks = [...document.querySelectorAll('#checklist-pasos input[type="checkbox"]')];
+        const pasosRealizados = checks.map(c => {
+            // Buscamos el texto del paso que está en el span hermano del checkbox
+            const textoPaso = c.parentElement.querySelector('span')?.innerText.trim() || "";
+            return {
+                paso: textoPaso,       // Guarda el string descriptivo completo
+                completado: c.checked  // Guarda true si está marcado, false si no
+            };
+        });
+
         const payload = {
             lote_id: loteFinal,
             valor: valorFinal,
             variable: variableActual,
             operador: document.getElementById('operador').value.trim(),
             comentario: document.getElementById('accionExtra').value.trim(),
-            pasos_realizados: pasosRealizados
+            pasos_realizados: pasosRealizados // Se va limpio con la nueva estructura unificada
         };
-        
-        // Guardar en la tabla correspondiente de Supabase
+
         const { error } = await _supabase.from('planes_reaccion').insert([payload]);
         if (error) {
             console.error("Error devuelto por Supabase:", error);
@@ -1993,11 +1995,8 @@ async function enviarReporte() {
         }
         
         alert("Inspección / Plan registrado correctamente.");
-        
-        // LIMPIEZA TOTAL: Forzamos el vaciado de los inputs y el bloqueo gris
         cancelarRegistro(); 
         
-        // Solo recargar gráficas si no es un módulo operativo manual
         if (!esManual) {
             filtrarPorFechas();
         }
@@ -2006,24 +2005,8 @@ async function enviarReporte() {
         console.error("Error capturado en el catch:", err);
         alert("Error crítico registrando el reporte: " + err.message);
     }
-    // ... (Tu código actual de inserción en Supabase)
-        const { error } = await _supabase.from('planes_reaccion').insert([payload]);
-        if (error) {
-            console.error("Error devuelto por Supabase:", error);
-            alert("Error en Supabase: " + error.message);
-            return;
-        }
-        
-        alert("Inspección / Plan registrado correctamente.");
-        
-        // ¡LIMPIEZA TOTAL Y RESETEO AL MODO GRIS!
-        cancelarRegistro(); 
-        
-        if (!esManual) {
-            filtrarPorFechas();
-        }
 }
-
+    
 function descargarReportes(){
     alert("Descargando CSV...");
 }
