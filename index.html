@@ -1079,6 +1079,56 @@ function abrirIndicador(nombre){
     cambiarVariable(nombre);
 }
 
+function abrirModuloImagen(nombreIndicador, nombreImagen) {
+    // 1. Ocultar Home y mostrar Dashboard
+    document.getElementById('homeScreen').style.display = 'none';
+    document.getElementById('dashboardScreen').style.display = 'block';
+    
+    // 2. Colocar el título del indicador seleccionado
+    document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
+    
+    // 3. Reemplazar el contenedor de la gráfica de Plotly por la imagen correspondiente
+    const visorContainer = document.querySelector('.visor-container');
+    visorContainer.innerHTML = `
+        <div class="canvas-imagen-fija">
+            <img src="assets/${nombreImagen}" class="imagen-fija-visor" alt="${nombreIndicador}" onerror="this.src='https://placehold.co/600x400?text=${nombreIndicador.replace(/ /g, '+')}'">
+        </div>
+    `;
+    
+    // 4. Configurar el panel lateral con la información del indicador estático
+    document.getElementById('infoLote').innerText = "MÓDULO DE INSPECCIÓN";
+    document.getElementById('infoLote').style.background = "#3182ce"; // Color azul informativo
+    
+    // Habilitar campos
+    document.getElementById('operador').disabled = false;
+    document.getElementById('accionExtra').disabled = false;
+    document.getElementById('operador').value = "";
+    document.getElementById('accionExtra').value = "";
+    
+    // 5. Cargar y renderizar el checklist de pasos correspondientes
+    const config = planesConfig[nombreIndicador];
+    const checklistDiv = document.getElementById('checklist-pasos');
+    checklistDiv.innerHTML = "";
+    
+    if (config && config.pasos) {
+        config.pasos.forEach((paso, index) => {
+            const label = document.createElement('label');
+            label.className = 'step';
+            label.innerHTML = `<input type="checkbox" onchange="validarPasos()" style="margin-right:10px;"> ${paso}`;
+            checklistDiv.appendChild(label);
+        });
+    }
+    
+    // Resetear el botón de enviar
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.classList.remove('active');
+    
+    // Guardar una referencia del estado actual de la variable por si se envía el reporte
+    variableActual = nombreIndicador;
+    datoSeleccionado = { lote: "INSPECCION_FIJA", y: 1 }; // Valores por defecto para la estructura de tu Supabase
+}
+
 function volverHome(){
 
     document.getElementById('dashboardScreen').style.display = 'none';
