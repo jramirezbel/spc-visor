@@ -532,12 +532,9 @@ textarea:disabled{
 <div id="camposManual" style="display:none; background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px dashed #cbd5e1;">
     <h4 style="margin-top:0; margin-bottom:10px; font-size:14px; color:#475569;">Datos de la Inspección</h4>
     
-    <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Nombre del Operador *</label>
-        <input type="text" id="manualOperador" oninput="validarPasos()" placeholder="Ej. Juan Ramírez" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;">
-    </div>
+    <div id="contenedorOperadorManual"></div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
         <div>
             <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Número de Lote *</label>
             <input type="number" id="manualLote" oninput="validarPasos()" placeholder="Ej. 27324" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;">
@@ -548,6 +545,7 @@ textarea:disabled{
         </div>
     </div>
 </div>
+    
 
     <div style="margin-bottom:15px;">
         <label style="font-weight:bold; font-size:13px;"> Operador </label>
