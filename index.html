@@ -1809,29 +1809,33 @@ function cerrarModalPlan(){
     
     
 function validarPasos() {
+    const btn = document.getElementById('btnRegistrarPlan');
     const config = planesConfig[variableActual];
-    const esManual = (config.tipo === "imagen");
-    
-    // Verificar que todos los checkbox del checklist estén marcados
-    const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
-    let todosLosPasosMarcados = checkboxes.length > 0;
-    checkboxes.forEach(cb => {
-        if (!cb.checked) todosLosPasosMarcados = false;
-    });
-    
-    const operadorLleno = document.getElementById('operador').value.trim() !== "";
-    
-    let formularioValido = todosLosPasosMarcados && operadorLleno;
-    
-    // Si es operativo/manual (TIPO 2), validar obligatoriamente lote y valor
+    const esManual = (config && config.tipo === "imagen");
+
     if (esManual) {
-        const loteLleno = document.getElementById('manualLote').value.trim() !== "";
-        const valorLleno = document.getElementById('manualValor').value.trim() !== "";
-        formularioValido = formularioValido && loteLleno && valorLleno;
+        // En el módulo manual, el botón depende de que se llenen los campos obligatorios
+        const lote = document.getElementById('manualLote').value.trim();
+        const valor = document.getElementById('manualValor').value.trim();
+        
+        // Si tiene lote y valor escrito, se habilita (sin importar cuántos checkboxes marcó)
+        if (lote !== "" && valor !== "") {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    } else {
+        // En los módulos SPC estándar (gráficas), mantenemos que marque todo o al menos uno
+        // Si prefieres que en SPC tampoco obligue a marcar todo, cambia .every por .some o déjalo en false
+        const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
+        if (checkboxes.length === 0) {
+            btn.disabled = true;
+            return;
+        }
+        // Para alertas SPC, exige que al menos se marque una acción tomada
+        const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
+        btn.disabled = !alMenosUno;
     }
-    
-    // Habilitar o deshabilitar botón de envío
-    document.getElementById('btnEnviar').disabled = !formularioValido;
 }
 
 async function enviarReporte() {
