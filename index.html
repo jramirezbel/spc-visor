@@ -1026,26 +1026,27 @@ function abrirIndicador(nombre) {
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    // Mostrar controles SPC y ocultar visor de imagen
+    // Mostrar controles SPC y ocultar contenedor de imagen
     document.getElementById('controlesFiltros').style.display = 'flex';
     document.getElementById('chartContainer').style.display = 'block';
     document.getElementById('imageContainer').style.display = 'none';
     
-    // Ocultar campos de entrada manual (vienen de la gráfica)
+    // El bloque manual se oculta en SPC
     document.getElementById('camposManual').style.display = 'none';
     
-    // Limpiar el estado previo del formulario
+    // Limpiar inputs del operador pero MOSTRAR el plan de reacción por defecto
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
-    document.getElementById('checklist-pasos').innerHTML = "";
     document.getElementById('btnEnviar').disabled = true;
-    document.getElementById('infoLote').innerText = "Sin lote seleccionado";
+    document.getElementById('infoLote').innerText = "Sin lote seleccionado (Haz clic en un punto del gráfico)";
     
-    // CORRECCIÓN: Dar un respiro al DOM para que Plotly encuentre el contenedor visible
+    // CARGAR EL CHECKLIST POR DEFECTO DESDE EL INICIO
+    if (config && config.pasos) {
+        generarChecklist(config.pasos);
+    }
+    
     setTimeout(() => {
         cambiarVariable(nombre);
-        // Inicializar filtros con las fechas por defecto si existen en los inputs
-        filtrarPorFechas();
     }, 50);
 }
 // Para los de TIPO 2: Módulos Manuales / Operativos
@@ -1056,28 +1057,38 @@ function abrirIndicadorManual(nombre) {
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    // Ocultar controles SPC y gráficos
+    // Ocultar controles SPC y gráfica
     document.getElementById('controlesFiltros').style.display = 'none';
     document.getElementById('chartContainer').style.display = 'none';
     
-    // Mostrar contenedor de planos/imágenes y campos obligatorios
-    const imgContainer = document.getElementById('imageContainer');
-    imgContainer.style.display = 'block';
-    imgContainer.innerHTML = `<img src="planos/${nombre}.png" alt="Plano ${nombre}" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1;">`;
+    // Mostrar el contenedor de la imagen/plano operativo
+    const imageContainer = document.getElementById('imageContainer');
+    imageContainer.style.display = 'block';
     
-    // Habilitar campos y mostrar entradas manuales de Lote y Valor
+    // Renderizado simple de un contenedor visual para la inspección
+    imageContainer.innerHTML = `
+        <div style="text-align:center; padding:40px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
+            <div style="font-size:48px; margin-bottom:10px;">📋</div>
+            <h3 style="margin:0; color:#1e293b;">Plano / Formulario de Inspección</h3>
+            <p style="color:#64748b; margin-top:5px;">Módulo Operativo Activo: ${nombre}</p>
+        </div>
+    `;
+    
+    // Ocultar el badge de lote SPC y MOSTRAR obligatoriamente el ingreso manual
+    document.getElementById('infoLote').style.display = 'none';
     document.getElementById('camposManual').style.display = 'block';
-    document.getElementById('operador').disabled = false;
-    document.getElementById('accionExtra').disabled = false;
     
-    // Limpiar campos por si había datos anteriores
+    // Limpiar campos previos
     document.getElementById('manualLote').value = "";
     document.getElementById('manualValor').value = "";
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
+    document.getElementById('btnEnviar').disabled = true;
     
-    // Renderizar los checklist de forma directa ya que no dependen de un punto clicado
-    generarChecklist(config.pasos);
+    // Forzar el despliegue del plan de reacción / checklist operativo
+    if (config && config.pasos) {
+        generarChecklist(config.pasos);
+    }
 }
     
 function mostrarImagenManual(nombre){
@@ -1385,45 +1396,21 @@ function mostrarProceso(nombreProceso){
 }
 
 function cambiarVariable(nombre){
-
     variableActual = nombre;
-
-    document.getElementById('tituloIndicadorActual')
-        .innerText = nombre;
-
-    cancelarRegistro();
-
+    document.getElementById('tituloIndicadorActual').innerText = nombre;
+    
     const config = planesConfig[nombre];
-
-    const filtros = document.querySelector('.filtros-fecha');
-
     const stats = document.getElementById('stats-bar');
-
-    if(config.modo === "manual"){
-
-        stats.style.display = 'none';
-
-        document.querySelectorAll('.filtro-group')
-            .forEach(el => el.style.display='none');
-
-        document.querySelector('.btn-filtrar')
-            .style.display='none';
-
-        mostrarImagenFija(nombre);
-
-    }else{
-
-        stats.style.display = 'flex';
-
-        document.querySelectorAll('.filtro-group')
-            .forEach(el => el.style.display='flex');
-
-        document.querySelector('.btn-filtrar')
-            .style.display='block';
-       
-        document.getElementById('camposManual')
-    .classList.remove('contenido-oculto');
-
+    
+    // Si es tipo imagen/manual, no calculamos estadísticas ni llamamos a Plotly
+    if(config.tipo === "imagen" || config.modo === "manual"){
+        if(stats) stats.style.display = 'none';
+    } else {
+        // Si es SPC, aseguramos que la barra de estadísticas y lote estén listos
+        if(stats) stats.style.display = 'flex';
+        document.getElementById('infoLote').style.display = 'block';
+        
+        // Ejecutar el filtro de datos históricos para Plotly
         filtrarPorFechas();
     }
 }
@@ -1677,13 +1664,19 @@ function cancelarRegistro() {
     document.getElementById('homeScreen').style.display = 'block';
     document.getElementById('dashboardScreen').style.display = 'none';
     
-    // Resetear valores de los inputs
+    // Resetear visibilidades por defecto
+    document.getElementById('infoLote').style.display = 'block';
+    document.getElementById('infoLote').innerText = "Sin lote seleccionado";
+    document.getElementById('camposManual').style.display = 'none';
+    
+    // Limpiar textos
+    document.getElementById('manualLote').value = "";
+    document.getElementById('manualValor').value = "";
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
     document.getElementById('checklist-pasos').innerHTML = "";
     document.getElementById('btnEnviar').disabled = true;
     
-    // Limpiar datos guardados temporalmente en SPC
     datoSeleccionado = null;
 }
     
