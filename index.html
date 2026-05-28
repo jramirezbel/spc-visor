@@ -532,6 +532,51 @@ textarea:disabled{
         <div class="panel-lateral">
 
             <div id="infoLote" class="badge-lote">
+                <div id="camposManual" class="contenido-oculto">
+
+    <div style="margin-bottom:15px;">
+
+        <label style="font-weight:bold;font-size:13px;">
+            Lote
+        </label>
+
+        <input
+            type="text"
+            id="manualLote"
+            oninput="validarPasos()"
+            style="
+                width:100%;
+                padding:10px;
+                margin-top:5px;
+                border-radius:8px;
+                border:1px solid #cbd5e0;
+            "
+        >
+
+    </div>
+
+    <div style="margin-bottom:15px;">
+
+        <label style="font-weight:bold;font-size:13px;">
+            Valor
+        </label>
+
+        <input
+            type="number"
+            id="manualValor"
+            oninput="validarPasos()"
+            style="
+                width:100%;
+                padding:10px;
+                margin-top:5px;
+                border-radius:8px;
+                border:1px solid #cbd5e0;
+            "
+        >
+
+    </div>
+
+</div>
                 Sin lote seleccionado
             </div>
 
@@ -1210,17 +1255,41 @@ function cambiarVariable(nombre){
 
     variableActual = nombre;
 
-    document.getElementById('tituloIndicadorActual').innerText = nombre;
+    document.getElementById('tituloIndicadorActual')
+        .innerText = nombre;
 
     cancelarRegistro();
 
     const config = planesConfig[nombre];
 
-    if(config.tipo === "imagen"){
+    const filtros = document.querySelector('.filtros-fecha');
+
+    const stats = document.getElementById('stats-bar');
+
+    if(config.modo === "manual"){
+
+        stats.style.display = 'none';
+
+        document.querySelectorAll('.filtro-group')
+            .forEach(el => el.style.display='none');
+
+        document.querySelector('.btn-filtrar')
+            .style.display='none';
 
         mostrarImagenFija(nombre);
 
     }else{
+
+        stats.style.display = 'flex';
+
+        document.querySelectorAll('.filtro-group')
+            .forEach(el => el.style.display='flex');
+
+        document.querySelector('.btn-filtrar')
+            .style.display='block';
+       
+        document.getElementById('camposManual')
+    .classList.remove('contenido-oculto');
 
         filtrarPorFechas();
     }
@@ -1446,7 +1515,8 @@ function mostrarImagenFija(nombreIndicador){
     document.getElementById('stat-pending').innerText = '-';
 
     cancelarRegistro();
-
+document.getElementById('camposManual')
+    .classList.add('contenido-oculto');
     document.getElementById('infoLote').innerHTML = `
         Seleccione una acción del checklist
     `;
@@ -1647,17 +1717,54 @@ function cerrarModalPlan(){
     
     
 function validarPasos(){
-    const total = document.querySelectorAll('#checklist-pasos input').length;
-    const checks = document.querySelectorAll('#checklist-pasos input:checked').length;
-    const op = document.getElementById('operador').value.trim() !== "";
-    const btn = document.getElementById('btnEnviar');
 
-    btn.disabled = !(op && checks === total);
+    const total =
+        document.querySelectorAll(
+            '#checklist-pasos input'
+        ).length;
 
-btn.classList.toggle(
-    'active',
-    op && checks === total
-);
+    const checks =
+        document.querySelectorAll(
+            '#checklist-pasos input:checked'
+        ).length;
+
+    const op =
+        document.getElementById('operador')
+        .value.trim() !== "";
+
+    const config = planesConfig[variableActual];
+
+    let valido = false;
+
+    if(config.modo === "manual"){
+
+        const lote =
+            document.getElementById('manualLote')
+            .value.trim();
+
+        const valor =
+            document.getElementById('manualValor')
+            .value.trim();
+
+        valido =
+            op &&
+            lote &&
+            valor &&
+            checks === total;
+
+    }else{
+
+        valido =
+            op &&
+            checks === total;
+    }
+
+    const btn =
+        document.getElementById('btnEnviar');
+
+    btn.disabled = !valido;
+
+    btn.classList.toggle('active', valido);
 }
 
 async function enviarReporte(){
@@ -1672,9 +1779,20 @@ async function enviarReporte(){
     .filter(p => p.realizado);
 
         const payload = {
-    lote_id: datoSeleccionado?.lote || null,
+            const config = planesConfig[variableActual];
+
+const loteFinal =
+    config.modo === "manual"
+        ? document.getElementById('manualLote').value
+        : datoSeleccionado?.lote || null;
+
+const valorFinal =
+    config.modo === "manual"
+        ? parseFloat(document.getElementById('manualValor').value)
+        : datoSeleccionado?.y || null;
+        lote_id: loteFinal,
+valor: valorFinal,
     variable: variableActual,
-    valor: datoSeleccionado?.y || null,
     operador: document.getElementById('operador').value,
     comentario: document.getElementById('accionExtra').value,
 
