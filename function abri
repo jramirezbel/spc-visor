@@ -676,14 +676,14 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 ]
     },
     
- "Control de Fugas Sección A": {
+"Control de Fugas Sección A": {
         tipo: "imagen",
-        imagen: "imagenes/plano_fugas_a.png", // <--- Aquí pones el nombre exacto de tu archivo de imagen
+        imagen: "imagenes/plano_fugas_a.png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
-            "1. Localizar visualmente el punto de fuga en el transportador/tubería.",
-            "2. Clasificar el nivel de estanqueidad (Baja / Crítica).",
-            "3. Colocar el Lote del producto afectado y la estimación del valor perdido.",
-            "4. Aplicar ajuste mecánico inmediato o registrar orden de mantenimiento."
+            "1. Identificar visualmente el punto crítico en el plano.",
+            "2. Evaluar nivel de estanqueidad (Bajo / Medio / Crítico).",
+            "3. Registrar obligatoriamente el Lote afectado y la pérdida estimada.",
+            "4. Aplicar empaque de estanqueidad o generar aviso de mantenimiento."
         ]
     }
 };
@@ -1004,78 +1004,71 @@ function actualizarCumplimientoHome(){
 // Para los de TIPO 1: Gráficas SPC
 function abrirIndicador(nombre) {
     variableActual = nombre;
+    
+    // CORRECCIÓN 1: Definir config para poder leer las propiedades del indicador
     const config = planesConfig[nombre];
-    if (!config) return;
+    if (!config) {
+        console.error("No se encontró la configuración para: " + nombre);
+        return;
+    }
 
-    // Cambiar de pantalla hacia el Dashboard
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    // Resetear valores de inputs del operador
+    // Resetear inputs del operador
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
     document.getElementById('btnEnviar').disabled = true;
     document.getElementById('btnEnviar').classList.remove('active');
 
-    // Identificar Contenedores de Visualización Visual
     const chartDiv = document.getElementById('myDiv');
-    
-    // Validar si es un módulo Operativo Manual (Tipo Imagen) o un módulo SPC Grafico
+
+    // Evaluar si es un módulo Operativo Manual (Tipo Imagen) o SPC Gráfico
     if (config.tipo === "imagen") {
-        // --- FLUJO MÓDULO OPERATIVO (IMAGEN/MANUAL) ---
-        // Ocultar componentes de filtrado estadístico SPC
+        // --- FLUJO MÓDULO MANUAL ---
         document.getElementById('stats-bar').style.display = 'none';
         document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'none');
         document.querySelector('.btn-filtrar').style.display = 'none';
         
-        // Configurar Panel de Datos: Mostrar obligatoriamente el ingreso de Lote y Valor
+        // Mostrar campos de digitación manual de Lote y Valor
         document.getElementById('infoLote').style.display = 'none'; 
         document.getElementById('camposManual').style.display = 'block';
         document.getElementById('manualLote').value = "";
         document.getElementById('manualValor').value = "";
 
-        // Inyectar el Plano / Imagen Operativa directamente en el contenedor izquierdo
-chartDiv.innerHTML = `
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; overflow-y: auto;">
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; max-width: 100%;">
-            <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 18px;">Plano de Inspección: ${nombre}</h3>
-            
-            <div style="margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
-                <img src="${config.imagen}" alt="Plano ${nombre}" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto; object-fit: contain;">
+        // CORRECCIÓN 2: Inyectar la etiqueta <img> real con la ruta asignada
+        chartDiv.innerHTML = `
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; min-height: 450px;">
+                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; max-width: 100%;">
+                    <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">Plano Operativo: ${nombre}</h3>
+                    <div style="margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
+                        <img src="${config.imagen}" alt="Plano ${nombre}" style="max-width: 100%; max-height: 380px; display: block; margin: 0 auto; object-fit: contain;">
+                    </div>
+                </div>
             </div>
-
-            <div style="display: inline-block; background: #2f855a; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase;">
-                Ruta del archivo: ${config.imagen}
-            </div>
-        </div>
-    </div>
-`;
+        `;
     } else {
-        // --- FLUJO MÓDULO SPC GRÁFICO (TIPO 1) ---
-        // Asegurar visualización de la barra de control estadístico y filtros SPC
+        // --- FLUJO MÓDULO SPC GRÁFICO ---
         document.getElementById('stats-bar').style.display = 'flex';
         document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'flex');
         document.querySelector('.btn-filtrar').style.display = 'block';
         
-        // Configurar Panel de Datos: Ocultar inputs manuales y activar Badge de Lote SPC
         document.getElementById('infoLote').style.display = 'block';
         document.getElementById('infoLote').innerText = "Sin lote seleccionado (Haz clic en un punto del gráfico)";
         document.getElementById('camposManual').style.display = 'none';
 
-        // Limpiar el contenedor para recibir la gráfica de Plotly
-        chartDiv.innerHTML = "";
+        chartDiv.innerHTML = ""; // Limpiar para que Plotly dibuje encima
     }
 
-    // CARGAR EL CHECKLIST DEL PLAN DE REACCIÓN POR DEFECTO DESDE EL INICIO
+    // CORRECCIÓN 3: Desplegar el checklist específico que viene en planesConfig
     if (config.pasos && config.pasos.length > 0) {
         generarChecklist(config.pasos);
     } else {
-        document.getElementById('checklist-pasos').innerHTML = `<p class="placeholder-text">No hay pasos configurados.</p>`;
+        document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic;">No hay pasos configurados.</p>`;
     }
 
-    // Configurar títulos y ejecutar renderizado asíncrono si aplica SPC
     document.getElementById('tituloIndicadorActual').innerText = nombre;
-    
+
     if (config.tipo !== "imagen") {
         setTimeout(() => {
             filtrarPorFechas();
