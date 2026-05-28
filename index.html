@@ -457,11 +457,20 @@ textarea:disabled{
                 <small>SUITE360</small>
             </div> 
         </div> 
-
+        
 <div class="indicator-card" onclick="abrirIndicador('Tiempo de Germinación')">
             <h3>Tiempo de Germinación</h3>
             <div class="mini-stat">
                 <span>⏱️🌱</span>
+                <small>SUITE360</small>
+            </div> 
+        </div> 
+        
+
+<div class="indicator-card" onclick="abrirIndicador('Humedad de Germinación')">
+            <h3>Humedad de Germinación</h3>
+            <div class="mini-stat">
+                <span>💧🌱</span>
                 <small>SUITE360</small>
             </div> 
         </div> 
@@ -739,6 +748,16 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         pasos: [
             "Paso 1: Cuando el tiempo del lote supere las 78 horas de germinación, reducir la temperatura del germinador a 14 °C (Configurar temperatura bajo capa en SCADA)",
             "Paso 2: Ajustar la dosis de ácido giberélico (AG) en los lotes en curso, según el nivel de atraso identificado en el programa, consultando con el supervisor de proceso."
+]
+    },
+
+            "Humedad de Germinación":{
+        tipo: "imagen",
+        imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(9).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
+        pasos: [
+            "Paso 1: Realizar doble batida por turno para mejorar la aireación y homogeneidad del lecho.",
+            "Paso 2: Cerrar duchas de saturación y verificar que no haya ingreso de agua que humidifique el aire fresco.",
+            "Paso 3: Ajustar temperatura de inicio de secado a 45 °C en etapa de Tostación."
 ]
     },
     
