@@ -1837,42 +1837,53 @@ function validarPasos() {
 async function enviarReporte() {
     try {
         const config = planesConfig[variableActual];
-        const esManual = (config.tipo === "imagen");
+        const esManual = (config && config.tipo === "imagen");
         
         // Determinar de dónde provienen el lote y el valor
         const loteFinal = esManual 
-            ? parseFloat(document.getElementById('manualLote').value)
+            ? document.getElementById('manualLote').value.trim()
             : (datoSeleccionado?.lote || null);
             
         const valorFinal = esManual 
             ? parseFloat(document.getElementById('manualValor').value)
             : (datoSeleccionado?.y || null);
             
-        // Capturar checklist
+        // Validación para campos obligatorios en el módulo manual
+        if (esManual && (!loteFinal || isNaN(valorFinal))) {
+            alert("Por favor, ingrese un número de lote válido y el valor de la inspección.");
+            return;
+        }
+            
+        // Capturar checklist de forma segura para cualquier tipo de módulo
         const pasosRealizados = [];
-        document.querySelectorAll('#checklist-pasos div').forEach(div => {
-            const cb = div.querySelector('input[type="checkbox"]');
-            const texto = div.querySelector('span').innerText;
-            pasosRealizados.push({
-                paso: texto,
-                completado: cb.checked
-            });
+        document.querySelectorAll('#checklist-pasos .step').forEach(element => {
+            const cb = element.querySelector('input[type="checkbox"]');
+            if (cb) {
+                // Buscamos un span interno, si no existe, tomamos el texto del contenedor completo
+                const spanElement = element.querySelector('span');
+                const texto = spanElement ? spanElement.innerText.trim() : element.innerText.trim();
+                
+                pasosRealizados.push({
+                    paso: texto,
+                    completado: cb.checked
+                });
+            }
         });
         
-        // Construir Payload de inserción
+        // Construir Payload de inserción (sin la columna tipo_modulo ausente)
         const payload = {
             lote_id: loteFinal,
             valor: valorFinal,
             variable: variableActual,
             operador: document.getElementById('operador').value.trim(),
             comentario: document.getElementById('accionExtra').value.trim(),
-            pasos_realizados: pasosRealizados,
+            pasos_realizados: pasosRealizados
         };
         
         // Guardar en la tabla correspondiente de Supabase
         const { error } = await _supabase.from('planes_reaccion').insert([payload]);
         if (error) {
-            console.error(error);
+            console.error("Error devuelto por Supabase:", error);
             alert("Error en Supabase: " + error.message);
             return;
         }
@@ -1886,8 +1897,8 @@ async function enviarReporte() {
         }
         
     } catch (err) {
-        console.error(err);
-        alert("Error crítico registrando el reporte");
+        console.error("Error capturado en el catch:", err);
+        alert("Error crítico registrando el reporte: " + err.message);
     }
 }
 
