@@ -1841,7 +1841,7 @@ async function enviarReporte() {
         
         // Determinar de dónde provienen el lote y el valor
         const loteFinal = esManual 
-            ? document.getElementById('manualLote').value.trim()
+            ? parseFloat(document.getElementById('manualLote').value)
             : (datoSeleccionado?.lote || null);
             
         const valorFinal = esManual 
