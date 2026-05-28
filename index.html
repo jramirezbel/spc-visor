@@ -1800,7 +1800,7 @@ function verReporteExistente(reporte) {
         infoLote.innerHTML = `Lote: ${reporte.lote_id} | Valor: ${reporte.valor}`;
     }
     
-    // Rellenar campos de texto y bloquearlos para el histórico
+    // Rellenar campos de texto y bloquearlos (Modo histórico de lectura)
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
@@ -1813,17 +1813,19 @@ function verReporteExistente(reporte) {
         inputComentario.disabled = true;
     }
     
-    // RENDERIZAR LOS PASOS SELECCIONADOS COMO ANTES
+    // RENDERIZAR PASOS CON LA LÓGICA DE ÍNDICES CORRECTA (i + 1)
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
+        const realizados = reporte.pasos_realizados || [];
         let htmlHistorico = "";
-        config.pasos.forEach(pasoText => {
-            // Evaluamos si el paso fue completado en Supabase
-            const fueMarcado = reporte.pasos_realizados?.some(p => p.paso === pasoText && p.completado) || false;
+        
+        config.pasos.forEach((pasoText, i) => {
+            // SOLUCIÓN AL ERROR: Buscamos en la BD si el número del paso (i + 1) o la descripción coincide
+            const fueMarcado = realizados.some(r => r.paso === (i + 1) || r.paso === pasoText || r.descripcion === pasoText);
             
-            // Usamos tu clase nativa .step. El 'onclick="return false;"' bloquea el clic sin romper la estética visual del check marcado
+            // ESTÉTICA ORIGINAL RECUPERADA: Si fue marcado, se le inyecta el fondo azul claro y borde destacado
             htmlHistorico += `
-                <label class="step">
+                <label class="step" style="background: ${fueMarcado ? '#ebf8ff' : '#f8fafc'}; border-color: ${fueMarcado ? '#90cdf4' : '#edf2f7'};">
                     <input type="checkbox" ${fueMarcado ? 'checked' : ''} onclick="return false;" style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
@@ -1832,7 +1834,7 @@ function verReporteExistente(reporte) {
         checklistPasos.innerHTML = htmlHistorico;
     }
     
-    // Apagar botón de registro para el histórico
+    // Bloquear botón de envío para evitar duplicar registros históricos
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
