@@ -1085,13 +1085,16 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
 
         validarPasos(); 
-  } else {
+ } else {
         // --- MÓDULO SPC ESTÁNDAR ---
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
         
-        // El label arranca en gris e inhabilitado de forma elegante
-        infoLote.innerHTML = '<span style="color: #94a3b8; font-weight: normal;">Sin lote seleccionado</span>';
+        // AQUÍ VA TU CÓDIGO: El banner arranca en rojo nativo y con texto limpio
+        if (infoLote) {
+            infoLote.style.background = '#e53e3e'; 
+            infoLote.innerText = 'Sin lote seleccionado';
+        }
         
         // Devolvemos el operador abajo si volvemos a una gráfica SPC
         if (inputOperador && bloqueOperadorOriginal) {
@@ -1100,7 +1103,7 @@ function abrirIndicador(nombreIndicador) {
             formDerecho.insertBefore(bloqueOperadorOriginal, campoAccionExtra);
         }
         
-        // Poner candados iniciales de seguridad a los inputs
+        // Poner candados iniciales de seguridad a los inputs para que no escriban sin seleccionar punto rojo
         if (inputOperador) inputOperador.disabled = true;
         if (inputComentario) inputComentario.disabled = true;
         
@@ -1706,15 +1709,17 @@ function cancelarRegistro() {
             cb.disabled = false;
         });
     } else {
-        // EN MÓDULO SPC: Bloqueo profundo (Gris inhabilitado)
-        // Bloqueamos operador y comentarios por defecto
+        // ============================================================
+        // MÓDULO SPC: RESETEAR EL BANNER A ROJO Y MANDAR AL MODO GRIS
+        // ============================================================
         if (inputOperador) inputOperador.disabled = true;
         if (inputComentario) inputComentario.disabled = true;
 
-        // Restauramos el banner informativo en gris de advertencia
+        // AQUÍ VA TU CÓDIGO: Devuelve el fondo rojo original y limpia el texto
         const infoLote = document.getElementById('infoLote');
         if (infoLote) {
-            infoLote.innerHTML = '<span style="color: #94a3b8; font-weight: normal;">Sin lote seleccionado</span>';
+            infoLote.style.background = '#e53e3e'; 
+            infoLote.innerText = 'Sin lote seleccionado';
         }
         
         // Volvemos a pintar los pasos en modo lectura (gris/disabled)
@@ -1747,10 +1752,14 @@ function cancelarRegistro() {
 function abrirPlanReaccion(dato) {
     const config = planesConfig[variableActual];
     
-    // El banner se ilumina y se pinta con el color e importancia correctos
-    document.getElementById('infoLote').innerHTML = `<span style="color:#1e293b;"><strong>Lote:</strong> ${dato.lote} | <strong>Valor:</strong> ${dato.y}</span>`;
+    // MANTIENE EL DISEÑO ORIGINAL: El badge se mantiene rojo (#e53e3e) con el lote activo
+    const infoLote = document.getElementById('infoLote');
+    if (infoLote) {
+        infoLote.style.background = '#e53e3e'; 
+        infoLote.innerHTML = `Lote: ${dato.lote} | Valor: ${dato.y}`;
+    }
     
-    // DESBLOQUEAR CAMPOS: Quitamos los candados para permitir el registro
+    // DESBLOQUEAR CAMPOS: Aseguramos que operador y comentarios sean editables y arranquen limpios
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
@@ -1763,13 +1772,13 @@ function abrirPlanReaccion(dato) {
         inputComentario.value = "";
     }
     
-    // Pintamos los pasos interactivos a color
+    // MANTIENE TU ESTRATEGIA ORIGINAL: Pasos interactivos usando la clase .step nativa sin estilos raros
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         let htmlActivo = "";
         config.pasos.forEach(pasoText => {
             htmlActivo += `
-                <label class="step-row" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #edf2f7; font-size:13px; cursor:pointer; color:#1e293b;">
+                <label class="step">
                     <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
@@ -1778,39 +1787,41 @@ function abrirPlanReaccion(dato) {
         checklistPasos.innerHTML = htmlActivo;
     }
     
-    validarPasos();
+    validarPasos(); // Evalúa el botón (empezará bloqueado hasta que pongan el nombre del operador)
 }
 
 function verReporteExistente(reporte) {
     const config = planesConfig[variableActual];
     
-    // ESTÉTICA RECUPERADA: Cuando el lote ya está ajustado, el label se pone en AZUL
-    document.getElementById('infoLote').innerHTML = `<span style="color:#3182ce;"><strong>Lote:</strong> ${reporte.lote_id} | <strong>Valor:</strong> ${reporte.valor}</span>`;
+    // MANTIENE EL DISEÑO ORIGINAL: El badge se vuelve azul (#3182ce) con texto blanco
+    const infoLote = document.getElementById('infoLote');
+    infoLote.style.background = '#3182ce'; 
+    infoLote.innerHTML = `Lote: ${reporte.lote_id} | Valor: ${reporte.valor}`;
     
-    // BLOQUEAR CAMPOS: Rellenar con el histórico y aplicar candados de lectura
+    // Rellenar campos de texto y bloquearlos (Modo lectura histórico)
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
     if (inputOperador) {
         inputOperador.value = reporte.operador || "";
-        inputOperador.disabled = true; // Sigue bloqueado para que no se altere el pasado
+        inputOperador.disabled = true;
     }
     if (inputComentario) {
         inputComentario.value = reporte.comentario || "";
         inputComentario.disabled = true;
     }
     
-    // ESTÉTICA RECUPERADA: Pintar los pasos visuales con sus colores de registro (legibles)
+    // MANTIENE TU ESTRETEGIA ORIGINAL: Pasos limpios usando la clase .step nativa
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         let htmlHistorico = "";
         config.pasos.forEach(pasoText => {
-            // Averiguamos si este paso se marcó en el reporte guardado
+            // Evaluamos si el paso fue completado en Supabase
             const fueMarcado = reporte.pasos_realizados?.some(p => p.paso === pasoText && p.completado) || false;
             
-            // Se muestran en color normal (#1e293b) para que se note qué se hizo, pero con 'disabled' para que no lo editen
+            // Usamos tu clase nativa .step sin alterar colores de fondo extraños
             htmlHistorico += `
-                <label class="step-row" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #edf2f7; font-size:13px; cursor:not-allowed; color:#1e293b;">
+                <label class="step">
                     <input type="checkbox" disabled ${fueMarcado ? 'checked' : ''} style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
@@ -1819,7 +1830,7 @@ function verReporteExistente(reporte) {
         checklistPasos.innerHTML = htmlHistorico;
     }
     
-    // Bloquear botón de envío para evitar modificaciones o duplicados
+    // Apagar botón de registro para el histórico
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
