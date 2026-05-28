@@ -440,11 +440,19 @@ textarea:disabled{
                 <small>SUITE360</small>
             </div> 
         </div> 
-        
+
 <div class="indicator-card" onclick="abrirIndicador('Tiempo de descarga de Tostador')">
             <h3>Tiempo de descarga de Tostador</h3>
             <div class="mini-stat">
                 <span>⏱️🎛️</span>
+                <small>SUITE360</small>
+            </div> 
+        </div> 
+        
+<div class="indicator-card" onclick="abrirIndicador('Tiempo de transporte de Malta Verde')">
+            <h3>Tiempo de transporte de Malta Verde</h3>
+            <div class="mini-stat">
+                <span>⏱️❯❯❯❯</span>
                 <small>SUITE360</small>
             </div> 
         </div> 
@@ -625,15 +633,11 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         fechaMes:"mes",
         pasos:[
             "Paso 1: Notificar con 30 minutos de anticipación la descarga de remojo con agua recuperada y dirigirse al tanque de agua recuperada en la terraza de producción para confirmar los niveles disponibles.",
-
             `Paso 2: Realizar limpieza de la línea antes de iniciar el descargue.
 Si se observan residuos o acumulación de grano en el germinador, realizar limpieza de las conexiones tipo “Y”.`,
-
             "Paso 3: Ajustar la conexión de la tubería de descarga tipo “Y” para evitar pérdidas de presión en la línea que puedan generar atascamientos durante la descarga por aluvión.",
-
             `Paso 4: Poner en 0% la válvula principal de ingreso de agua potable a los grupos. Abrir la válvula de ingreso de agua de uno de los tanques vacíos y verificar si registra flujo.
 En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marque 0 m³/h.`,
-
             "Paso 5: Verificar que el flujo de agua recuperada sea mayor a 50 m³/h. Flujos inferiores indican baja presión o agotamiento de agua recuperada, lo que podría causar atascamientos."
         ]
     },
@@ -646,9 +650,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         fechaMes:"mes_malta",
         pasos:[
             "Paso 1: Ingresar a las limpiadoras de malta y retirar manualmente los residuos acumulados en las mallas si se evidencia acumulación de material.",
-
             "Paso 2: Ajustar el flujo de alimentación de grano a 7 toneladas/hora por cada limpiadora.",
-
             "Paso 3: Reparar las mallas rotas o reemplazar remaches en mal estado."
         ]
     },
@@ -661,9 +663,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         fechaMes:"mes",
         pasos:[
             "Paso 1: Ejecutar limpieza inmediata de la malla de la limpiadora LM-05 si se evidencia acumulación de material. Utilizar las herramientas de limpieza definidas en el SOP.",
-
             "Paso 2: Reducir el flujo de cebada desde el área de recibo ajustando manualmente los volantes de cierre en el sótano TC-01 para mejorar la eficiencia de limpieza.",
-
             "Paso 3: Retirar atascamientos en los ductos de ingreso a la tarara y ajustar el damper de extracción."
         ]
     },
@@ -689,6 +689,17 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
         pasos: [
             "Paso 1: Verificar en el SCADA disponibilidad de Tolvas Buffer para el Tostador 4 y comunicarse 30 minutos antes de la descarga con operador de Cebadas y maltas.",
             "Paso 2: Ajustar sensibilidad del sensor de grano o realizar cambio de sensor de ser necesario."
+]
+    },
+
+        "Tiempo de transporte de Malta Verde":{
+        tipo: "imagen",
+        imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(7).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
+        pasos: [
+            "Paso 1: Medir y ajustar manualmente la altura de los dosificadores según la velocidad de descarga 1, 2, 3 y capacidad volumétrica de Elevador 4 o 5",
+            "Paso 2: Revisar estado de helicoides una vez se termina descargue y solicitar a mecánico cambio si es necesario.",
+            "Paso 3: Realizar tensión de cadena redler trasportadores de malta verde (TC-20 al TC-24)",
+            "Paso 4: Lubricar el carro wincher antes de iniciar operación. Aplicar grasa o lubricante si se observa resequedad o falta de engrase en rieles o ejes móviles."
 ]
     },
     
