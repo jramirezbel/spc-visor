@@ -1867,7 +1867,6 @@ async function enviarReporte() {
             operador: document.getElementById('operador').value.trim(),
             comentario: document.getElementById('accionExtra').value.trim(),
             pasos_realizados: pasosRealizados,
-            tipo_modulo: esManual ? "OPERATIVO" : "SPC"
         };
         
         // Guardar en la tabla correspondiente de Supabase
