@@ -1002,6 +1002,7 @@ function actualizarCumplimientoHome(){
 }
 
 // Para los de TIPO 1: Gráficas SPC
+// Para los de TIPO 1: Gráficas SPC
 function abrirIndicador(nombre) {
     variableActual = nombre;
     
@@ -1062,9 +1063,24 @@ function abrirIndicador(nombre) {
         chartDiv.innerHTML = ""; // Limpiar para que Plotly tome el control
     }
 
-    // Renderizar las preguntas/pasos específicos del plan de reacción inmediatamente
+    // CORRECCIÓN AQUÍ: Eliminamos la función fantasma y renderizamos nativamente el checklist por default
     if (config.pasos && config.pasos.length > 0) {
-        generarChecklist(config.pasos);
+        // Si es manual (imagen), pintamos el checklist de una vez por default
+        if (config.tipo === "imagen") {
+            document.getElementById('checklist-pasos').innerHTML = config.pasos.map((p, i) => `
+                <label class="step">
+                    <input 
+                        type="checkbox"
+                        onchange="validarPasos()"
+                        id="paso${i}"
+                    >
+                    ${p}
+                </label>
+            `).join('');
+        } else {
+            // Si es SPC (gráfico), se debe mantener vacío o con la instrucción hasta que hagan clic en un punto fuera de límites
+            document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic; padding:10px;">Selecciona un punto en el gráfico para activar el plan.</p>`;
+        }
     } else {
         document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic; padding:10px;">No hay pasos configurados.</p>`;
     }
