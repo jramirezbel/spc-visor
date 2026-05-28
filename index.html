@@ -1737,29 +1737,28 @@ function cancelarRegistro() {
             checklistPasos.innerHTML = htmlGris;
         }
     }
-    
-    // Resetear variables de control de Plotly
+
+    // 3. RESTABLECER VARIABLES Y BOTÓN AL ESTADO INICIAL
     datoSeleccionado = null;
-    
-    // Bloquear botón de envío y quitarle el color verde activo
+
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
         btn.classList.remove('active');
+        btn.innerText = 'Registrar Inspección / Plan'; // <--- AQUÍ QUEDA AGREGADO EL CAMBIO
     }
 }
     
 function abrirPlanReaccion(dato) {
     const config = planesConfig[variableActual];
     
-    // MANTIENE EL DISEÑO ORIGINAL: El badge se mantiene rojo (#e53e3e) con el lote activo
     const infoLote = document.getElementById('infoLote');
     if (infoLote) {
         infoLote.style.background = '#e53e3e'; 
+        infoLote.style.color = 'white';
         infoLote.innerHTML = `Lote: ${dato.lote} | Valor: ${dato.y}`;
     }
     
-    // DESBLOQUEAR CAMPOS: Aseguramos que operador y comentarios sean editables y arranquen limpios
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
@@ -1772,7 +1771,6 @@ function abrirPlanReaccion(dato) {
         inputComentario.value = "";
     }
     
-    // MANTIENE TU ESTRATEGIA ORIGINAL: Pasos interactivos usando la clase .step nativa sin estilos raros
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         let htmlActivo = "";
@@ -1787,63 +1785,57 @@ function abrirPlanReaccion(dato) {
         checklistPasos.innerHTML = htmlActivo;
     }
     
-    validarPasos(); // Evalúa el botón (empezará bloqueado hasta que pongan el nombre del operador)
-}
-
-function verReporteExistente(reporte) {
-    const config = planesConfig[variableActual];
-    
-    // MANTIENE EL DISEÑO ORIGINAL: El badge se vuelve azul con texto blanco
-    const infoLote = document.getElementById('infoLote');
-    if (infoLote) {
-        infoLote.style.background = '#3182ce'; 
-        infoLote.innerHTML = `Lote: ${reporte.lote_id} | Valor: ${reporte.valor}`;
-    }
-    
-    // Rellenar campos de texto y bloquearlos (Modo histórico de lectura)
-    const inputOperador = document.getElementById('operador');
-    const inputComentario = document.getElementById('accionExtra');
-    
-    if (inputOperador) {
-        inputOperador.value = reporte.operador || "";
-        inputOperador.disabled = true;
-    }
-    if (inputComentario) {
-        inputComentario.value = reporte.comentario || "";
-        inputComentario.disabled = true;
-    }
-    
-    // RECUPERACIÓN EXACTA DE TU LÓGICA DE index (8).txt
-    const checklistPasos = document.getElementById('checklist-pasos');
-    if (config && config.pasos) {
-        const realizados = reporte.pasos_realizados || [];
-        let htmlHistorico = "";
-        
-        config.pasos.forEach((pasoText) => {
-            // Buscamos si el texto de este paso coincide exactamente con el campo 'paso' guardado en Supabase
-            const encontrado = realizados.find(r => r.paso === pasoText);
-            
-            // Evaluamos de forma segura si el paso existe y si fue marcado como completado
-            const fueMarcado = encontrado ? (encontrado.completado === true || encontrado.realizado === true) : false;
-            
-            // Renderizado nativo: Mantiene el recuadro azul estético de la clase .step
-            // Usamos onclick="return false;" para congelar la interacción sin opacar los colores
-            htmlHistorico += `
-                <label class="step" style="background: ${fueMarcado ? '#ebf8ff' : '#f8fafc'}; border-color: ${fueMarcado ? '#90cdf4' : '#edf2f7'};">
-                    <input type="checkbox" ${fueMarcado ? 'checked' : ''} onclick="return false;" style="margin-right:10px;">
-                    <span>${pasoText}</span>
-                </label>
-            `;
-        });
-        checklistPasos.innerHTML = htmlHistorico;
-    }
-    
-    // Bloquear botón de envío para evitar duplicar registros históricos
+    // RESTABLECER TEXTO DEL BOTÓN PARA EL NUEVO REGISTRO
     const btn = document.getElementById('btnEnviar');
     if (btn) {
-        btn.disabled = true;
-        btn.classList.remove('active');
+        btn.innerText = 'Registrar Inspección / Plan'; // Pon aquí el texto original que usa tu botón
     }
+    
+    validarPasos();
+}
+function verReporteExistente(reporte){
+    const info = document.getElementById('infoLote');
+    
+    info.style.background = '#3182ce';
+    info.style.color = 'white';
+    
+    info.innerHTML = `
+        Lote ${reporte.lote_id}<br>
+        Gestionado por: <b>${reporte.operador}</b>
+    `;
+    
+    document.getElementById('operador').value = reporte.operador || '';
+    document.getElementById('accionExtra').value = reporte.comentario || '';
+    
+    document.getElementById('operador').disabled = true;
+    document.getElementById('accionExtra').disabled = true;
+    
+    const pasos = planesConfig[variableActual].pasos;
+    const realizados = reporte.pasos_realizados || [];
+    
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p,i)=>{
+        const ejecutado = realizados.some(r => r.paso === (i+1));
+        
+        return `
+            <label class="step" style="
+                background:${ejecutado ? '#ebf8ff' : '#f8fafc'};
+                border-color:${ejecutado ? '#90cdf4' : '#edf2f7'};
+            ">
+                <input
+                    type="checkbox"
+                    ${ejecutado ? 'checked' : ''}
+                    disabled
+                >
+                ${p}
+            </label>
+        `;
+    }).join('');
+    
+    const btn = document.getElementById('btnEnviar');
+    
+    btn.disabled = true;
+    btn.classList.remove('active');
+    btn.innerText = 'Reporte ya registrado';
 }
     
 function verPlan(proceso, id){
