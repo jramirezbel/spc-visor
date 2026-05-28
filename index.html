@@ -1016,6 +1016,27 @@ function abrirIndicador(nombreIndicador) {
         return;
     }
     
+    // ============================================================
+    // SOLUCIÓN AL BLOQUEO: QUITAR CANDADOS Y LIMPIAR TEXTOS VIEJOS
+    // ============================================================
+    const inputOperador = document.getElementById('operador');
+    const inputComentario = document.getElementById('accionExtra');
+    const manualLote = document.getElementById('manualLote');
+    const manualValor = document.getElementById('manualValor');
+
+    // Forzamos a que los campos de texto se puedan volver a editar (disabled = false)
+    if (inputOperador) inputOperador.disabled = false;
+    if (inputComentario) inputComentario.disabled = false;
+    if (manualLote) manualLote.disabled = false;
+    if (manualValor) manualValor.disabled = false;
+
+    // Vaciamos cualquier residuo de texto de la tarjeta anterior
+    if (inputOperador) inputOperador.value = "";
+    if (inputComentario) inputComentario.value = "";
+    if (manualLote) manualLote.value = "";
+    if (manualValor) manualValor.value = "";
+    // ============================================================
+
     // Cambiar de pantalla hacia el Dashboard
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
@@ -1024,14 +1045,22 @@ function abrirIndicador(nombreIndicador) {
     const visorContainer = document.querySelector('.visor-container');
     const camposManual = document.getElementById('camposManual');
     const infoLote = document.getElementById('infoLote');
-    const checklistPasos = document.getElementById('checklist-pasos'); // Contenedor del checklist 
+    const checklistPasos = document.getElementById('checklist-pasos');
     
-    // Resetear datos previos del punto seleccionado
+    const bloqueOperadorOriginal = inputOperador ? inputOperador.parentElement : null;
+    const contenedorManualOps = document.getElementById('contenedorOperadorManual');
+    
     datoSeleccionado = null;
     
     if (config.tipo === "imagen") {
+        // --- MÓDULO MANUAL / IMAGEN ---
         camposManual.style.display = 'block'; 
         infoLote.style.display = 'none';
+        
+        // Movimiento dinámico del operador dentro del recuadro gris
+        if (inputOperador && contenedorManualOps) {
+            contenedorManualOps.appendChild(bloqueOperadorOriginal);
+        }
         
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
@@ -1050,8 +1079,10 @@ function abrirIndicador(nombreIndicador) {
         });
         checklistPasos.innerHTML = htmlChecklist;
         
+        // Enlazar los eventos de escucha en tiempo real
         document.getElementById('manualLote').oninput = validarPasos;
         document.getElementById('manualValor').oninput = validarPasos;
+        if (inputOperador) inputOperador.oninput = validarPasos;
 
         validarPasos(); 
     } else {
@@ -1060,14 +1091,19 @@ function abrirIndicador(nombreIndicador) {
         infoLote.style.display = 'block';
         infoLote.innerText = "Sin lote seleccionado";
         
-        // Restaurar la estructura HTML limpia para Plotly [cite: 28]
+        // Devolvemos el operador abajo si volvemos a una gráfica SPC
+        if (inputOperador && bloqueOperadorOriginal) {
+            const formDerecho = document.getElementById('accionExtra').parentElement.parentElement;
+            const campoAccionExtra = document.getElementById('accionExtra').parentElement;
+            formDerecho.insertBefore(bloqueOperadorOriginal, campoAccionExtra);
+        }
+        
         visorContainer.innerHTML = `
             <div class="canvas-scroll">
                 <div id="myDiv"></div>
             </div>
         `;
         
-        // Configurar fechas por defecto
         const hoy = new Date();
         const haceMes = new Date();
         haceMes.setDate(hoy.getDate() - 30);
@@ -1075,10 +1111,9 @@ function abrirIndicador(nombreIndicador) {
         document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
         document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
         
-        // Limpiar el checklist anterior si veníamos del módulo de imágenes
         checklistPasos.innerHTML = '<p class="placeholder-text" style="color:#94a3b8; text-align:center; margin-top:20px;">Seleccione un punto en la gráfica para ver el plan de reacción.</p>';
         
-        // Ejecutar la consulta gráfica únicamente aquí
+        if (inputOperador) inputOperador.oninput = validarPasos;
         filtrarPorFechas();
     }
 }
