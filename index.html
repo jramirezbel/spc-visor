@@ -1813,23 +1813,21 @@ function verReporteExistente(reporte) {
         inputComentario.disabled = true;
     }
     
-    // RENDERIZAR PASOS COMPARANDO ESTRICTAMENTE EL TEXTO GUARDADO
+    // RECUPERACIÓN EXACTA DE TU LÓGICA DE index (8).txt
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         const realizados = reporte.pasos_realizados || [];
         let htmlHistorico = "";
         
         config.pasos.forEach((pasoText) => {
-            // COMPARACIÓN ESTRICTA: Buscamos si el texto del paso coincide con lo guardado en 'paso' o 'descripcion'
-            const pasoEncontrado = realizados.find(r => 
-                String(r.paso).trim() === pasoText.trim() || 
-                String(r.descripcion).trim() === pasoText.trim()
-            );
-
-            // Evaluamos si existe el registro Y si explícitamente se guardó como completado/realizado
-            const fueMarcado = pasoEncontrado ? (pasoEncontrado.completado === true || pasoEncontrado.realizado === true) : false;
+            // Buscamos si el texto de este paso coincide exactamente con el campo 'paso' guardado en Supabase
+            const encontrado = realizados.find(r => r.paso === pasoText);
             
-            // ESTÉTICA ORIGINAL: Si fue marcado, se le inyecta el fondo azul claro y borde destacado de la maltería
+            // Evaluamos de forma segura si el paso existe y si fue marcado como completado
+            const fueMarcado = encontrado ? (encontrado.completado === true || encontrado.realizado === true) : false;
+            
+            // Renderizado nativo: Mantiene el recuadro azul estético de la clase .step
+            // Usamos onclick="return false;" para congelar la interacción sin opacar los colores
             htmlHistorico += `
                 <label class="step" style="background: ${fueMarcado ? '#ebf8ff' : '#f8fafc'}; border-color: ${fueMarcado ? '#90cdf4' : '#edf2f7'};">
                     <input type="checkbox" ${fueMarcado ? 'checked' : ''} onclick="return false;" style="margin-right:10px;">
