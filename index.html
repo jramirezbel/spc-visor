@@ -1024,7 +1024,7 @@ function abrirIndicador(nombreIndicador) {
     
     if (config.tipo === "imagen") {
         // --- MÓDULO MANUAL / IMAGEN ---
-        camposManual.style.display = 'block'; // Corregido el duplicado .style.style
+        camposManual.style.display = 'block'; 
         infoLote.style.display = 'none';
         
         // Inyectamos la imagen directamente en el contenedor limpio
@@ -1034,7 +1034,7 @@ function abrirIndicador(nombreIndicador) {
             </div>
         `;
         
-        // Renderizar su checklist correspondiente
+        // CORRECCIÓN AQUÍ: Asegurar que el nombre sea "generarChecklist"
         generarChecklist(config.pasos);
         validarPasos();
         
