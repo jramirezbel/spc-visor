@@ -1095,9 +1095,197 @@ function actualizarCumplimientoHome(){
 function abrirIndicador(nombre){
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
+    document.querySelectorAll('.filtro-group')
+    .forEach(el => el.style.display='flex');
+
+document.querySelector('.btn-filtrar')
+    .style.display='block';
+
+document.getElementById('stats-bar')
+    .style.display='flex';
     cambiarVariable(nombre);
 }
 
+function abrirIndicadorManual(nombre){
+
+    variableActual = nombre;
+
+    document.getElementById('homeScreen').style.display = 'none';
+
+    document.getElementById('dashboardScreen').style.display = 'block';
+
+    document.getElementById('tituloIndicadorActual')
+        .innerText = nombre;
+
+    // ocultar filtros
+    document.querySelectorAll('.filtro-group')
+        .forEach(el => el.style.display='none');
+
+    document.querySelector('.btn-filtrar')
+        .style.display='none';
+
+    // ocultar stats
+    document.getElementById('stats-bar')
+        .style.display='none';
+
+    // limpiar panel
+    cancelarRegistroManual();
+
+    // mostrar imagen
+    mostrarImagenManual(nombre);
+}
+
+function mostrarImagenManual(nombre){
+
+    const config = planesConfig[nombre];
+
+    document.getElementById('myDiv').innerHTML = `
+        <div style="
+            width:100%;
+            height:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#f8fafc;
+            overflow:auto;
+        ">
+
+            <img
+                src="${config.imagen}"
+                style="
+                    max-width:95%;
+                    max-height:95%;
+                    object-fit:contain;
+                    border-radius:12px;
+                    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+                "
+            >
+
+        </div>
+    `;
+}
+
+function cancelarRegistroManual(){
+
+    document.getElementById('infoLote').innerHTML = `
+        Registro manual
+    `;
+
+    document.getElementById('infoLote').style.background = '#3182ce';
+
+    document.getElementById('operador').disabled = false;
+
+    document.getElementById('operador').value = '';
+
+    document.getElementById('accionExtra').disabled = false;
+
+    document.getElementById('accionExtra').value = '';
+
+    const pasos = planesConfig[variableActual].pasos;
+
+    document.getElementById('checklist-pasos').innerHTML = `
+
+        <div style="margin-bottom:15px;">
+
+            <label style="font-weight:bold;font-size:13px;">
+                Lote
+            </label>
+
+            <input
+                type="text"
+                id="manualLote"
+                oninput="validarManual()"
+                style="
+                    width:100%;
+                    padding:10px;
+                    margin-top:5px;
+                    border-radius:8px;
+                    border:1px solid #cbd5e0;
+                "
+            >
+
+        </div>
+
+        <div style="margin-bottom:15px;">
+
+            <label style="font-weight:bold;font-size:13px;">
+                Valor
+            </label>
+
+            <input
+                type="number"
+                id="manualValor"
+                oninput="validarManual()"
+                style="
+                    width:100%;
+                    padding:10px;
+                    margin-top:5px;
+                    border-radius:8px;
+                    border:1px solid #cbd5e0;
+                "
+            >
+
+        </div>
+
+        ${pasos.map((p,i)=>`
+            <label class="step">
+                <input
+                    type="checkbox"
+                    onchange="validarManual()"
+                    id="paso${i}"
+                >
+                ${p}
+            </label>
+        `).join('')}
+    `;
+
+    const btn = document.getElementById('btnEnviar');
+
+    btn.disabled = true;
+
+    btn.classList.remove('active');
+
+    btn.innerText = 'Registrar Plan';
+}
+
+function validarManual(){
+
+    const checks =
+        document.querySelectorAll(
+            '#checklist-pasos input[type="checkbox"]:checked'
+        ).length;
+
+    const total =
+        document.querySelectorAll(
+            '#checklist-pasos input[type="checkbox"]'
+        ).length;
+
+    const operador =
+        document.getElementById('operador')
+        .value.trim();
+
+    const lote =
+        document.getElementById('manualLote')
+        ?.value.trim();
+
+    const valor =
+        document.getElementById('manualValor')
+        ?.value.trim();
+
+    const valido =
+        operador &&
+        lote &&
+        valor &&
+        checks === total;
+
+    const btn =
+        document.getElementById('btnEnviar');
+
+    btn.disabled = !valido;
+
+    btn.classList.toggle('active', valido);
+}
+    
 function volverHome(){
 
     document.getElementById('dashboardScreen').style.display = 'none';
@@ -1777,7 +1965,18 @@ async function enviarReporte(){
         realizado: c.checked
     }))
     .filter(p => p.realizado);
+        
+const esManual =
+    document.getElementById('manualLote');
 
+const loteFinal = esManual
+    ? document.getElementById('manualLote').value
+    : datoSeleccionado.lote;
+
+const valorFinal = esManual
+    ? parseFloat(document.getElementById('manualValor').value)
+    : datoSeleccionado.y;
+        
         const payload = {
             const config = planesConfig[variableActual];
 
