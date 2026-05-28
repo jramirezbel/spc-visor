@@ -1015,47 +1015,43 @@ function abrirIndicador(nombreIndicador) {
     document.getElementById('dashboardScreen').style.display = 'block';
     document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
     
-    // Obtener los contenedores clave
     const visorContainer = document.querySelector('.visor-container');
     const camposManual = document.getElementById('camposManual');
     const infoLote = document.getElementById('infoLote');
     
-    // Resetear datos previos
+    // Resetear datos previos del punto seleccionado
     datoSeleccionado = null;
     
-    // EVALUAR EL TIPO DE MÓDULO
     if (config.tipo === "imagen") {
         // --- MÓDULO MANUAL / IMAGEN ---
-        // 1. Mostrar campos de entrada manual y ocultar el badge SPC
-        camposManual.style.style.display = 'block';
+        camposManual.style.display = 'block'; // Corregido el duplicado .style.style
         infoLote.style.display = 'none';
         
-        // 2. Reemplazar el contenedor por la imagen del plano
+        // Inyectamos la imagen directamente en el contenedor limpio
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
                 <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
             </div>
         `;
         
-        // 3. Renderizar su checklist correspondiente
-        renderChecklist(config.pasos);
+        // Renderizar su checklist correspondiente
+        generarChecklist(config.pasos);
         validarPasos();
         
     } else {
         // --- MÓDULO SPC ESTÁNDAR ---
-        // 1. Ocultar campos manuales y mostrar el badge SPC
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
         infoLote.innerText = "Sin lote seleccionado";
         
-        // 2. Restaurar la estructura original para Plotly por si veníamos de una imagen
+        // Restaurar la estructura HTML limpia para que Plotly pueda dibujar sin interferencias
         visorContainer.innerHTML = `
             <div class="canvas-scroll">
                 <div id="myDiv"></div>
             </div>
         `;
         
-        // 3. Cargar datos desde Supabase e imprimir la gráfica
+        // AJUSTE CLAVE: Las fechas y la consulta a Supabase SOLO ocurren si es SPC
         const hoy = new Date();
         const haceMes = new Date();
         haceMes.setDate(hoy.getDate() - 30);
@@ -1063,48 +1059,8 @@ function abrirIndicador(nombreIndicador) {
         document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
         document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
         
+        // Ejecutar la consulta gráfica únicamente aquí
         filtrarPorFechas();
-    }
-}
-// Para los de TIPO 2: Módulos Manuales / Operativos
-function abrirIndicadorManual(nombre) {
-    variableActual = nombre;
-    const config = planesConfig[nombre];
-    
-    document.getElementById('homeScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
-    
-    // Ocultar controles SPC y gráfica
-    document.getElementById('controlesFiltros').style.display = 'none';
-    document.getElementById('chartContainer').style.display = 'none';
-    
-    // Mostrar el contenedor de la imagen/plano operativo
-    const imageContainer = document.getElementById('imageContainer');
-    imageContainer.style.display = 'block';
-    
-    // Renderizado simple de un contenedor visual para la inspección
-    imageContainer.innerHTML = `
-        <div style="text-align:center; padding:40px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
-            <div style="font-size:48px; margin-bottom:10px;">📋</div>
-            <h3 style="margin:0; color:#1e293b;">Plano / Formulario de Inspección</h3>
-            <p style="color:#64748b; margin-top:5px;">Módulo Operativo Activo: ${nombre}</p>
-        </div>
-    `;
-    
-    // Ocultar el badge de lote SPC y MOSTRAR obligatoriamente el ingreso manual
-    document.getElementById('infoLote').style.display = 'none';
-    document.getElementById('camposManual').style.display = 'block';
-    
-    // Limpiar campos previos
-    document.getElementById('manualLote').value = "";
-    document.getElementById('manualValor').value = "";
-    document.getElementById('operador').value = "";
-    document.getElementById('accionExtra').value = "";
-    document.getElementById('btnEnviar').disabled = true;
-    
-    // Forzar el despliegue del plan de reacción / checklist operativo
-    if (config && config.pasos) {
-        generarChecklist(config.pasos);
     }
 }
     
