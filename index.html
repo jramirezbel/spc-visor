@@ -1026,21 +1026,28 @@ function abrirIndicador(nombre) {
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    // Mostrar controles SPC, ocultar visor de imagen
+    // Mostrar controles SPC y ocultar visor de imagen
     document.getElementById('controlesFiltros').style.display = 'flex';
     document.getElementById('chartContainer').style.display = 'block';
     document.getElementById('imageContainer').style.display = 'none';
     
-    // Ocultar campos de entrada manual (Lote/Valor vienen del punto del gráfico)
+    // Ocultar campos de entrada manual (vienen de la gráfica)
     document.getElementById('camposManual').style.display = 'none';
     
-    // Bloquear campos hasta que seleccionen un punto en la gráfica
-    document.getElementById('operador').disabled = true;
-    document.getElementById('accionExtra').disabled = true;
+    // Limpiar el estado previo del formulario
+    document.getElementById('operador').value = "";
+    document.getElementById('accionExtra').value = "";
+    document.getElementById('checklist-pasos').innerHTML = "";
+    document.getElementById('btnEnviar').disabled = true;
+    document.getElementById('infoLote').innerText = "Sin lote seleccionado";
     
-    cambiarVariable(nombre);
+    // CORRECCIÓN: Dar un respiro al DOM para que Plotly encuentre el contenedor visible
+    setTimeout(() => {
+        cambiarVariable(nombre);
+        // Inicializar filtros con las fechas por defecto si existen en los inputs
+        filtrarPorFechas();
+    }, 50);
 }
-
 // Para los de TIPO 2: Módulos Manuales / Operativos
 function abrirIndicadorManual(nombre) {
     variableActual = nombre;
