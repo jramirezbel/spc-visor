@@ -1024,18 +1024,15 @@ function abrirIndicador(nombreIndicador) {
     datoSeleccionado = null;
     
     if (config.tipo === "imagen") {
-        // --- MÓDULO MANUAL / IMAGEN ---
         camposManual.style.display = 'block'; 
         infoLote.style.display = 'none';
         
-        // 1. Inyectamos la imagen en el visor izquierdo
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
                 <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
             </div>
         `;
         
-        // 2. Generamos el Checklist directamente en el panel derecho 
         let htmlChecklist = "";
         config.pasos.forEach((pasoText, index) => {
             htmlChecklist += `
@@ -1047,11 +1044,10 @@ function abrirIndicador(nombreIndicador) {
         });
         checklistPasos.innerHTML = htmlChecklist;
         
-        // 3. Validar el estado del botón de envío
         document.getElementById('manualLote').oninput = validarPasos;
         document.getElementById('manualValor').oninput = validarPasos;
-        validarPasos();
-        
+
+        validarPasos(); 
     } else {
         // --- MÓDULO SPC ESTÁNDAR ---
         camposManual.style.display = 'none';
@@ -1812,7 +1808,7 @@ function cerrarModalPlan(){
     
     
 function validarPasos() {
-    // CAMBIO CLAVE: Usamos 'btnEnviar' que es el ID real en tu HTML
+    // Apuntamos a 'btnEnviar' que es el ID que tiene tu botón físico en el HTML
     const btn = document.getElementById('btnEnviar'); 
     if (!btn) return;
 
@@ -1820,29 +1816,30 @@ function validarPasos() {
     const esManual = (config && config.tipo === "imagen");
 
     if (esManual) {
-        // En el módulo manual, validamos que los inputs existan y tengan texto
+        // Validación ágil para el módulo operativo manual
         const loteInput = document.getElementById('manualLote');
         const valorInput = document.getElementById('manualValor');
         
         const lote = loteInput ? loteInput.value.trim() : "";
         const valor = valorInput ? valorInput.value.trim() : "";
         
-        // El botón se habilita si ambos campos obligatorios tienen datos escrito
+        // El botón se activa si hay datos en lote y valor (no obliga a marcar todos los checkboxes)
         if (lote !== "" && valor !== "") {
             btn.disabled = false;
-            btn.classList.add('active'); // Añade la clase verde que tienes en tus estilos
+            btn.classList.add('active');
         } else {
             btn.disabled = true;
             btn.classList.remove('active');
+        }
     } else {
-        // En los módulos SPC estándar (gráficas)
+        // Validación estándar para gráficas SPC
         const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
         if (checkboxes.length === 0) {
             btn.disabled = true;
             btn.classList.remove('active');
             return;
         }
-        // Exige que al menos se marque una acción tomada
+        // Requiere al menos una acción marcada para habilitarse
         const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
         btn.disabled = !alMenosUno;
         if (alMenosUno) {
@@ -1852,6 +1849,7 @@ function validarPasos() {
         }
     }
 }
+
 
 async function enviarReporte() {
     try {
