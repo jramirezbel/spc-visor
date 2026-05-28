@@ -1813,17 +1813,23 @@ function verReporteExistente(reporte) {
         inputComentario.disabled = true;
     }
     
-    // RENDERIZAR PASOS CON LA LÓGICA DE ÍNDICES CORRECTA (i + 1)
+    // RENDERIZAR PASOS COMPARANDO ESTRICTAMENTE EL TEXTO GUARDADO
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         const realizados = reporte.pasos_realizados || [];
         let htmlHistorico = "";
         
-        config.pasos.forEach((pasoText, i) => {
-            // SOLUCIÓN AL ERROR: Buscamos en la BD si el número del paso (i + 1) o la descripción coincide
-            const fueMarcado = realizados.some(r => r.paso === (i + 1) || r.paso === pasoText || r.descripcion === pasoText);
+        config.pasos.forEach((pasoText) => {
+            // COMPARACIÓN ESTRICTA: Buscamos si el texto del paso coincide con lo guardado en 'paso' o 'descripcion'
+            const pasoEncontrado = realizados.find(r => 
+                String(r.paso).trim() === pasoText.trim() || 
+                String(r.descripcion).trim() === pasoText.trim()
+            );
+
+            // Evaluamos si existe el registro Y si explícitamente se guardó como completado/realizado
+            const fueMarcado = pasoEncontrado ? (pasoEncontrado.completado === true || pasoEncontrado.realizado === true) : false;
             
-            // ESTÉTICA ORIGINAL RECUPERADA: Si fue marcado, se le inyecta el fondo azul claro y borde destacado
+            // ESTÉTICA ORIGINAL: Si fue marcado, se le inyecta el fondo azul claro y borde destacado de la maltería
             htmlHistorico += `
                 <label class="step" style="background: ${fueMarcado ? '#ebf8ff' : '#f8fafc'}; border-color: ${fueMarcado ? '#90cdf4' : '#edf2f7'};">
                     <input type="checkbox" ${fueMarcado ? 'checked' : ''} onclick="return false;" style="margin-right:10px;">
