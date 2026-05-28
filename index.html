@@ -1793,12 +1793,14 @@ function abrirPlanReaccion(dato) {
 function verReporteExistente(reporte) {
     const config = planesConfig[variableActual];
     
-    // MANTIENE EL DISEÑO ORIGINAL: El badge se vuelve azul (#3182ce) con texto blanco
+    // MANTIENE EL DISEÑO ORIGINAL: El badge se vuelve azul con texto blanco
     const infoLote = document.getElementById('infoLote');
-    infoLote.style.background = '#3182ce'; 
-    infoLote.innerHTML = `Lote: ${reporte.lote_id} | Valor: ${reporte.valor}`;
+    if (infoLote) {
+        infoLote.style.background = '#3182ce'; 
+        infoLote.innerHTML = `Lote: ${reporte.lote_id} | Valor: ${reporte.valor}`;
+    }
     
-    // Rellenar campos de texto y bloquearlos (Modo lectura histórico)
+    // Rellenar campos de texto y bloquearlos para el histórico
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
@@ -1811,7 +1813,7 @@ function verReporteExistente(reporte) {
         inputComentario.disabled = true;
     }
     
-    // MANTIENE TU ESTRETEGIA ORIGINAL: Pasos limpios usando la clase .step nativa
+    // RENDERIZAR LOS PASOS SELECCIONADOS COMO ANTES
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         let htmlHistorico = "";
@@ -1819,10 +1821,10 @@ function verReporteExistente(reporte) {
             // Evaluamos si el paso fue completado en Supabase
             const fueMarcado = reporte.pasos_realizados?.some(p => p.paso === pasoText && p.completado) || false;
             
-            // Usamos tu clase nativa .step sin alterar colores de fondo extraños
+            // Usamos tu clase nativa .step. El 'onclick="return false;"' bloquea el clic sin romper la estética visual del check marcado
             htmlHistorico += `
                 <label class="step">
-                    <input type="checkbox" disabled ${fueMarcado ? 'checked' : ''} style="margin-right:10px;">
+                    <input type="checkbox" ${fueMarcado ? 'checked' : ''} onclick="return false;" style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
             `;
