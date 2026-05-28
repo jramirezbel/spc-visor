@@ -1784,31 +1784,33 @@ function abrirPlanReaccion(dato) {
 function verReporteExistente(reporte) {
     const config = planesConfig[variableActual];
     
-    // 1. Mostrar información en el banner
-    document.getElementById('infoLote').innerHTML = `<strong>Lote:</strong> ${reporte.lote_id} | <strong>Valor:</strong> ${reporte.valor}`;
+    // ESTÉTICA RECUPERADA: Cuando el lote ya está ajustado, el label se pone en AZUL
+    document.getElementById('infoLote').innerHTML = `<span style="color:#3182ce;"><strong>Lote:</strong> ${reporte.lote_id} | <strong>Valor:</strong> ${reporte.valor}</span>`;
     
-    // 2. BLOQUEAR CAMPOS: Rellenar con el histórico y aplicar candados
+    // BLOQUEAR CAMPOS: Rellenar con el histórico y aplicar candados de lectura
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     
     if (inputOperador) {
         inputOperador.value = reporte.operador || "";
-        inputOperador.disabled = true;
+        inputOperador.disabled = true; // Sigue bloqueado para que no se altere el pasado
     }
     if (inputComentario) {
         inputComentario.value = reporte.comentario || "";
         inputComentario.disabled = true;
     }
     
-    // 3. MOSTRAR PASOS GRISES: Bloquear los checks mostrando qué se hizo en el pasado
+    // ESTÉTICA RECUPERADA: Pintar los pasos visuales con sus colores de registro (legibles)
     const checklistPasos = document.getElementById('checklist-pasos');
     if (config && config.pasos) {
         let htmlHistorico = "";
         config.pasos.forEach(pasoText => {
+            // Averiguamos si este paso se marcó en el reporte guardado
             const fueMarcado = reporte.pasos_realizados?.some(p => p.paso === pasoText && p.completado) || false;
             
+            // Se muestran en color normal (#1e293b) para que se note qué se hizo, pero con 'disabled' para que no lo editen
             htmlHistorico += `
-                <label class="step-row" style="display:block; opacity:0.7; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px; cursor:not-allowed; color:#475569;">
+                <label class="step-row" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #edf2f7; font-size:13px; cursor:not-allowed; color:#1e293b;">
                     <input type="checkbox" disabled ${fueMarcado ? 'checked' : ''} style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
@@ -1817,14 +1819,14 @@ function verReporteExistente(reporte) {
         checklistPasos.innerHTML = htmlHistorico;
     }
     
-    // 4. Bloquear botón de envío para evitar modificaciones
+    // Bloquear botón de envío para evitar modificaciones o duplicados
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
         btn.classList.remove('active');
     }
 }
-
+    
 function verPlan(proceso, id){
 
     const plan = bibliotecaPlanes[proceso]
