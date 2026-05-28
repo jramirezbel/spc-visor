@@ -1511,90 +1511,66 @@ async function dibujarGrafica(datos){
     document.getElementById('stat-percent').innerText = Math.round((ok/datos.length)*100) + "%";
     document.getElementById('stat-pending').innerText = fuera.length - listos;
 
-    datos.sort((a,b)=>parseInt(a.lote)-parseInt(b.lote));
-
-// 1. Asegurar el orden ascendente por lote antes de mapear el eje X
+    // Asegurar el orden ascendente por lote antes de mapear el eje X
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
-    // 2. Mapeamos un único array de texto combinando Día y Lote de forma clara
-const trace = {
-
-    x: [
-        datos.map(d => {
-
+    const trace = {
+        x: [
+            datos.map(d => {
+                const fecha = d.fechas[variableActual];
+                return fecha ? fecha.getDate() : "";
+            }),
+            datos.map(d => d.lote)
+        ],
+        y: datos.map(d => d.y),
+        mode: 'lines+markers',
+        customdata: datos.map(d => {
             const fecha = d.fechas[variableActual];
-
-            return fecha.getDate();
-
+            return [
+                d.lote,
+                fecha ? fecha.toLocaleDateString('es-CO',{ day:'2-digit', month:'short' }) : "S/F"
+            ];
         }),
-
-        datos.map(d => d.lote)
-    ],
-
-    y: datos.map(d => d.y),
-
-    mode: 'lines+markers',
-
-    customdata: datos.map(d => {
-
-        const fecha = d.fechas[variableActual];
-
-        return [
-            d.lote,
-            fecha.toLocaleDateString('es-CO',{
-                day:'2-digit',
-                month:'short'
+        hovertemplate:
+            '<b>Lote:</b> %{customdata[0]}' +
+            '<br><b>Fecha:</b> %{customdata[1]}' +
+            '<br><b>Valor:</b> %{y}' +
+            '<extra></extra>',
+        line: {
+            color: '#2d3748',
+            width: 2
+        },
+        marker: {
+            size: 8,
+            color: datos.map(d => {
+                const gestionado = bd.some(r =>
+                    String(r.lote_id) === d.lote &&
+                    r.variable === variableActual
+                );
+                return d.y > config.ucl
+                    ? (gestionado ? '#3182ce' : 'red')
+                    : '#2d3748';
             })
-        ];
-    }),
+        }
+    };
 
-    hovertemplate:
-        '<b>Lote:</b> %{customdata[0]}' +
-        '<br><b>Fecha:</b> %{customdata[1]}' +
-        '<br><b>Valor:</b> %{y}' +
-        '<extra></extra>',
-
-    line: {
-        color: '#2d3748',
-        width: 2
-    },
-
-    marker: {
-        size: 8,
-
-        color: datos.map(d => {
-
-            const gestionado = bd.some(r =>
-                String(r.lote_id) === d.lote &&
-                r.variable === variableActual
-            );
-
-            return d.y > config.ucl
-                ? (gestionado ? '#3182ce' : 'red')
-                : '#2d3748';
-        })
-    }
-};
-
-
-    
     const layout = {
         autosize: true,
-        dragmode:false,
-xaxis:{
-    type:'multicategory',
-    fixedrange:true,
-    tickangle:90,
-    automargin:true,
-    showgrid:false
-},
+        dragmode: false,
+        xaxis: {
+            type: 'multicategory',
+            fixedrange: true,
+            tickangle: 90,
+            automargin: true,
+            showgrid: false
+        },
         yaxis: { 
             range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
             fixedrange: true 
         },
         margin: { 
             t: 20, 
-            b: 140, // Se puede reducir ligeramente ya que 'automargin: true' se encarga del trabajo pesado
+            b: 140, 
             l: 50, 
             r: 20 
         },
@@ -1605,7 +1581,6 @@ xaxis:{
     };
 
     const div = document.getElementById('myDiv');
-    
     div.style.width = "100%";
     div.style.height = "100%";
     
@@ -1616,16 +1591,15 @@ xaxis:{
 
     document.querySelector('.canvas-scroll').scrollLeft = 0;
         
-    // 3. Modificación del evento de clic para interactuar correctamente con el nuevo formato del eje X
-// 3. Modificación del evento de clic para interactuar correctamente con el nuevo formato del eje X
+    // 3. EVENTO DE CLIC PERFECTAMENTE LIMPIO (Sin duplicados)
     div.on('plotly_click', function(evento){
         const punto = evento.points[0];
-        const indice = punto.pointIndex; // Usamos el índice del punto cliqueado
-        const dato = datos[indice];     // Recuperamos el objeto original directo del array ordenado
+        const indice = punto.pointIndex; 
+        const dato = datos[indice];     
 
         if(!dato || dato.y <= config.ucl) return;
 
-        // VITAL: Guardar el punto seleccionado en la variable global
+        // Guardar el punto seleccionado en la variable global
         datoSeleccionado = dato;
 
         const reporteExistente = bd.find(r =>
@@ -1638,18 +1612,8 @@ xaxis:{
         } else {
             abrirPlanReaccion(dato);
         }
-    });
-
-if(reporteExistente){
-
-    verReporteExistente(reporteExistente);
-
-} else {
-
-    abrirPlanReaccion(dato);
-}
     }); 
-} 
+}
 
 function mostrarImagenFija(nombreIndicador){
 
