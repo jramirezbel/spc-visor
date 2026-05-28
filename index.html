@@ -1542,133 +1542,171 @@ function filtrarPorFechas() {
         .filter(d => !isNaN(d.y));
 
     // Llamamos a tu función de renderizado pasándole los datos ya con el grupo inyectado
-    dibujarGrafica(datos);
+    dibujarGrafica(filtrados);
 }
     
 async function dibujarGrafica(datos){
-    if(!datos.length){
-        document.getElementById('myDiv').innerHTML = `
-            <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:22px; color:#94a3b8; font-weight:bold;">
-                No hay datos para el rango seleccionado
-            </div>`;
-        return;
-    }
+    if(!datos.length){
+        document.getElementById('myDiv').innerHTML = `
+            <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:22px; color:#94a3b8; font-weight:bold;">
+                No hay datos para el rango seleccionado
+            </div>`;
+        return;
+    }
 
-    const config = planesConfig[variableActual];
-    const {data:reportes} = await _supabase.from('planes_reaccion').select('*');
-    const bd = reportes || [];
+    const config = planesConfig[variableActual];
+    const {data:reportes} = await _supabase.from('planes_reaccion').select('*');
+    const bd = reportes || [];
 
-    const ok = datos.filter(d=>d.y <= config.ucl).length;
-    const fuera = datos.filter(d=>d.y > config.ucl);
-    const listos = fuera.filter(d=>bd.some(r=> String(r.lote_id) === d.lote && r.variable === variableActual)).length;
+    const ok = datos.filter(d=>d.y <= config.ucl).length;
+    const fuera = datos.filter(d=>d.y > config.ucl);
+    const listos = fuera.filter(d=>bd.some(r=> String(r.lote_id) === d.lote && r.variable === variableActual)).length;
 
-    document.getElementById('stat-total').innerText = datos.length;
-    document.getElementById('stat-ok').innerText = ok;
-    document.getElementById('stat-percent').innerText = Math.round((ok/datos.length)*100) + "%";
-    document.getElementById('stat-pending').innerText = fuera.length - listos;
+    document.getElementById('stat-total').innerText = datos.length;
+    document.getElementById('stat-ok').innerText = ok;
+    document.getElementById('stat-percent').innerText = Math.round((ok/datos.length)*100) + "%";
+    document.getElementById('stat-pending').innerText = fuera.length - listos;
 
-    // Asegurar el orden ascendente por lote antes de mapear el eje X
-    datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
+    // Asegurar el orden ascendente por lote antes de mapear el eje X
+    datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
-    const trace = {
-        x: [
-            datos.map(d => {
-                const fecha = d.fechas[variableActual];
-                return fecha ? fecha.getDate() : "";
-            }),
-            datos.map(d => d.lote)
-        ],
-        y: datos.map(d => d.y),
-        mode: 'lines+markers',
-        customdata: datos.map(d => {
-            const fecha = d.fechas[variableActual];
-            return [
-                d.lote,
-                fecha ? fecha.toLocaleDateString('es-CO',{ day:'2-digit', month:'short' }) : "S/F"
-            ];
-        }),
-        hovertemplate:
-            '<b>Lote:</b> %{customdata[0]}' +
-            '<br><b>Fecha:</b> %{customdata[1]}' +
-            '<br><b>Valor:</b> %{y}' +
-            '<extra></extra>',
-        line: {
-            color: '#2d3748',
-            width: 2
-        },
-        marker: {
-            size: 8,
-            color: datos.map(d => {
-                const gestionado = bd.some(r =>
-                    String(r.lote_id) === d.lote &&
-                    r.variable === variableActual
-                );
-                return d.y > config.ucl
-                    ? (gestionado ? '#3182ce' : 'red')
-                    : '#2d3748';
-            })
-        }
-    };
+    // ============================================================
+    // 1. MAPEADO DE SÍMBOLOS CONDICIONALES PARA GRUPOS DE REMOJO
+    // ============================================================
+    const simbolosGrupos = {
+        'G1': 'star',          // Estrella
+        'G2': 'square',        // Cuadrado
+        'G3': 'diamond',       // Rombo
+        'G4': 'triangle-up',   // Triángulo
+        'G5': 'cross',         // Cruz
+        'G6': 'hexagon'        // Hexágono
+    };
 
-    const layout = {
-        autosize: true,
-        dragmode: false,
-        xaxis: {
-            type: 'multicategory',
-            fixedrange: true,
-            tickangle: 90,
-            automargin: true,
-            showgrid: false
-        },
-        yaxis: { 
-            range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
-            fixedrange: true 
-        },
-        margin: { 
-            t: 20, 
-            b: 140, 
-            l: 50, 
-            r: 20 
-        },
-        shapes: [
-            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: config.ucl, fillcolor: 'rgba(144,238,144,0.6)', line: { width: 0 }, layer: 'below' },
-            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.6)', line: { width: 0 }, layer: 'below' }
-        ]
-    };
+    // Si estás en Relleno de tanques, evalúa cada fila; si estás en cualquier otra gráfica, usa círculo para todos
+    const simbolosMapeados = variableActual === 'Relleno total tanques'
+        ? datos.map(d => simbolosGrupos[d.grupo] || 'circle')
+        : 'circle';
 
-    const div = document.getElementById('myDiv');
-    div.style.width = "100%";
-    div.style.height = "100%";
-    
-    Plotly.newPlot(div, [trace], layout, {
-        responsive: true,
-        displayModeBar: false
-    });
+    const trace = {
+        x: [
+            datos.map(d => {
+                const fecha = d.fechas[variableActual];
+                return fecha ? fecha.getDate() : "";
+            }),
+            datos.map(d => d.lote)
+        ],
+        y: datos.map(d => d.y),
+        mode: 'lines+markers',
+        customdata: datos.map(d => {
+            const fecha = d.fechas[variableActual];
+            return [
+                d.lote,
+                fecha ? fecha.toLocaleDateString('es-CO',{ day:'2-digit', month:'short' }) : "S/F"
+            ];
+        }),
+        // Si es Relleno total tanques, le inyectamos de forma dinámica el grupo de remojo al hovertemplate
+        hovertemplate:
+            '<b>Lote:</b> %{customdata[0]}' +
+            '<br><b>Fecha:</b> %{customdata[1]}' +
+            (variableActual === 'Relleno total tanques' ? '<br><b>Grupo de Remojo:</b> %{text}' : '') +
+            '<br><b>Valor:</b> %{y}' +
+            '<extra></extra>',
+        text: datos.map(d => d.grupo || 'G1'), // Pasamos el texto del grupo para que hovertemplate lo capture de forma nativa
+        line: {
+            color: '#2d3748',
+            width: 2
+        },
+        marker: {
+            // Un pelín más grandes (size: 11) en Relleno para que la estrella o el rombo se distingan bien
+            size: variableActual === 'Relleno total tanques' ? 11 : 8,
+            symbol: simbolosMapeados, // <--- AQUÍ SE APLICA EL CAMBIO DE FIGURAS
+            color: datos.map(d => {
+                const gestionado = bd.some(r =>
+                    String(r.lote_id) === d.lote &&
+                    r.variable === variableActual
+                );
+                return d.y > config.ucl
+                    ? (gestionado ? '#3182ce' : 'red')
+                    : '#2d3748';
+            })
+        }
+    };
 
-    document.querySelector('.canvas-scroll').scrollLeft = 0;
-        
-    // 3. EVENTO DE CLIC PERFECTAMENTE LIMPIO (Sin duplicados)
-    div.on('plotly_click', function(evento){
-        const punto = evento.points[0];
-        const indice = punto.pointIndex; 
-        const dato = datos[indice];     
+    const layout = {
+        autosize: true,
+        dragmode: false,
+        xaxis: {
+            type: 'multicategory',
+            fixedrange: true,
+            tickangle: 90,
+            automargin: true,
+            showgrid: false
+        },
+        yaxis: { 
+            range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
+            fixedrange: true 
+        },
+        margin: { 
+            t: 20, 
+            b: 140, 
+            l: 50, 
+            r: 20 
+        },
+        shapes: [
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: config.ucl, fillcolor: 'rgba(144,238,144,0.6)', line: { width: 0 }, layer: 'below' },
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.6)', line: { width: 0 }, layer: 'below' }
+        ]
+    };
 
-        if(!dato || dato.y <= config.ucl) return;
+    const div = document.getElementById('myDiv');
+    div.style.width = "100%";
+    div.style.height = "100%";
+    
+    Plotly.newPlot(div, [trace], layout, {
+        responsive: true,
+        displayModeBar: false
+    });
 
-        // Guardar el punto seleccionado en la variable global
-        datoSeleccionado = dato;
+    document.querySelector('.canvas-scroll').scrollLeft = 0;
+        
+    // 3. EVENTO DE CLIC PERFECTAMENTE LIMPIO (Sin duplicados)
+    div.on('plotly_click', function(evento){
+        const punto = evento.points[0];
+        const indice = punto.pointIndex; 
+        const dato = datos[indice];     
 
-        const reporteExistente = bd.find(r =>
-            String(r.lote_id) === String(dato.lote) &&
-            r.variable === variableActual
-        );
+        if(!dato || dato.y <= config.ucl) return;
 
-        if(reporteExistente){
-            verReporteExistente(reporteExistente);
-        } else {
-            abrirPlanReaccion(dato);
-        }
-    }); 
+        // Guardar el punto seleccionado en la variable global
+        datoSeleccionado = dato;
+
+        const reporteExistente = bd.find(r =>
+            String(r.lote_id) === String(dato.lote) &&
+            r.variable === variableActual
+        );
+
+        if(reporteExistente){
+            verReporteExistente(reporteExistente);
+            
+            // Si el lote ya fue gestionado y es Relleno, le añadimos visualmente el grupo al banner azul
+            if(variableActual === 'Relleno total tanques') {
+                setTimeout(() => {
+                    const infoLote = document.getElementById('infoLote');
+                    if(infoLote) infoLote.innerHTML = `Lote: ${dato.lote} (Grupo: ${dato.grupo || 'G1'})`;
+                }, 50);
+            }
+        } else {
+            abrirPlanReaccion(dato);
+            
+            // Si es un plan nuevo fuera de control y es Relleno, le añadimos el grupo al banner rojo
+            if(variableActual === 'Relleno total tanques') {
+                setTimeout(() => {
+                    const infoLote = document.getElementById('infoLote');
+                    if(infoLote) infoLote.innerHTML = `Lote: ${dato.lote} [${dato.grupo || 'G1'}] | Valor: ${dato.y}`;
+                }, 50);
+            }
+        }
+    }); 
 }
     
 function mostrarImagenFija(nombreIndicador){
