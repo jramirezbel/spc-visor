@@ -1005,17 +1005,17 @@ function actualizarCumplimientoHome(){
 function abrirIndicador(nombre) {
     variableActual = nombre;
     
-    // CORRECCIÓN 1: Definir config para poder leer las propiedades del indicador
     const config = planesConfig[nombre];
     if (!config) {
-        console.error("No se encontró la configuración para: " + nombre);
+        console.error("No se encontró configuración para: " + nombre);
         return;
     }
 
+    // Cambiar de pantalla hacia el Dashboard
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    // Resetear inputs del operador
+    // Resetear textos y limpiar estados del botón
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
     document.getElementById('btnEnviar').disabled = true;
@@ -1023,32 +1023,34 @@ function abrirIndicador(nombre) {
 
     const chartDiv = document.getElementById('myDiv');
 
-    // Evaluar si es un módulo Operativo Manual (Tipo Imagen) o SPC Gráfico
     if (config.tipo === "imagen") {
-        // --- FLUJO MÓDULO MANUAL ---
+        // --- 🟩 FLUJO MÓDULO MANUAL OPERATIVO ---
         document.getElementById('stats-bar').style.display = 'none';
         document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'none');
         document.querySelector('.btn-filtrar').style.display = 'none';
         
-        // Mostrar campos de digitación manual de Lote y Valor
+        // Forzar visibilidad de la caja de captura de datos manual
         document.getElementById('infoLote').style.display = 'none'; 
         document.getElementById('camposManual').style.display = 'block';
         document.getElementById('manualLote').value = "";
         document.getElementById('manualValor').value = "";
 
-        // CORRECCIÓN 2: Inyectar la etiqueta <img> real con la ruta asignada
+        // Renderizar el contenedor con tu plano/imagen técnica
         chartDiv.innerHTML = `
             <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; min-height: 450px;">
-                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; max-width: 100%;">
-                    <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">Plano Operativo: ${nombre}</h3>
-                    <div style="margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
-                        <img src="${config.imagen}" alt="Plano ${nombre}" style="max-width: 100%; max-height: 380px; display: block; margin: 0 auto; object-fit: contain;">
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; max-width: 100%;">
+                    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px;">Plano de Inspección Activo: ${nombre}</h3>
+                    <div style="margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; max-width: 500px; margin-left: auto; margin-right: auto;">
+                        <img src="${config.imagen}" alt="Plano ${nombre}" style="width: 100%; height: auto; display: block; object-fit: contain;">
+                    </div>
+                    <div style="display: inline-block; background: #2f855a; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase;">
+                        Ubicación: ${config.imagen}
                     </div>
                 </div>
             </div>
         `;
     } else {
-        // --- FLUJO MÓDULO SPC GRÁFICO ---
+        // --- 🟦 FLUJO MÓDULO SPC GRÁFICO ---
         document.getElementById('stats-bar').style.display = 'flex';
         document.querySelectorAll('.filtro-group').forEach(el => el.style.display = 'flex');
         document.querySelector('.btn-filtrar').style.display = 'block';
@@ -1057,18 +1059,19 @@ function abrirIndicador(nombre) {
         document.getElementById('infoLote').innerText = "Sin lote seleccionado (Haz clic en un punto del gráfico)";
         document.getElementById('camposManual').style.display = 'none';
 
-        chartDiv.innerHTML = ""; // Limpiar para que Plotly dibuje encima
+        chartDiv.innerHTML = ""; // Limpiar para que Plotly tome el control
     }
 
-    // CORRECCIÓN 3: Desplegar el checklist específico que viene en planesConfig
+    // Renderizar las preguntas/pasos específicos del plan de reacción inmediatamente
     if (config.pasos && config.pasos.length > 0) {
         generarChecklist(config.pasos);
     } else {
-        document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic;">No hay pasos configurados.</p>`;
+        document.getElementById('checklist-pasos').innerHTML = `<p style="color:#64748b; font-style:italic; padding:10px;">No hay pasos configurados.</p>`;
     }
 
     document.getElementById('tituloIndicadorActual').innerText = nombre;
 
+    // Solo si es SPC, disparamos la consulta asíncrona a Supabase
     if (config.tipo !== "imagen") {
         setTimeout(() => {
             filtrarPorFechas();
@@ -1424,7 +1427,19 @@ function mostrarProceso(nombreProceso){
 function cambiarVariable(nombre){
     variableActual = nombre;
     document.getElementById('tituloIndicadorActual').innerText = nombre;
-    cancelarRegistro(); // Limpia estados colaterales
+    
+    const config = planesConfig[nombre];
+    if (!config) return;
+
+    // Solo si es un módulo estadístico real (SPC), recalculamos gráficos
+    if (config.tipo !== "imagen") {
+        document.getElementById('stats-bar').style.display = 'flex';
+        document.getElementById('infoLote').style.display = 'block';
+        filtrarPorFechas();
+    } else {
+        // Si por alguna razón cae aquí un módulo manual, apagamos barras SPC
+        document.getElementById('stats-bar').style.display = 'none';
+    }
 }
     
 function filtrarPorFechas() {
@@ -1672,28 +1687,28 @@ document.getElementById('camposManual')
 }
     
 function cancelarRegistro() {
-    // Retornar a la pantalla principal
+    // Volver al Home
     document.getElementById('homeScreen').style.display = 'block';
     document.getElementById('dashboardScreen').style.display = 'none';
     
-    // Forzar reseteo de elementos del panel a su estado base
+    // Dejar el panel listo para el siguiente ingreso base (SPC)
     document.getElementById('infoLote').style.display = 'block';
     document.getElementById('infoLote').innerText = "Sin lote seleccionado";
     document.getElementById('camposManual').style.display = 'none';
     
-    // Limpiar cajas de texto y de ingreso de datos
+    // Vaciar inputs
     document.getElementById('manualLote').value = "";
     document.getElementById('manualValor').value = "";
     document.getElementById('operador').value = "";
     document.getElementById('accionExtra').value = "";
     document.getElementById('checklist-pasos').innerHTML = "";
     
-    // Bloquear botón de envío
     document.getElementById('btnEnviar').disabled = true;
     document.getElementById('btnEnviar').classList.remove('active');
     
     datoSeleccionado = null;
 }
+    
 function abrirPlanReaccion(dato){
 
     datoSeleccionado = dato;
