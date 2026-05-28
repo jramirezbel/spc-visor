@@ -1644,9 +1644,12 @@ document.getElementById('camposManual')
 }
     
 function cancelarRegistro() {
-    // Limpieza de campos comunes
-    document.getElementById('operador').value = "";
+    // Limpieza de campos de texto comunes
     document.getElementById('accionExtra').value = "";
+    
+    // Si estás usando persistencia del operador puedes elegir NO borrarlo, 
+    // pero si deseas limpiarlo para obligar al nuevo registro, descomenta la línea de abajo:
+    // document.getElementById('operador').value = ""; 
     
     // Limpieza específica de campos manuales si existen
     const manualLote = document.getElementById('manualLote');
@@ -1654,12 +1657,19 @@ function cancelarRegistro() {
     if (manualLote) manualLote.value = "";
     if (manualValor) manualValor.value = "";
     
-    // Ocultar el contenido y resetear estados
-    document.getElementById('infoLote').innerHTML = "Sin lote seleccionado";
-    document.getElementById('checklist-pasos').innerHTML = "";
+    // CORRECCIÓN: Desmarcar los checkboxes sin eliminar la estructura HTML de la pantalla
+    const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    
+    // Mantenemos visible el texto informativo por defecto si aplica
+    const config = planesConfig[variableActual];
+    if (config && config.tipo !== "imagen") {
+        document.getElementById('infoLote').innerHTML = "Sin lote seleccionado";
+    }
     
     datoSeleccionado = null;
     
+    // Dejar el botón bloqueado y remover el color verde activo
     const btn = document.getElementById('btnEnviar');
     if (btn) {
         btn.disabled = true;
@@ -1808,23 +1818,30 @@ function cerrarModalPlan(){
     
     
 function validarPasos() {
-    // Apuntamos a 'btnEnviar' que es el ID que tiene tu botón físico en el HTML
     const btn = document.getElementById('btnEnviar'); 
     if (!btn) return;
 
     const config = planesConfig[variableActual];
     const esManual = (config && config.tipo === "imagen");
 
+    // 1. El nombre del operador SIEMPRE es obligatorio
+    const operadorInput = document.getElementById('operador');
+    const operador = operadorInput ? operadorInput.value.trim() : "";
+
+    // 2. Validar que al menos un paso del checklist esté marcado
+    const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
+    const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
+
     if (esManual) {
-        // Validación ágil para el módulo operativo manual
+        // En el módulo operativo manual, además validamos Lote y Valor
         const loteInput = document.getElementById('manualLote');
         const valorInput = document.getElementById('manualValor');
         
         const lote = loteInput ? loteInput.value.trim() : "";
         const valor = valorInput ? valorInput.value.trim() : "";
         
-        // El botón se activa si hay datos en lote y valor (no obliga a marcar todos los checkboxes)
-        if (lote !== "" && valor !== "") {
+        // Se habilita si tiene: Lote Y Valor Y Operador Y al menos un paso marcado (Comentario es opcional)
+        if (lote !== "" && valor !== "" && operador !== "" && alMenosUno) {
             btn.disabled = false;
             btn.classList.add('active');
         } else {
@@ -1832,19 +1849,13 @@ function validarPasos() {
             btn.classList.remove('active');
         }
     } else {
-        // Validación estándar para gráficas SPC
-        const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
-        if (checkboxes.length === 0) {
-            btn.disabled = true;
-            btn.classList.remove('active');
-            return;
-        }
-        // Requiere al menos una acción marcada para habilitarse
-        const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
-        btn.disabled = !alMenosUno;
-        if (alMenosUno) {
+        // En los módulos SPC estándar (gráficas)
+        // Se habilita si tiene: Operador Y al menos un paso marcado
+        if (operador !== "" && alMenosUno) {
+            btn.disabled = false;
             btn.classList.add('active');
         } else {
+            btn.disabled = true;
             btn.classList.remove('active');
         }
     }
