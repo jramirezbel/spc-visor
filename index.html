@@ -1813,12 +1813,10 @@ function verReporteExistente(reporte){
     const pasos = planesConfig[variableActual].pasos;
     const realizados = reporte.pasos_realizados || [];
     
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p)=>{
-        // COMPARACIÓN STRICTA: Busca el texto idéntico del paso en el JSON guardado
-        const registroPaso = realizados.find(r => r.paso === p);
-        
-        // Evalúa si se encontró y si la propiedad 'completado' es verdadera
-        const ejecutado = registroPaso ? (registroPaso.completado === true) : false;
+    document.getElementById('checklist-pasos').innerHTML = pasos.map((p, i)=>{
+        // SOLUCIÓN AL ERROR: Buscamos si en la BD existe un registro cuyo 'paso' sea igual al texto largo 'p' 
+        // Y que además la propiedad 'completado' sea explícitamente true.
+        const ejecutado = realizados.some(r => r.paso === p && r.completado === true);
         
         return `
             <label class="step" style="
@@ -1836,8 +1834,10 @@ function verReporteExistente(reporte){
     }).join('');
     
     const btn = document.getElementById('btnEnviar');
+    
     btn.disabled = true;
     btn.classList.remove('active');
+    
     btn.innerText = 'Reporte ya registrado';
 }
     
