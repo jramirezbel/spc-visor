@@ -1546,6 +1546,25 @@ function filtrarPorFechas() {
 }
     
 async function dibujarGrafica(datos){
+    const config = planesConfig[variableActual];
+
+    // MÓDULOS BASADOS EN IMAGENES (Tostación, etc.)
+    if (config && config.tipo === "imagen") {
+        const div = document.getElementById('myDiv');
+        if (div) {
+            div.innerHTML = `
+                <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
+                    <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                </div>`;
+        }
+        document.getElementById('stat-total').innerText = '-';
+        document.getElementById('stat-ok').innerText = '-';
+        document.getElementById('stat-percent').innerText = '-';
+        document.getElementById('stat-pending').innerText = '-';
+        return; 
+    }
+
+    // MÓDULO SPC ESTÁNDAR
     if(!datos.length){
         document.getElementById('myDiv').innerHTML = `
             <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:22px; color:#94a3b8; font-weight:bold;">
@@ -1554,7 +1573,6 @@ async function dibujarGrafica(datos){
         return;
     }
 
-    const config = planesConfig[variableActual];
     const {data:reportes} = await _supabase.from('planes_reaccion').select('*');
     const bd = reportes || [];
 
@@ -1570,19 +1588,16 @@ async function dibujarGrafica(datos){
     // Asegurar el orden ascendente por lote antes de mapear el eje X
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
 
-    // ============================================================
-    // LOGICA DE SÍMBOLOS ÚNICAMENTE PARA RELLENO TOTAL TANQUES
-    // ============================================================
+    // Configuración de símbolos condicionales únicamente para "Relleno total tanques"
     const simbolosGrupos = {
-        'G1': 'star',          // Estrella
-        'G2': 'square',        // Cuadrado
-        'G3': 'diamond',       // Rombo
-        'G4': 'triangle-up',   // Triángulo
-        'G5': 'cross',         // Cruz
-        'G6': 'hexagon'        // Hexágono
+        'G1': 'star',
+        'G2': 'square',
+        'G3': 'diamond',
+        'G4': 'triangle-up',
+        'G5': 'cross',
+        'G6': 'hexagon'
     };
 
-    // Si es Relleno total tanques mapea figuras según su grupo, si no, usa círculos ('circle') para todo el mundo
     const simbolosMapeados = variableActual === 'Relleno total tanques'
         ? datos.map(d => simbolosGrupos[d.grupo] || 'circle')
         : 'circle';
@@ -1599,13 +1614,13 @@ async function dibujarGrafica(datos){
         mode: 'lines+markers',
         customdata: datos.map(d => {
             const fecha = d.fechas[variableActual];
+            // RESTAURADO: Devolvemos el array plano interno idéntico al original + el grupo al final
             return [
                 d.lote,
                 fecha ? fecha.toLocaleDateString('es-CO',{ day:'2-digit', month:'short' }) : "S/F",
-                d.grupo || 'N/A' // Guardamos el grupo en la posición 2 del customdata
+                d.grupo || 'N/A'
             ];
         }),
-        // Si es Relleno total tanques, añade el grupo al cuadro flotante automáticamente
         hovertemplate:
             '<b>Lote:</b> %{customdata[0]}' +
             '<br><b>Fecha:</b> %{customdata[1]}' +
@@ -1617,8 +1632,8 @@ async function dibujarGrafica(datos){
             width: 2
         },
         marker: {
-            size: 10, // Le subí un pelín a 10 para que las estrellas y rombos se aprecien nítidos en planta
-            symbol: simbolosMapeados, // <--- AQUÍ SE ASIGNA EL CAMBIO VISUAL CONDICIONAL
+            size: variableActual === 'Relleno total tanques' ? 11 : 8, // Subimos el tamaño solo para ver las estrellas nítidas
+            symbol: simbolosMapeados, 
             color: datos.map(d => {
                 const gestionado = bd.some(r =>
                     String(r.lote_id) === d.lote &&
@@ -1685,7 +1700,6 @@ async function dibujarGrafica(datos){
         if(reporteExistente){
             verReporteExistente(reporteExistente);
             
-            // Si ya existe reporte y es relleno de tanques, le inyectamos textualmente el grupo al banner azul
             if(variableActual === 'Relleno total tanques'){
                 const info = document.getElementById('infoLote');
                 if(info){
@@ -1695,7 +1709,6 @@ async function dibujarGrafica(datos){
         } else {
             abrirPlanReaccion(dato);
             
-            // Si es un lote nuevo fuera de límites, le avisamos el grupo al operador en el banner rojo
             if(variableActual === 'Relleno total tanques'){
                 const infoLote = document.getElementById('infoLote');
                 if(infoLote){
