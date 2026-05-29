@@ -312,6 +312,33 @@ textarea:disabled{
     cursor:not-allowed;
     opacity:0.8;
 }
+
+.table-5why-detail {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+    font-size: 13px;
+}
+.table-5why-detail th, .table-5why-detail td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #edf2f7;
+}
+.table-5why-detail th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+.badge-5why-detail {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 11px;
+    display: inline-block;
+}
     
 </style>
 </head>
@@ -1144,9 +1171,19 @@ function abrirIndicador(nombreIndicador) {
             contenedorManualOps.appendChild(bloqueOperadorOriginal);
         }
         
+        // INTEGRAMOS EL CONTENEDOR ABAJO DE LA IMAGEN
         visorContainer.innerHTML = `
-            <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#f8fafc; padding:20px;">
-                <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+            <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#f8fafc; padding:20px; overflow-y:auto;">
+                <div style="flex:1; display:flex; justify-content:center; align-items:center; min-height:400px;">
+                    <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                </div>
+                <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); margin-top:25px; border:1px solid #e2e8f0; text-align:left;">
+                    <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
+                        <span>⚠️</span>
+                        <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas (Año Actual)</h4>
+                    </div>
+                    <div id="5why-detail-table-container"></div>
+                </div>
             </div>
         `;
         
@@ -1167,7 +1204,7 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
 
         validarPasos(); 
-} else {
+    } else {
         // --- MÓDULO SPC ESTÁNDAR ---
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
@@ -1190,9 +1227,18 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.disabled = true;
         if (inputComentario) inputComentario.disabled = true;
         
+        // INTEGRAMOS EL CONTENEDOR DEBAJO DE LA GRAFICA (DENTRO DEL SCROLL)
         visorContainer.innerHTML = `
-            <div class="canvas-scroll">
-                <div id="myDiv"></div>
+            <div class="canvas-scroll" style="display:flex; flex-direction:column; gap:20px; padding:10px;">
+                <div id="myDiv" style="width:100%;"></div>
+                
+                <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); border:1px solid #e2e8f0; text-align:left;">
+                    <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
+                        <span>⚠️</span>
+                        <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas (Año Actual)</h4>
+                    </div>
+                    <div id="5why-detail-table-container"></div>
+                </div>
             </div>
         `;
         
@@ -1222,6 +1268,9 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
         filtrarPorFechas();
     }
+
+    // LLAMAMOS A LA CONSULTA DE LA NUEVA TABLA DE SUPABASE
+    cargar5WhyDelIndicador(nombreIndicador);
 }
     
 function mostrarImagenManual(nombre){
@@ -2135,6 +2184,66 @@ window.onload = async ()=>{
     inicializarFechasMesActual();
     await cargarDatosMaestros();
 };
+
+async function cargar5WhyDelIndicador(nombreIndicador) {
+    const contenedorTabla = document.getElementById('5why-detail-table-container');
+    if (!contenedorTabla) return;
+
+    // Estado visual de espera
+    contenedorTabla.innerHTML = '<p style="color:#94a3b8; font-style:italic; font-size:13px; margin:0;">Buscando activaciones de 5WHY en el registro maestro...</p>';
+
+    try {
+        // Consultamos la tabla independiente usando tu objeto de conexión global
+        const { data: registros, error } = await _supabase
+            .from('registro_5why')
+            .select('codigo_5why, descripcion')
+            .eq('variable', nombreIndicador);
+
+        if (error) {
+            console.error("Error consultando la tabla registro_5why:", error);
+            contenedorTabla.innerHTML = '<p style="color:#ef4444; font-size:13px; margin:0;">Error al conectar con el registro histórico de herramientas.</p>';
+            return;
+        }
+
+        // Si para este PI no existen alarmas o disparadores activos en el año
+        if (!registros || registros.length === 0) {
+            contenedorTabla.innerHTML = '<div style="color:#64748b; font-style:italic; padding:10px 0; text-align:center; font-size:13px;">No se registran herramientas 5WHY activadas para este indicador en el periodo actual.</div>';
+            return;
+        }
+
+        // Construcción de la tabla limpia (sin la columna de fecha para evitar castigar al equipo)
+        let htmlTable = `
+            <table class="table-5why-detail">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Código de Herramienta</th>
+                        <th>Descripción del Disparador / Evento Operativo</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        registros.forEach(reg => {
+            htmlTable += `
+                <tr>
+                    <td><span class="badge-5why-detail">${reg.codigo_5why}</span></td>
+                    <td style="color:#334155; line-height: 1.4;">${reg.descripcion}</td>
+                </tr>
+            `;
+        });
+
+        htmlTable += `
+                </tbody>
+            </table>
+        `;
+
+        contenedorTabla.innerHTML = htmlTable;
+
+    } catch (err) {
+        console.error("Error crítico en proceso 5WHY:", err);
+        contenedorTabla.innerHTML = '<p style="color:#ef4444; font-size:13px; margin:0;">Error crítico al procesar la información.</p>';
+    }
+}
 
 </script>
 
