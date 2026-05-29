@@ -1161,10 +1161,14 @@ function abrirIndicador(nombreIndicador) {
     
     datoSeleccionado = null;
     
-    if (config.tipo === "imagen") {
+if (config.tipo === "imagen") {
         // --- MÓDULO MANUAL / IMAGEN ---
         camposManual.style.display = 'block'; 
         infoLote.style.display = 'none';
+        
+        // Ajustamos el contenedor para la visualización de la imagen
+        visorContainer.style.overflowY = 'auto';
+        visorContainer.style.display = 'block';
         
         // Movimiento dinámico del operador dentro del recuadro gris
         if (inputOperador && contenedorManualOps) {
@@ -1204,7 +1208,7 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
 
         validarPasos(); 
-    } else {
+ } else {
         // --- MÓDULO SPC ESTÁNDAR ---
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
@@ -1228,23 +1232,23 @@ function abrirIndicador(nombreIndicador) {
         if (inputComentario) inputComentario.disabled = true;
         
         // ============================================================================
-        // CORRECCIÓN AQUÍ: Estructura flex vertical con cierre correcto de contenedores
+        // AJUSTE DE ESPACIO: Scroll global en el visor, gráfica con tamaño intacto
         // ============================================================================
+        // Forzamos al contenedor principal a permitir scroll vertical total
+        visorContainer.style.overflowY = 'auto';
+        visorContainer.style.display = 'block'; // Asegura flujo vertical secuencial
+        
         visorContainer.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:20px; width:100%; height:100%; overflow-y:auto; padding:10px;">
-                
-                <div class="canvas-scroll" style="width:100%;">
-                    <div id="myDiv"></div>
+            <div class="canvas-scroll" style="width:100%; margin-bottom: 20px;">
+                <div id="myDiv"></div>
+            </div>
+            
+            <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); border:1px solid #e2e8f0; text-align:left; margin: 15px 10px 20px 10px;">
+                <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
+                    <span>⚠️</span>
+                    <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas (Año Actual)</h4>
                 </div>
-                
-                <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); border:1px solid #e2e8f0; text-align:left; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
-                        <span>⚠️</span>
-                        <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas (Año Actual)</h4>
-                    </div>
-                    <div id="5why-detail-table-container"></div>
-                </div>
-
+                <div id="5why-detail-table-container"></div>
             </div>
         `;
         
@@ -1274,7 +1278,7 @@ function abrirIndicador(nombreIndicador) {
         if (inputOperador) inputOperador.oninput = validarPasos;
         filtrarPorFechas();
     }
-
+    
     // LLAMAMOS A LA CONSULTA DE LA NUEVA TABLA DE SUPABASE
     cargar5WhyDelIndicador(nombreIndicador);
 }
