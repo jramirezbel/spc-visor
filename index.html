@@ -858,13 +858,13 @@ const bibliotecaPlanes = {
             id: 1,
             disparador: "Humedad de descarga en remojo > 43% (por drenaje deficiente)",
             causa: "Retención de agua por vaciado incompleto de las tinas.",
-            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción."
+            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción.\n4. Realizar de manera estricta una doble batida cada 8 horas."
         },
         {
             id: 2,
             disparador: "Humedad de descarga en remojo > 43% (por exceso de inmersión)",
             causa: "Tiempo de inmersión mayor al establecido en el programa.",
-            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción."
+            accion: "1. Suspender la humectación en la cámara de saturación hasta obtener el resultado de la muestra previa al primer riego en el germinador (evaluar también según propiedades organolépticas).\n2. Incrementar la frecuencia de los ventiladores en modo manual (velocidad alta) previa autorización del gerente de ingeniería.\n3. Reducir el caudal de los riegos programados en el germinador, alineado con las directrices del maltero o gerente de producción.\n4. Realizar de manera estricta una doble batida cada 8 horas."
         },
         {
             id: 3,
@@ -898,15 +898,21 @@ const bibliotecaPlanes = {
         },
         {
             id: 8,
+            disparador: "Tiempo de germinación superior al programado (+/- 4 horas)",
+            causa: "Indisponibilidad del tostador o fallas técnicas en el sistema de descarga de TMV.",
+            accion: "1. Disminuir la temperatura controlada a 14 °C.\n2. Ejecutar ciclos de batidas continuas para evitar de forma preventiva la formación de grumos.\n3. Mantener el sistema de ventilación encendido de manera permanente hasta que la falla operativa sea resuelta."
+        },
+        {
+            id: 9,
             disparador: "Tiempo de descarga de remojo > 1.5 horas",
             causa: "Obstrucción o atascamiento durante la descarga de las tinas.",
             accion: "Iniciar la ventilación SIN HUMECTACIÓN para prevenir un choque térmico. Al finalizar la transferencia, arrancar la germinación con temperaturas de 1 a 2 °C por encima de la receta estándar para estimular la metabolización del agua libre, y ejecutar batida.\n\nNotificar al maltero o al gerente de producción para ajustar según la variedad de la cebada:\n- Hora del primer riego (si aplica).\n- Temperaturas de germinación y curvas de secado.\n- Frecuencia de ventiladores (incremento de caudal) y ciclos de la cámara de saturación.\n- Dosificación de Laminex y caudales de riego."
         },
         {
-            id: 9,
+            id: 10,
             disparador: "Falla crítica en el sistema de ventilación",
             causa: "Avería en el motor principal o rotura de las correas de transmisión.",
-            accion: "1. Registrar de inmediato el evento en las observaciones de control, bitácora y Suite 360.\n2. Coordinar soporte prioritario con los técnicos mecánicos y electricistas de turno (evaluar el canibalismo de componentes/motor de un germinador desocupado).\n3. Abrir el damper de aire fresco al 100% en modo manual.\n4. Programar una doble batida.\n5. Tomar muestras inmediatas para analizar los niveles de humedad y avance de punteo."
+            accion: "1. Registrar de inmediato el evento en las observaciones de control, bitácora y Suite 360.\n2. Coordinar soporte prioritario con los técnicos mecánicos y electricistas de turno (evaluar el uso de componentes o el motor de un germinador desocupado).\n3. Abrir el damper de aire fresco al 100% en modo manual.\n4. Programar una doble batida.\n5. Tomar muestras inmediatas para analizar los niveles de humedad y avance de punteo."
         }
     ],
 
@@ -915,7 +921,7 @@ const bibliotecaPlanes = {
             id: 1,
             disparador: "Tiempo de transferencia de malta verde > 5 horas",
             causa: "Rotura en la cadena del transportador Redler.",
-            accion: "En Tostación: Asegurar una ventilación continua fijando la temperatura del aire de entrada a 40 °C para proteger el grano alojado.\n\nEn Germinación:\n1. Reiniciar los sistemas de humectación y ventilación.\n2. Aplicar ciclos de batida de ida y vuelta.\n3. Evaluar el acróspiro: si más del 70% del grano se encuentra entre 3/4 y 1, reducir las temperaturas de entrada y salida a 15 °C (validar previamente con el maltero o gerente).\n4. Si el desarrollo de la malta no cumple este criterio clínico (>60% modificado), definir con la jefatura los parámetros de secado libre y curado.\n*Nota:* Si la reparación excede 1 hora, apagar el tostador y reanudar en la última etapa activa o coordinar el cambio de piso para la Malta Verde."
+            accion: "En Tostación: Asegurar una ventilación continua fijando la temperatura del aire de entrada a 40 °C para proteger el grano alojado.\n\nEn Germinación:\n1. Reiniciar los sistemas de humectación y ventilación.\n2. Aplicar ciclos de batida de ida y vuelta.\n3. Evaluar el acróspiro: si más del 70% del grano se encuentra entre 3/4 y 1, reducir las temperaturas de entrada y salida a 15 °C (validar previamente con el maltero o gerente).\n4. Si el desarrollo de la malta no cumple este criterio (>60% modificado), definir con la jefatura los parámetros de secado libre y curado.\n*Nota:* Si la reparación excede 1 hora, apagar el tostador y reanudar en la última etapa activa o coordinar el cambio de piso para la Malta Verde."
         },
         {
             id: 2,
@@ -952,6 +958,12 @@ const bibliotecaPlanes = {
             disparador: "Segunda etapa flexible prolongada (> 1h en T1/T2; > 30 min en T3/T4)",
             causa: "Fugas físicas en la estructura del tostador o saturación de humedad oculta para los sensores.",
             accion: "Registrar la incidencia en el archivo de control, bitácora y Suite 360. Ajustar compuertas en manual:\n1. Configurar los retornos al 75% y abrir los frescos al 25% hasta que la temperatura sobre capa registre 62 °C.\n2. Devolver el control de retornos y frescos a modo automático."
+        },
+        {
+            id: 8,
+            disparador: "Salto imprevisto de rampa 2 a rampa 4",
+            causa: "Fugas físicas o estructurales detectadas en el equipo del tostador.",
+            accion: "Registrar inmediatamente la incidencia en observaciones del control de proceso, bitácora de turno y Suite 360.\nSi faltando 30 minutos para concluir el tiempo de la segunda rampa, la temperatura sobrecapa se encuentra a +/- 1 °C respecto a la temperatura de inicio de recirculación, o si ya alcanzó dicho valor:\n1. Modificar manualmente la receta de tostación sumando de 1 °C en 1 °C de forma progresiva, hasta que la temperatura programada de la rampa 3 sea estrictamente 2 °C superior a la temperatura sobrecapa real actual."
         }
     ]
 };
