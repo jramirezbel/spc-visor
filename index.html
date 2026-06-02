@@ -1331,89 +1331,60 @@ function mostrarImagenManual(nombre){
     `;
 }
 
-function cancelarRegistroManual(){
+function cancelarRegistroManual() {
 
-    document.getElementById('infoLote').innerHTML = `
-        Registro manual
-    `;
-
-    document.getElementById('infoLote').style.background = '#3182ce';
-
-    document.getElementById('operador').disabled = false;
-
-    document.getElementById('operador').value = '';
-
-    document.getElementById('accionExtra').disabled = false;
-
-    document.getElementById('accionExtra').value = '';
-
-    const pasos = planesConfig[variableActual].pasos;
-
-    document.getElementById('checklist-pasos').innerHTML = `
-
-        <div style="margin-bottom:15px;">
-
-            <label style="font-weight:bold;font-size:13px;">
-                Lote
-            </label>
-
-            <input
-                type="text"
-                id="manualLote"
-                oninput="validarManual()"
-                style="
-                    width:100%;
-                    padding:10px;
-                    margin-top:5px;
-                    border-radius:8px;
-                    border:1px solid #cbd5e0;
-                "
-            >
-
-        </div>
-
-        <div style="margin-bottom:15px;">
-
-            <label style="font-weight:bold;font-size:13px;">
-                Valor
-            </label>
-
-            <input
-                type="number"
-                id="manualValor"
-                oninput="validarManual()"
-                style="
-                    width:100%;
-                    padding:10px;
-                    margin-top:5px;
-                    border-radius:8px;
-                    border:1px solid #cbd5e0;
-                "
-            >
-
-        </div>
-
-        ${pasos.map((p,i)=>`
-            <label class="step">
-                <input
-                    type="checkbox"
-                    onchange="validarManual()"
-                    id="paso${i}"
-                >
-                ${p}
-            </label>
-        `).join('')}
-    `;
-
+    const infoLote = document.getElementById('infoLote');
+    const operador = document.getElementById('operador');
+    const accionExtra = document.getElementById('accionExtra');
+    const checklist = document.getElementById('checklist-pasos');
     const btn = document.getElementById('btnEnviar');
 
+    // ============================================================
+    // RESET VISUAL
+    // ============================================================
+    infoLote.innerHTML = `Registro manual`;
+    infoLote.style.background = '#3182ce';
+
+    // ============================================================
+    // REACTIVAR CAMPOS SPC (SIN BLOQUEO)
+    // ============================================================
+    if (operador) {
+        operador.disabled = false;
+        operador.value = "";
+        operador.classList.remove("bloqueado-spc");
+    }
+
+    if (accionExtra) {
+        accionExtra.disabled = false;
+        accionExtra.value = "";
+        accionExtra.classList.remove("bloqueado-spc");
+    }
+
+    // ============================================================
+    // VOLVER A RENDERIZAR SPC (NO MANUAL)
+    // ============================================================
+    const pasos = planesConfig[variableActual].pasos;
+
+    checklist.innerHTML = pasos.map(p => `
+        <label class="step spc-step" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px;">
+            <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
+            <span>${p}</span>
+        </label>
+    `).join('');
+
+    // ============================================================
+    // BOTÓN EN ESTADO INICIAL
+    // ============================================================
     btn.disabled = true;
-
     btn.classList.remove('active');
-
     btn.innerText = 'Registrar Plan';
-}
 
+    // opcional: recalcular estado SPC
+    if (typeof validarPasos === "function") {
+        validarPasos();
+    }
+}
+    
 function validarManual(){
 
     const checks =
