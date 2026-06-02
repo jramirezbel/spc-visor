@@ -268,6 +268,20 @@ body{
     border:1px solid #edf2f7;
     font-size:13px;
 }
+
+.spc-step {
+    opacity: 0.5;
+    transition: 0.2s;
+}
+
+.spc-step.activo {
+    opacity: 1;
+}
+
+.bloqueado-spc {
+    opacity: 0.6;
+}
+    
 #btnEnviar{
     width:100%;
     margin-top:10px;
@@ -1133,167 +1147,158 @@ function actualizarCumplimientoHome(){
 function abrirIndicador(nombreIndicador) {
     variableActual = nombreIndicador;
     const config = planesConfig[nombreIndicador];
-    
+
     if (!config) {
         alert("Configuración no encontrada para: " + nombreIndicador);
         return;
     }
-    
-    // ============================================================
-    // SOLUCIÓN AL BLOQUEO: QUITAR CANDADOS Y LIMPIAR TEXTOS VIEJOS
-    // ============================================================
+
     const inputOperador = document.getElementById('operador');
     const inputComentario = document.getElementById('accionExtra');
     const manualLote = document.getElementById('manualLote');
     const manualValor = document.getElementById('manualValor');
 
-    // Forzamos a que los campos de texto se puedan volver a editar (disabled = false)
-    if (inputOperador) inputOperador.disabled = false;
-    if (inputComentario) inputComentario.disabled = false;
-    if (manualLote) manualLote.disabled = false;
-    if (manualValor) manualValor.disabled = false;
-
-    // Vaciamos cualquier residuo de texto de la tarjeta anterior
-    if (inputOperador) inputOperador.value = "";
-    if (inputComentario) inputComentario.value = "";
-    if (manualLote) manualLote.value = "";
-    if (manualValor) manualValor.value = "";
-    // ============================================================
-
-    // Cambiar de pantalla hacia el Dashboard
-    document.getElementById('homeScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
-    document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
-    
     const visorContainer = document.querySelector('.visor-container');
     const camposManual = document.getElementById('camposManual');
     const infoLote = document.getElementById('infoLote');
     const checklistPasos = document.getElementById('checklist-pasos');
-    
+
     const bloqueOperadorOriginal = inputOperador ? inputOperador.parentElement : null;
     const contenedorManualOps = document.getElementById('contenedorOperadorManual');
-    
+
     datoSeleccionado = null;
-    
-if (config.tipo === "imagen") {
-        // --- MÓDULO MANUAL / IMAGEN ---
-        camposManual.style.display = 'block'; 
+
+    // ============================================================
+    // LIMPIEZA GENERAL (SIN BLOQUEAR INPUTS)
+    // ============================================================
+    if (inputOperador) {
+        inputOperador.value = "";
+        inputOperador.classList.remove("bloqueado-spc");
+        inputOperador.disabled = false;
+    }
+
+    if (inputComentario) {
+        inputComentario.value = "";
+        inputComentario.classList.remove("bloqueado-spc");
+        inputComentario.disabled = false;
+    }
+
+    if (manualLote) manualLote.value = "";
+    if (manualValor) manualValor.value = "";
+
+    // ============================================================
+    // CAMBIO DE PANTALLA
+    // ============================================================
+    document.getElementById('homeScreen').style.display = 'none';
+    document.getElementById('dashboardScreen').style.display = 'block';
+    document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
+
+    // ============================================================
+    // MODO IMAGEN (MANUAL)
+    // ============================================================
+    if (config.tipo === "imagen") {
+
+        camposManual.style.display = 'block';
         infoLote.style.display = 'none';
-        
-        // Ajustamos el contenedor para la visualización de la imagen
+
         visorContainer.style.overflowY = 'auto';
         visorContainer.style.display = 'block';
-        
-        // Movimiento dinámico del operador dentro del recuadro gris
+
         if (inputOperador && contenedorManualOps) {
             contenedorManualOps.appendChild(bloqueOperadorOriginal);
         }
-        
-        // INTEGRAMOS EL CONTENEDOR ABAJO DE LA IMAGEN
+
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#f8fafc; padding:20px; overflow-y:auto;">
                 <div style="flex:1; display:flex; justify-content:center; align-items:center; min-height:400px;">
-                    <img src="${config.imagen}" alt="Plano Técnico" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                    <img src="${config.imagen}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;">
                 </div>
-                <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); margin-top:25px; border:1px solid #e2e8f0; text-align:left;">
-                    <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
-                        <span>⚠️</span>
-                        <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas</h4>
-                    </div>
+
+                <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; margin-top:25px;">
+                    <h4 style="margin:0 0 10px 0;">Herramientas 5WHY</h4>
                     <div id="5why-detail-table-container"></div>
                 </div>
             </div>
         `;
-        
+
+        // checklist interactivo SIEMPRE
         let htmlChecklist = "";
-        config.pasos.forEach((pasoText, index) => {
+        config.pasos.forEach(pasoText => {
             htmlChecklist += `
-                <label class="step" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #edf2f7; font-size:13px; cursor:pointer;">
+                <label class="step spc-step activo" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px;">
                     <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
                     <span>${pasoText}</span>
                 </label>
             `;
         });
+
         checklistPasos.innerHTML = htmlChecklist;
-        
-        // Enlazar los eventos de escucha en tiempo real
+
         document.getElementById('manualLote').oninput = validarPasos;
         document.getElementById('manualValor').oninput = validarPasos;
         if (inputOperador) inputOperador.oninput = validarPasos;
 
-        validarPasos(); 
- } else {
-        // --- MÓDULO SPC ESTÁNDAR ---
+        validarPasos();
+    }
+
+    // ============================================================
+    // MODO SPC
+    // ============================================================
+    else {
+
         camposManual.style.display = 'none';
         infoLote.style.display = 'block';
-        
-        // Al cambiar de gráfica, el banner arranca en GRIS por defecto
-        if (infoLote) {
-            infoLote.style.background = '#64748b'; 
-            infoLote.style.color = 'white';
-            infoLote.innerText = 'Sin lote seleccionado';
-        }
-        
-        // Devolvemos el operador abajo si volvemos a una gráfica SPC
+
+        infoLote.style.background = '#64748b';
+        infoLote.style.color = 'white';
+        infoLote.innerText = 'Sin lote seleccionado';
+
         if (inputOperador && bloqueOperadorOriginal) {
             const formDerecho = document.getElementById('accionExtra').parentElement.parentElement;
             const campoAccionExtra = document.getElementById('accionExtra').parentElement;
             formDerecho.insertBefore(bloqueOperadorOriginal, campoAccionExtra);
         }
-        
-        // Poner candados iniciales de seguridad a los inputs para que no escriban sin seleccionar punto rojo
-        if (inputOperador) inputOperador.disabled = true;
-        if (inputComentario) inputComentario.disabled = true;
-        
-        // ============================================================================
-        // AJUSTE DE ESPACIO: Scroll global en el visor, gráfica con tamaño intacto
-        // ============================================================================
-        // Forzamos al contenedor principal a permitir scroll vertical total
+
         visorContainer.style.overflowY = 'auto';
-        visorContainer.style.display = 'block'; // Asegura flujo vertical secuencial
-        
+        visorContainer.style.display = 'block';
+
         visorContainer.innerHTML = `
-            <div class="canvas-scroll" style="width:100%; margin-bottom: 20px;">
+            <div class="canvas-scroll" style="width:100%; margin-bottom:20px;">
                 <div id="myDiv"></div>
             </div>
-            
-            <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); border:1px solid #e2e8f0; text-align:left; margin: 15px 10px 20px 10px;">
-                <div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #fee2e2; padding-bottom:8px; margin-bottom:12px;">
-                    <span>⚠️</span>
-                    <h4 style="margin:0; font-size:15px; color:#991b1b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Herramientas 5WHY Activadas</h4>
-                </div>
+
+            <div id="5why-seccion-bloque" style="background:white; padding:20px; border-radius:8px; margin:15px;">
+                <h4 style="margin:0 0 10px 0;">Herramientas 5WHY</h4>
                 <div id="5why-detail-table-container"></div>
             </div>
         `;
-        
+
+        // fechas default
         const hoy = new Date();
         const haceMes = new Date();
         haceMes.setDate(hoy.getDate() - 30);
-        
+
         document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
         document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
-        
-        // Pintar los pasos iniciales en Gris Inhabilitado
-        if (config && config.pasos) {
-            let htmlGris = "";
-            config.pasos.forEach(pasoText => {
-                htmlGris += `
-                    <label class="step-row" style="display:block; opacity:0.5; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px; cursor:not-allowed; color:#94a3b8;">
-                        <input type="checkbox" disabled style="margin-right:10px;">
-                        <span>${pasoText}</span>
-                    </label>
-                `;
-            });
-            checklistPasos.innerHTML = htmlGris;
-        } else {
-            checklistPasos.innerHTML = '<p class="placeholder-text" style="color:#94a3b8; text-align:center; margin-top:20px;">Seleccione un punto en la gráfica para ver el plan de reacción.</p>';
-        }
-        
-        if (inputOperador) inputOperador.oninput = validarPasos;
+
+        // ============================================================
+        // CHECKLIST SPC (GRIS PERO SIEMPRE INTERACTIVO)
+        // ============================================================
+        let html = "";
+        config.pasos.forEach(pasoText => {
+            html += `
+                <label class="step spc-step" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px;">
+                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
+                    <span>${pasoText}</span>
+                </label>
+            `;
+        });
+
+        checklistPasos.innerHTML = html;
+
         filtrarPorFechas();
     }
-    
-    // LLAMAMOS A LA CONSULTA DE LA NUEVA TABLA DE SUPABASE
+
     cargar5WhyDelIndicador(nombreIndicador);
 }
     
@@ -1938,101 +1943,6 @@ function cancelarRegistro() {
     }
 }
     
-function abrirPlanReaccion(dato) {
-    const config = planesConfig[variableActual];
-    
-    const infoLote = document.getElementById('infoLote');
-    if (infoLote) {
-        infoLote.style.background = '#e53e3e'; 
-        infoLote.style.color = 'white';
-        infoLote.innerHTML = `Lote: ${dato.lote} | Valor: ${dato.y}`;
-    }
-    
-    const inputOperador = document.getElementById('operador');
-    const inputComentario = document.getElementById('accionExtra');
-    
-    if (inputOperador) {
-        inputOperador.disabled = false;
-        inputOperador.value = ""; 
-    }
-    if (inputComentario) {
-        inputComentario.disabled = false;
-        inputComentario.value = "";
-    }
-    
-    const checklistPasos = document.getElementById('checklist-pasos');
-    if (config && config.pasos) {
-        let htmlActivo = "";
-        config.pasos.forEach(pasoText => {
-            htmlActivo += `
-                <label class="step">
-                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
-                    <span>${pasoText}</span>
-                </label>
-            `;
-        });
-        checklistPasos.innerHTML = htmlActivo;
-    }
-    
-    // RESTABLECER TEXTO DEL BOTÓN PARA EL NUEVO REGISTRO
-    const btn = document.getElementById('btnEnviar');
-    if (btn) {
-        btn.innerText = 'Registrar Inspección / Plan';
-    }
-    
-    validarPasos();
-}
-    
-function verReporteExistente(reporte){
-    const info = document.getElementById('infoLote');
-    
-    info.style.background = '#3182ce';
-    info.style.color = 'white';
-    
-    info.innerHTML = `
-        Lote ${reporte.lote_id}<br>
-        Gestionado por: <b>${reporte.operador}</b>
-    `;
-    
-    document.getElementById('operador').value = reporte.operador || '';
-    document.getElementById('accionExtra').value = reporte.comentario || '';
-    
-    document.getElementById('operador').disabled = true;
-    document.getElementById('accionExtra').disabled = true;
-    
-    const pasos = planesConfig[variableActual].pasos;
-    const realizados = reporte.pasos_realizados || [];
-    
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p)=>{
-        // LIMPIEZA Y COMPARACIÓN STRICTA DE STRINGS:
-        // Limpiamos espacios y quitamos saltos de línea para asegurar un match perfecto
-        const textoLimpioConfig = p.replace(/\s+/g, ' ').trim();
-        
-        const ejecutado = realizados.some(r => {
-            const textoLimpioBD = String(r.paso).replace(/\s+/g, ' ').trim();
-            return textoLimpioBD === textoLimpioConfig && r.completado === true;
-        });
-        
-        return `
-            <label class="step" style="
-                background:${ejecutado ? '#ebf8ff' : '#f8fafc'};
-                border-color:${ejecutado ? '#90cdf4' : '#edf2f7'};
-            ">
-                <input
-                    type="checkbox"
-                    ${ejecutado ? 'checked' : ''}
-                    disabled
-                >
-                ${p}
-            </label>
-        `;
-    }).join('');
-    
-    const btn = document.getElementById('btnEnviar');
-    btn.disabled = true;
-    btn.classList.remove('active');
-    btn.innerText = 'Reporte ya registrado';
-}
     
 function verPlan(proceso, id){
 
@@ -2200,14 +2110,6 @@ async function enviarReporte() {
     }
 }
     
-function descargarReportes(){
-    alert("Descargando CSV...");
-}
-
-window.onload = async ()=>{
-    inicializarFechasMesActual();
-    await cargarDatosMaestros();
-};
 
 async function cargar5WhyDelIndicador(nombreIndicador) {
     const contenedorTabla = document.getElementById('5why-detail-table-container');
