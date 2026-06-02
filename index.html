@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Visor SPC - Maltería Tibitó</title>
+<title>Visor SPC - Maltería Profesional</title>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -343,19 +343,6 @@ textarea:disabled{
 .table-5why-detail td:first-child {
     white-space: nowrap; /* Evita que la fecha se parta en dos renglones en pantallas pequeñas */
 }
-
-.spc-step {
-    opacity: 1;
-    transition: 0.2s;
-}
-
-.spc-step.activo {
-    opacity: 1;
-}
-
-.bloqueado-spc {
-    opacity: 1;
-}
     
 </style>
 </head>
@@ -586,7 +573,13 @@ textarea:disabled{
             <span class="stat-value" id="stat-percent">0%</span>
         </div>
 
+        <div class="stat-card">
+            <span class="stat-label">Pendientes</span>
+            <span class="stat-value" id="stat-pending">0</span>
+        </div>
+
     </div>
+
     <!-- LAYOUT -->
     <div class="layout-principal">
 
@@ -1325,60 +1318,89 @@ function mostrarImagenManual(nombre){
     `;
 }
 
-function cancelarRegistroManual() {
+function cancelarRegistroManual(){
 
-    const infoLote = document.getElementById('infoLote');
-    const operador = document.getElementById('operador');
-    const accionExtra = document.getElementById('accionExtra');
-    const checklist = document.getElementById('checklist-pasos');
-    const btn = document.getElementById('btnEnviar');
+    document.getElementById('infoLote').innerHTML = `
+        Registro manual
+    `;
 
-    // ============================================================
-    // RESET VISUAL
-    // ============================================================
-    infoLote.innerHTML = `Registro manual`;
-    infoLote.style.background = '#3182ce';
+    document.getElementById('infoLote').style.background = '#3182ce';
 
-    // ============================================================
-    // REACTIVAR CAMPOS SPC (SIN BLOQUEO)
-    // ============================================================
-    if (operador) {
-        operador.disabled = false;
-        operador.value = "";
-        operador.classList.remove("bloqueado-spc");
-    }
+    document.getElementById('operador').disabled = false;
 
-    if (accionExtra) {
-        accionExtra.disabled = false;
-        accionExtra.value = "";
-        accionExtra.classList.remove("bloqueado-spc");
-    }
+    document.getElementById('operador').value = '';
 
-    // ============================================================
-    // VOLVER A RENDERIZAR SPC (NO MANUAL)
-    // ============================================================
+    document.getElementById('accionExtra').disabled = false;
+
+    document.getElementById('accionExtra').value = '';
+
     const pasos = planesConfig[variableActual].pasos;
 
-    checklist.innerHTML = pasos.map(p => `
-        <label class="step spc-step" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px;">
-            <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
-            <span>${p}</span>
-        </label>
-    `).join('');
+    document.getElementById('checklist-pasos').innerHTML = `
 
-    // ============================================================
-    // BOTÓN EN ESTADO INICIAL
-    // ============================================================
+        <div style="margin-bottom:15px;">
+
+            <label style="font-weight:bold;font-size:13px;">
+                Lote
+            </label>
+
+            <input
+                type="text"
+                id="manualLote"
+                oninput="validarManual()"
+                style="
+                    width:100%;
+                    padding:10px;
+                    margin-top:5px;
+                    border-radius:8px;
+                    border:1px solid #cbd5e0;
+                "
+            >
+
+        </div>
+
+        <div style="margin-bottom:15px;">
+
+            <label style="font-weight:bold;font-size:13px;">
+                Valor
+            </label>
+
+            <input
+                type="number"
+                id="manualValor"
+                oninput="validarManual()"
+                style="
+                    width:100%;
+                    padding:10px;
+                    margin-top:5px;
+                    border-radius:8px;
+                    border:1px solid #cbd5e0;
+                "
+            >
+
+        </div>
+
+        ${pasos.map((p,i)=>`
+            <label class="step">
+                <input
+                    type="checkbox"
+                    onchange="validarManual()"
+                    id="paso${i}"
+                >
+                ${p}
+            </label>
+        `).join('')}
+    `;
+
+    const btn = document.getElementById('btnEnviar');
+
     btn.disabled = true;
-    btn.classList.remove('active');
-    btn.innerText = 'Registrar Plan';
 
-    // opcional: recalcular estado SPC
-    if (typeof validarPasos === "function") {
-        validarPasos();
-    }
+    btn.classList.remove('active');
+
+    btn.innerText = 'Registrar Plan';
 }
-    
+
 function validarManual(){
 
     const checks =
