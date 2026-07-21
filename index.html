@@ -457,17 +457,6 @@ textarea:disabled{
             </div>
         </div>
 
-<div class="indicator-card"
-     onclick="abrirIndicador('Control por Variedad')">
-
-    <div class="icon">🌾</div>
-
-    <div class="title">
-        Control por Variedad
-    </div>
-
-</div>
-        
         <div class="indicator-card" onclick="abrirIndicador('Consumo agua recuperada')">
     <h3>Consumo agua recuperada</h3>
 
@@ -743,17 +732,6 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
             "Paso 3: Retirar atascamientos en los ductos de ingreso a la tarara y ajustar el damper de extracción."
         ]
     },
-    
-"Control por Variedad": {
-    fechaDia: "dia",
-    fechaMes: "mes",
-    pasos:[
-            "Paso 1: Ejecutar limpieza inmediata de la malla de la limpiadora LM-05 si se evidencia acumulación de material. Utilizar las herramientas de limpieza definidas en el SOP.",
-            "Paso 2: Reducir el flujo de cebada desde el área de recibo ajustando manualmente los volantes de cierre en el sótano TC-01 para mejorar la eficiencia de limpieza.",
-            "Paso 3: Retirar atascamientos en los ductos de ingreso a la tarara y ajustar el damper de extracción."
-        ]
-    },
-    
 
     "Malta en germen":{
         ucl:1,
@@ -1001,7 +979,6 @@ const bibliotecaPlanes = {
 };
     
 let datosCompletos = [];
-let datosVariedades = [];
 let variableActual = "";
 let datoSeleccionado = {};
 
@@ -1119,134 +1096,6 @@ async function cargarDatosMaestros(){
 
             return {
                 lote: String(fl['lote'] || '').trim(),
-                fechas: fechasProcesadas,
-                raw: fl
-            };
-
-        }).filter(d => d.lote);
-
-        console.log("Datos procesados:", datosCompletos.length);
-
-        actualizarCumplimientoHome();
-
-    }catch(err){
-
-        console.error("Error cargando histórico:", err);
-
-        alert(
-            "Error cargando el histórico completo de Supabase"
-        );
-    }
-}
-
-    
-async function cargarDatosVariedades() {
-    
-    try{
-
-        let data = [];
-        let desde = 0;
-        const tamañoPagina = 1000;
-        let seguir = true;
-
-        while(seguir){
-
-            const { data: pagina, error } = await _supabase
-                .from('produccion_variedades')
-                .select('*')
-                .order('lote', { ascending:false })
-                .range(desde, desde + tamañoPagina - 1);
-
-            if(error){
-                console.error("Error Supabase:", error);
-                throw error;
-            }
-
-            if(!pagina || pagina.length === 0){
-                seguir = false;
-                break;
-            }
-
-            data.push(...pagina);
-
-            console.log(`Página cargada: ${desde} - ${desde + tamañoPagina - 1}`);
-            console.log(`Total acumulado: ${data.length}`);
-
-            if(pagina.length < tamañoPagina){
-                seguir = false;
-            }
-
-            desde += tamañoPagina;
-        }
-
-        console.log("TOTAL FINAL:", data.length);
-
-        datosVariedades = data.map(f=>{
-
-            const fl = {};
-
-            Object.keys(f).forEach(k=>{
-
-                let v = f[k];
-
-                if(typeof v === 'string' && v.includes(',')){
-
-                    const num = parseFloat(v.replace(',','.'));
-
-                    if(!isNaN(num)) v = num;
-                }
-
-                fl[k.trim().toLowerCase()] = v;
-            });
-
-            const traductorMeses = {
-                'jan':0, 'ene':0,
-                'feb':1,
-                'mar':2,
-                'apr':3, 'abr':3,
-                'may':4,
-                'jun':5,
-                'jul':6,
-                'aug':7, 'ago':7,
-                'sep':8,
-                'oct':9,
-                'nov':10,
-                'dec':11, 'dic':11
-            };
-
-            const fechasProcesadas = {};
-
-            Object.keys(planesConfig).forEach(nombreIndicador => {
-
-                const conf = planesConfig[nombreIndicador];
-
-                const colDia = conf.fechaDia || 'dia';
-                const colMes = conf.fechaMes || 'mes';
-
-                const dia = parseInt(fl[colDia]);
-
-                const mesTexto = String(fl[colMes] || '')
-                    .trim()
-                    .toLowerCase();
-
-                const mesNum = traductorMeses[mesTexto];
-
-                let fecha = null;
-
-                if(mesNum !== undefined && !isNaN(dia)){
-
-                    fecha = new Date(
-                        new Date().getFullYear(),
-                        mesNum,
-                        dia
-                    );
-                }
-
-                fechasProcesadas[nombreIndicador] = fecha;
-            });
-
-            return {
-                lote: String(fl['variedad'] || '').trim(),
                 fechas: fechasProcesadas,
                 raw: fl
             };
@@ -1778,12 +1627,7 @@ function filtrarPorFechas() {
 
     const config = planesConfig[variableActual];
 
-    const fuente =
-    indicadorSeleccionado === "Control por Variedad"
-        ? datosVariedades
-        : datosCompletos;
-
-const filtrados = fuente
+    const filtrados = datosCompletos
         .filter(d => {
             const fechaIndicador = d.fechas[variableActual];
             if (!fechaIndicador || isNaN(fechaIndicador)) return false;
@@ -2366,7 +2210,6 @@ function descargarReportes(){
 window.onload = async ()=>{
     inicializarFechasMesActual();
     await cargarDatosMaestros();
-    await cargarDatosVariedades();
 };
 
 async function cargar5WhyDelIndicador(nombreIndicador) {
