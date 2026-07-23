@@ -1156,12 +1156,11 @@ async function cargarDatosVariedades() {
             const { data: pagina, error } = await _supabase
                 .from('produccion_variedades')
                 .select('*')
-                .order('Variedad', { ascending: false })
                 .range(desde, desde + tamañoPagina - 1);
 
             if(error){
                 console.error("Error Supabase:", error);
-                throw error;
+                console.log("PAGINA:", pagina);
             }
 
             if(!pagina || pagina.length === 0){
