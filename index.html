@@ -1127,7 +1127,7 @@ async function cargarDatosMaestros(){
 
         }).filter(d => d.lote);
 
-        console.log("Datos procesados:", datosCompletos.length);
+        console.log("Datos procesados:", datosVariedades.length);
 
         actualizarCumplimientoHome();
 
@@ -1153,14 +1153,13 @@ async function cargarDatosVariedades() {
 
         while(seguir){
 
-            const { data: pagina, error } = await _supabase
-                .from('produccion_variedades')
-                .select('*')
-                .range(desde, desde + tamañoPagina - 1);
+            const { data, error } = await _supabase
+    .from('produccion_variedades')
+    .select('*');
 
-            if(error){
-                console.error("Error Supabase:", error);
-                console.log("PAGINA:", pagina);
+console.log(data);
+console.log(error);
+            
             }
 
             if(!pagina || pagina.length === 0){
