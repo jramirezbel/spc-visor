@@ -1266,6 +1266,7 @@ async function cargarDatosVariedades() {
         alert(
             "Error cargando el histórico completo de Supabase"
         );
+        console.log(datosVariedades);
     }
 }
     
@@ -1805,6 +1806,9 @@ const filtrados = datosCompletos
         .filter(d => !isNaN(d.y));
 
     // Llamamos a tu función de renderizado pasándole los datos ya con el grupo inyectado
+    console.log(variableActual);
+console.log(config);
+console.log(filtrados);
     dibujarGrafica(filtrados);
 }
     
