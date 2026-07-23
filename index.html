@@ -1156,7 +1156,7 @@ async function cargarDatosVariedades() {
             const { data: pagina, error } = await _supabase
                 .from('produccion_variedades')
                 .select('*')
-                .order('lote', { ascending:false })
+                .order('Variedad', { ascending: false })
                 .range(desde, desde + tamañoPagina - 1);
 
             if(error){
