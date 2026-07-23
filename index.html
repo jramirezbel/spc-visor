@@ -1668,11 +1668,8 @@ function filtrarPorFechas() {
     variableActual === "Polvillo"
         ? datosVariedades
         : datosCompletos;
-const fuente =
-    variableActual === "Polvillo"
-        ? datosVariedades
-        : datosCompletos;
-
+    
+console.log("Fuente:", fuente);
 const filtrados = fuente
     .filter(d => {
         const fechaIndicador = d.fechas[variableActual];
