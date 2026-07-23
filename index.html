@@ -1668,32 +1668,29 @@ function filtrarPorFechas() {
     variableActual === "Polvillo"
         ? datosVariedades
         : datosCompletos;
+const fuente =
+    variableActual === "Polvillo"
+        ? datosVariedades
+        : datosCompletos;
 
-const filtrados = datosCompletos
-        .filter(d => {
-            const fechaIndicador = d.fechas[variableActual];
-            if (!fechaIndicador || isNaN(fechaIndicador)) return false;
-            return fechaIndicador >= desde && fechaIndicador <= hasta;
-        })
-        .map(d => ({
-            ...d,
-            y: parseFloat(d.raw[config.columna]),
-            
-            // ============================================================
-            // AQUÍ CONECTAMOS LA COLUMNA DE SUPABASE:
-            // d.raw tiene la fila original. Buscamos 'grupo_remojo'. 
-            // Si no tiene nada o es viejo, por defecto le ponemos 'G1'
-            // ============================================================
-            grupo: d.raw.grupo_remojo || 'G1' 
-        }))
-        .filter(d => !isNaN(d.y));
+const filtrados = fuente
+    .filter(d => {
+        const fechaIndicador = d.fechas[variableActual];
+        if (!fechaIndicador || isNaN(fechaIndicador)) return false;
+        return fechaIndicador >= desde && fechaIndicador <= hasta;
+    })
+    .map(d => ({
+        ...d,
+        y: parseFloat(d.raw[config.columna]),
+        grupo: d.raw.grupo_remojo || 'G1'
+    }))
+    .filter(d => !isNaN(d.y));
 
-    // Llamamos a tu función de renderizado pasándole los datos ya con el grupo inyectado
-    console.log(variableActual);
+console.log(variableActual);
 console.log(config);
 console.log(filtrados);
-    dibujarGrafica(filtrados);
-}
+
+dibujarGrafica(filtrados);
     
 async function dibujarGrafica(datos){
     if(!datos.length){
