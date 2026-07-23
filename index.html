@@ -1267,19 +1267,7 @@ async function cargarDatosVariedades(){
     }
 }
 
-    
-async function cargarDatosVariedades(){
-
-    const { data, error } = await _supabase
-        .from('produccion_variedades')
-        .select('*');
-
-    console.log("ERROR:", error);
-    console.log("DATA:", data);
-
-}
-    
-    
+        
 function actualizarCumplimientoHome(){
 
     Object.keys(planesConfig).forEach(key=>{
