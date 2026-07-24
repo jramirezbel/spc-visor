@@ -1847,13 +1847,25 @@ async function dibujarGrafica(datos){
         : 'circle';
 
     const trace = {
-        x: [
-            datos.map(d => {
-                const fecha = d.fechas[variableActual];
-                return fecha ? fecha.getDate() : "";
-            }),
-            datos.map(d => d.lote)
-        ],
+const contadorDias = {};
+
+const ejeDias = datos.map(d => {
+    const fecha = d.fechas[variableActual];
+    if (!fecha) return "";
+
+    const dia = fecha.getDate();
+
+    contadorDias[dia] = (contadorDias[dia] || 0) + 1;
+
+    // Desplazamiento de ±0.15, ±0.30, etc.
+    return dia + (contadorDias[dia] - 1) * 0.15;
+});
+
+    x: [
+    ejeDias,
+    datos.map(d => d.lote)
+],
+        
         y: datos.map(d => d.y),
         mode: 'lines+markers',
         customdata: datos.map(d => {
