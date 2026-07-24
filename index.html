@@ -1007,6 +1007,15 @@ let datosVariedades = [];
 let variableActual = "";
 let datoSeleccionado = {};
 
+function formatearFecha(fecha){
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+
+    return `${año}-${mes}-${dia}`;
+}
+    
+    
 function inicializarFechasMesActual(){
 
     const hoy = new Date();
@@ -1018,8 +1027,8 @@ function inicializarFechasMesActual(){
     console.log("Desde:", desde);
     console.log("Hasta:", hoy);
 
-    document.getElementById('fechaDesde').value = desde.toISOString().split('T')[0];
-    document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('fechaDesde').value = formatearFecha(desde);
+document.getElementById('fechaHasta').value = formatearFecha(hoy);
 }
 
 async function cargarDatosMaestros(){
