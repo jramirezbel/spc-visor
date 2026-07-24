@@ -1248,7 +1248,7 @@ async function cargarDatosVariedades(){
             });
 
             return {
-    lote: String(fl['id'] || '').trim(),          // ← ahora el "lote" será el ID
+    lote: String(fl['lote'] || '').trim(),          // ← ahora el "lote" será el ID
     variedad: String(fl['variedad'] || '').trim(),// ← guardamos la variedad aparte
     fechas: fechasProcesadas,
     raw: fl
