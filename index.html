@@ -1008,18 +1008,19 @@ let variableActual = "";
 let datoSeleccionado = {};
 
 function inicializarFechasMesActual(){
-console.log("Desde:", desde);
-console.log("Hasta:", hoy);
+
     const hoy = new Date();
 
     const desde = new Date(hoy);
     desde.setMonth(desde.getMonth() - 1);
     desde.setDate(desde.getDate() + 1);
 
+    console.log("Desde:", desde);
+    console.log("Hasta:", hoy);
+
     document.getElementById('fechaDesde').value = desde.toISOString().split('T')[0];
     document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
 }
-
 
 async function cargarDatosMaestros(){
 
