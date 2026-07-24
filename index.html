@@ -1008,9 +1008,14 @@ let variableActual = "";
 let datoSeleccionado = {};
 
 function inicializarFechasMesActual(){
+
     const hoy = new Date();
-    const primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    document.getElementById('fechaDesde').value = primero.toISOString().split('T')[0];
+
+    const desde = new Date(hoy);
+    desde.setMonth(desde.getMonth() - 1);
+    desde.setDate(desde.getDate() + 1);
+
+    document.getElementById('fechaDesde').value = desde.toISOString().split('T')[0];
     document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
 }
 
