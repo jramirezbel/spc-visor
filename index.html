@@ -1852,12 +1852,16 @@ async function dibujarGrafica(datos){
     const trace = {
 
 x: [
-            datos.map(d => {
-                const fecha = d.fechas[variableActual];
-                return fecha ? fecha.getDate() : "";
-            }),
-            datos.map(d => d.lote)
-        ],
+    datos.map(d => {
+        const fecha = d.fechas[variableActual];
+        return fecha ? fecha.getDate() : "";
+    }),
+    datos.map(d =>
+        variableActual === "Polvillo"
+            ? d.variedad
+            : d.lote
+    )
+],
 
         y: datos.map(d => d.y),
         mode: 'lines+markers',
