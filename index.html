@@ -1786,6 +1786,7 @@ function filtrarPorFechas() {
     
 console.log("Fuente:", fuente);
 const filtrados = fuente
+    console.log(datosVariedades[0]);
     .filter(d => {
         const fechaIndicador = d.fechas[variableActual];
         if (!fechaIndicador || isNaN(fechaIndicador)) return false;
