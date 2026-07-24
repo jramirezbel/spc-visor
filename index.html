@@ -1849,7 +1849,6 @@ async function dibujarGrafica(datos){
         ? datos.map(d => simbolosGrupos[d.grupo] || 'circle')
         : 'circle';
     
-    const lotesMostrados = {};
     const trace = {
 
 x: [
@@ -1857,18 +1856,11 @@ x: [
         const fecha = d.fechas[variableActual];
         return fecha ? fecha.getDate() : "";
     }),
-    datos.map(d => {
-
-    if (variableActual !== "Polvillo") {
-        return d.lote;
-    }
-
-    const clave = d.raw.dia + "_" + d.variedad;
-
-    contadorVariedades[clave] = (contadorVariedades[clave] || 0) + 1;
-
-    return d.variedad + "\u200B".repeat(contadorVariedades[clave] - 1);
-})
+    datos.map(d =>
+        variableActual === "Polvillo"
+            ? `${d.variedad} (${d.lote})`
+            : d.lote
+    )
 ],
 
         y: datos.map(d => d.y),
