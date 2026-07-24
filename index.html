@@ -1441,13 +1441,15 @@ function abrirIndicador(nombreIndicador) {
         `;
 
         // fechas default
-        const hoy = new Date();
-        const haceMes = new Date();
-        haceMes.setDate(hoy.getDate() - 30);
+        // fechas default
+const hoy = new Date();
 
-        document.getElementById('fechaDesde').value = haceMes.toISOString().split('T')[0];
-        document.getElementById('fechaHasta').value = hoy.toISOString().split('T')[0];
+const desde = new Date(hoy);
+desde.setMonth(desde.getMonth() - 1);
+desde.setDate(desde.getDate() + 1);
 
+document.getElementById('fechaDesde').value = formatearFecha(desde);
+document.getElementById('fechaHasta').value = formatearFecha(hoy);
         // ============================================================
         // CHECKLIST SPC (GRIS PERO SIEMPRE INTERACTIVO)
         // ============================================================
