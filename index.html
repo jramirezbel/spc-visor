@@ -168,6 +168,36 @@ body{
     color:white;
 }
 
+/* SECCIONADORES (Variedad / # de Inundados) */
+
+.seccionador-botones{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+.btn-seccionador{
+    border:1px solid #cbd5e0;
+    background:white;
+    color:#334155;
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.btn-seccionador:hover{
+    border-color:#3182ce;
+}
+
+.btn-seccionador.active{
+    background:#3182ce;
+    border-color:#3182ce;
+    color:white;
+}
+
 /* STATS */
 
 #stats-bar{
@@ -568,6 +598,21 @@ textarea:disabled{
             <input type="date" id="fechaHasta">
         </div>
 
+        <!-- Seccionadores exclusivos de la SIC "Consumo agua recuperada" -->
+        <div class="filtro-group" id="filtroVariedadContainer" style="display:none;">
+            <label>Variedad</label>
+            <div class="seccionador-botones" id="seccionadorVariedad"></div>
+        </div>
+
+        <div class="filtro-group" id="filtroInundadosContainer" style="display:none;">
+            <label># de Inundados</label>
+            <div class="seccionador-botones" id="seccionadorInundados">
+                <button type="button" class="btn-seccionador active" data-valor="todos" onclick="seleccionarInundado('todos')">Todos</button>
+                <button type="button" class="btn-seccionador" data-valor="1" onclick="seleccionarInundado('1')">1 Inundado</button>
+                <button type="button" class="btn-seccionador" data-valor="2" onclick="seleccionarInundado('2')">2 Inundados</button>
+            </div>
+        </div>
+
         <button class="btn-filtrar" onclick="filtrarPorFechas()">
             Filtrar
         </button>
@@ -671,8 +716,21 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const planesConfig = {
     "Consumo agua recuperada":{
-        ucl:85,
-   
+        ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o segundo_inundado
+
+        // ============================================================
+        // TARGET DINÁMICO — completa aquí los valores reales
+        // ============================================================
+        targets:{
+            // Target único cuando el lote tuvo UN solo inundado (aplica sin importar la variedad)
+            unInundado: null, // TODO: ej. 85
+
+            // Target por variedad cuando el lote tuvo DOS inundados (columna segundo_inundado = 1)
+            dosInundados:{
+                // TODO: completar, ej: "Malta Pilsen": 80, "Malta Cebada": 88,
+            }
+        },
+
         columna:"consumo agua recuperada",
         homeId:"home-recuperada-percent",
         fechaDia:"dia",
