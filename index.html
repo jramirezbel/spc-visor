@@ -722,14 +722,13 @@ const planesConfig = {
         // TARGET DINÁMICO — completa aquí los valores reales
         // ============================================================
         targets:{
-            // Target único cuando el lote tuvo UN solo inundado (aplica sin importar la variedad)
-            unInundado: 145, // TODO: ej. 85
+            // Target cuando el lote tuvo UN solo inundado (aplica a todas las variedades)
+            unInundado: 145,
 
-            // Target por variedad cuando el lote tuvo DOS inundados (columna segundo_inundado = 1)
-            dosInundados:{
-                85        }
+            // Target cuando el lote tuvo DOS inundados / segundo_inundado = 1 (aplica a todas las variedades)
+            dosInundados: 85
         },
-
+        
         columna:"consumo agua recuperada",
         homeId:"home-recuperada-percent",
         fechaDia:"dia",
