@@ -723,12 +723,11 @@ const planesConfig = {
         // ============================================================
         targets:{
             // Target único cuando el lote tuvo UN solo inundado (aplica sin importar la variedad)
-            unInundado: null, // TODO: ej. 85
+            unInundado: 145, // TODO: ej. 85
 
             // Target por variedad cuando el lote tuvo DOS inundados (columna segundo_inundado = 1)
             dosInundados:{
-                // TODO: completar, ej: "Malta Pilsen": 80, "Malta Cebada": 88,
-            }
+                85        }
         },
 
         columna:"consumo agua recuperada",
@@ -1067,6 +1066,44 @@ let datosVariedades = [];
 let variableActual = "";
 let datoSeleccionado = {};
 
+// Estado de los seccionadores (solo aplican a "Consumo agua recuperada")
+let filtroVariedadActual = 'todas';
+let filtroInundadosActual = 'todos';
+
+// ============================================================
+// TARGET DINÁMICO
+// ============================================================
+// Devuelve el target (ucl) que corresponde a una fila cruda (d.raw) para un
+// indicador dado. Para "Consumo agua recuperada" el target depende de la
+// variedad y de si el lote tuvo uno o dos inundados (columna segundo_inundado:
+// 1 = sí hubo segundo inundado / 2 inundados en total, 0 = un solo inundado).
+// Para el resto de indicadores simplemente devuelve el ucl fijo de siempre.
+function obtenerTargetIndicador(nombreIndicador, fila){
+    const conf = planesConfig[nombreIndicador];
+    if(!conf) return null;
+
+    if(nombreIndicador === "Consumo agua recuperada" && conf.targets){
+
+        const segundoInundado = parseInt(fila ? fila['segundo_inundado'] : NaN);
+
+        if(segundoInundado === 1){
+            const variedad = String((fila && fila['variedad']) || '').trim();
+            const targetVariedad = conf.targets.dosInundados[variedad];
+
+            return (targetVariedad !== undefined && targetVariedad !== null)
+                ? targetVariedad
+                : conf.ucl; // fallback si esa variedad aún no tiene target configurado
+        }
+
+        // segundo_inundado = 0, vacío o no numérico -> se trata como un solo inundado
+        return (conf.targets.unInundado !== undefined && conf.targets.unInundado !== null)
+            ? conf.targets.unInundado
+            : conf.ucl;
+    }
+
+    return conf.ucl;
+}
+
 function formatearFecha(fecha){
     const año = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -1350,21 +1387,22 @@ function actualizarCumplimientoHome(){
     Object.keys(planesConfig).forEach(key=>{
 
         const conf = planesConfig[key];
+        if(!conf.columna) return; // módulos manuales (tipo "imagen") no tienen columna numérica
 
-        const vals = datosCompletos
-            .map(d=>parseFloat(d.raw[conf.columna]))
-            .filter(v=>!isNaN(v));
+        const filas = datosCompletos
+            .map(d => ({ raw: d.raw, valor: parseFloat(d.raw[conf.columna]) }))
+            .filter(item => !isNaN(item.valor));
 
-        if(vals.length){
+        if(filas.length){
 
-            const ok = vals.filter(v=>v <= conf.ucl).length;
+            const ok = filas.filter(item => item.valor <= obtenerTargetIndicador(key, item.raw)).length;
 
             const el = document.getElementById(conf.homeId);
 
             if(el){
 
                 el.innerText =
-                    Math.round((ok / vals.length)*100) + "%";
+                    Math.round((ok / filas.length)*100) + "%";
             }
         }
     });
@@ -1394,6 +1432,8 @@ function abrirIndicador(nombreIndicador) {
     const contenedorManualOps = document.getElementById('contenedorOperadorManual');
 
     datoSeleccionado = null;
+
+    actualizarVisibilidadSeccionadores(nombreIndicador);
 
     // ============================================================
     // LIMPIEZA GENERAL (SIN BLOQUEAR INPUTS)
@@ -1828,6 +1868,73 @@ function mostrarProceso(nombreProceso){
     `;
 }
 
+// ============================================================
+// SECCIONADORES: Variedad y # de Inundados
+// (exclusivos de la SIC "Consumo agua recuperada")
+// ============================================================
+function actualizarVisibilidadSeccionadores(nombreIndicador){
+    const contVariedad = document.getElementById('filtroVariedadContainer');
+    const contInundados = document.getElementById('filtroInundadosContainer');
+    if(!contVariedad || !contInundados) return;
+
+    const esAguaRecuperada = nombreIndicador === "Consumo agua recuperada";
+
+    contVariedad.style.display = esAguaRecuperada ? 'flex' : 'none';
+    contInundados.style.display = esAguaRecuperada ? 'flex' : 'none';
+
+    if(esAguaRecuperada){
+        // Reiniciamos siempre a "Todas" / "Todos" al entrar al indicador
+        filtroVariedadActual = 'todas';
+        filtroInundadosActual = 'todos';
+
+        poblarSeccionadorVariedad();
+
+        document.querySelectorAll('#seccionadorInundados .btn-seccionador').forEach(btn=>{
+            btn.classList.toggle('active', btn.dataset.valor === 'todos');
+        });
+    }
+}
+
+function poblarSeccionadorVariedad(){
+    const contenedor = document.getElementById('seccionadorVariedad');
+    if(!contenedor) return;
+
+    const variedades = [...new Set(
+        datosCompletos
+            .map(d => String((d.raw && d.raw.variedad) || '').trim())
+            .filter(v => v !== '')
+    )].sort();
+
+    let html = `<button type="button" class="btn-seccionador active" data-valor="todas" onclick="seleccionarVariedad('todas')">Todas</button>`;
+
+    variedades.forEach(v=>{
+        const vEscapado = v.replace(/'/g, "\\'");
+        html += `<button type="button" class="btn-seccionador" data-valor="${v}" onclick="seleccionarVariedad('${vEscapado}')">${v}</button>`;
+    });
+
+    contenedor.innerHTML = html;
+}
+
+function seleccionarVariedad(valor){
+    filtroVariedadActual = valor;
+
+    document.querySelectorAll('#seccionadorVariedad .btn-seccionador').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.valor === valor);
+    });
+
+    filtrarPorFechas();
+}
+
+function seleccionarInundado(valor){
+    filtroInundadosActual = valor;
+
+    document.querySelectorAll('#seccionadorInundados .btn-seccionador').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.valor === valor);
+    });
+
+    filtrarPorFechas();
+}
+
 function cambiarVariable(nombre){
     variableActual = nombre;
     document.getElementById('tituloIndicadorActual').innerText = nombre;
@@ -1866,7 +1973,7 @@ function filtrarPorFechas() {
 console.log("Fuente:", fuente);
 console.log(datosVariedades[0]);
 
-const filtrados = fuente
+let filtrados = fuente
     .filter(d => {
         const fechaIndicador = d.fechas[variableActual];
         if (!fechaIndicador || isNaN(fechaIndicador)) return false;
@@ -1875,9 +1982,29 @@ const filtrados = fuente
     .map(d => ({
         ...d,
         y: parseFloat(d.raw[config.columna]),
-        grupo: d.raw.grupo_remojo || 'G1'
+        grupo: d.raw.grupo_remojo || 'G1',
+        variedad: String((d.raw && d.raw.variedad) || d.variedad || '').trim(),
+        segundoInundado: parseInt(d.raw ? d.raw.segundo_inundado : NaN),
+        target: obtenerTargetIndicador(variableActual, d.raw)
     }))
     .filter(d => !isNaN(d.y));
+
+// ============================================================
+// SECCIONADORES: Variedad y # de Inundados
+// (solo aplican a "Consumo agua recuperada")
+// ============================================================
+if (variableActual === "Consumo agua recuperada") {
+
+    if (filtroVariedadActual !== 'todas') {
+        filtrados = filtrados.filter(d => d.variedad === filtroVariedadActual);
+    }
+
+    if (filtroInundadosActual !== 'todos') {
+        // segundo_inundado: 1 = sí hubo segundo inundado (2 en total), 0 = un solo inundado
+        const valorFiltro = filtroInundadosActual === '2' ? 1 : 0;
+        filtrados = filtrados.filter(d => d.segundoInundado === valorFiltro);
+    }
+}
 
 console.log(variableActual);
 console.log(config);
@@ -1899,8 +2026,8 @@ async function dibujarGrafica(datos){
     const {data:reportes} = await _supabase.from('planes_reaccion').select('*');
     const bd = reportes || [];
 
-    const ok = datos.filter(d=>d.y <= config.ucl).length;
-    const fuera = datos.filter(d=>d.y > config.ucl);
+    const ok = datos.filter(d=>d.y <= d.target).length;
+    const fuera = datos.filter(d=>d.y > d.target);
     const listos = fuera.filter(d=>bd.some(r=> String(r.lote_id) === d.lote && r.variable === variableActual)).length;
 
     document.getElementById('stat-total').innerText = datos.length;
@@ -1980,12 +2107,29 @@ x: [
                     String(r.lote_id) === d.lote &&
                     r.variable === variableActual
                 );
-                return d.y > config.ucl
+                return d.y > d.target
                     ? (gestionado ? '#3182ce' : 'red')
                     : '#2d3748';
             })
         }
     };
+
+    // ============================================================
+    // TARGET (línea de control) — puede variar punto a punto cuando
+    // la SIC tiene target dinámico (ej. Consumo agua recuperada)
+    // ============================================================
+    const targetsUnicos = [...new Set(datos.map(d => d.target))];
+    const targetUnico = targetsUnicos.length === 1 ? targetsUnicos[0] : null;
+
+    const trazaTarget = targetUnico === null ? {
+        x: trace.x,
+        y: datos.map(d => d.target),
+        mode: 'lines',
+        name: 'Target',
+        line: { color: '#d69e2e', width: 2, dash: 'dot' },
+        hovertemplate: '<b>Target:</b> %{y}<extra></extra>',
+        showlegend: false
+    } : null;
 
     const layout = {
         autosize: true,
@@ -1998,7 +2142,7 @@ x: [
             showgrid: false
         },
         yaxis: { 
-            range: [0, Math.max(...datos.map(d => d.y), config.ucl) * 1.2], 
+            range: [0, Math.max(...datos.map(d => Math.max(d.y, d.target))) * 1.2], 
             fixedrange: true 
         },
         margin: { 
@@ -2007,9 +2151,9 @@ x: [
             l: 50, 
             r: 20 
         },
-        shapes: [
-            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: config.ucl, fillcolor: 'rgba(144,238,144,0.6)', line: { width: 0 }, layer: 'below' },
-            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: config.ucl, y1: 1000, fillcolor: 'rgba(255,90,90,0.6)', line: { width: 0 }, layer: 'below' }
+        shapes: targetUnico === null ? [] : [
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: targetUnico, fillcolor: 'rgba(144,238,144,0.6)', line: { width: 0 }, layer: 'below' },
+            { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: targetUnico, y1: 1000, fillcolor: 'rgba(255,90,90,0.6)', line: { width: 0 }, layer: 'below' }
         ]
     };
 
@@ -2017,7 +2161,7 @@ x: [
     div.style.width = "100%";
     div.style.height = "100%";
     
-    Plotly.newPlot(div, [trace], layout, {
+    Plotly.newPlot(div, trazaTarget ? [trace, trazaTarget] : [trace], layout, {
         responsive: true,
         displayModeBar: false
     });
@@ -2026,11 +2170,11 @@ x: [
         
     // 3. EVENTO DE CLIC PERFECTAMENTE LIMPIO (Sin duplicados)
     div.on('plotly_click', function(evento){
-        const punto = evento.points[0];
+        const punto = evento.points.find(p => p.curveNumber === 0) || evento.points[0];
         const indice = punto.pointIndex; 
         const dato = datos[indice];     
 
-        if(!dato || dato.y <= config.ucl) return;
+        if(!dato || dato.y <= dato.target) return;
 
         // Guardar el punto seleccionado en la variable global
         datoSeleccionado = dato;
