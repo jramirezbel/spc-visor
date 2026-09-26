@@ -716,7 +716,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const planesConfig = {
     "Consumo agua recuperada":{
-        ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o la columna "1 Inundado"
+        ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o la columna "segundo_inundado"
 
         // ============================================================
         // TARGET DINÁMICO — completa aquí los valores reales
@@ -725,7 +725,7 @@ const planesConfig = {
             // Target cuando el lote tuvo UN solo inundado (aplica a todas las variedades)
             unInundado: 145,
 
-            // Target cuando el lote tuvo DOS inundados / columna "1 Inundado" = No (aplica a todas las variedades)
+            // Target cuando el lote tuvo DOS inundados / columna "segundo_inundado" = No (aplica a todas las variedades)
             dosInundados: 85
         },
 
@@ -1072,7 +1072,7 @@ let filtroInundadosActual = 'todos';
 // ============================================================
 // TARGET DINÁMICO
 // ============================================================
-// Los operarios llenan la columna "1 Inundado" con "Si" / "No":
+// Los operarios llenan la columna "segundo_inundado" con "Si" / "No":
 //   Si -> el lote tuvo UN solo inundado
 //   No -> el lote tuvo DOS inundados
 // obtenerCategoriaInundado() interpreta esa columna; obtenerTargetIndicador()
@@ -1080,7 +1080,7 @@ let filtroInundadosActual = 'todos';
 // recuperada" (mismo target para todas las variedades). Para el resto de
 // indicadores simplemente devuelve el ucl fijo de siempre.
 function obtenerCategoriaInundado(fila){
-    const valor = String((fila && fila['1 inundado']) || '').trim().toLowerCase();
+    const valor = String((fila && fila['segundo_inundado']) || '').trim().toLowerCase();
 
     if(valor === 'si' || valor === 'sí') return 'uno';
     if(valor === 'no') return 'dos';
@@ -1108,7 +1108,7 @@ function obtenerTargetIndicador(nombreIndicador, fila){
                 : conf.ucl;
         }
 
-        return conf.ucl; // "1 Inundado" vacío o con un valor distinto de Si/No
+        return conf.ucl; // "segundo_inundado" vacío o con un valor distinto de Si/No
     }
 
     return conf.ucl;
