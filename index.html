@@ -716,7 +716,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const planesConfig = {
     "Consumo agua recuperada":{
-        ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o segundo_inundado
+        ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o la columna "1 Inundado"
 
         // ============================================================
         // TARGET DINÁMICO — completa aquí los valores reales
@@ -725,10 +725,10 @@ const planesConfig = {
             // Target cuando el lote tuvo UN solo inundado (aplica a todas las variedades)
             unInundado: 145,
 
-            // Target cuando el lote tuvo DOS inundados / segundo_inundado = 1 (aplica a todas las variedades)
+            // Target cuando el lote tuvo DOS inundados / columna "1 Inundado" = No (aplica a todas las variedades)
             dosInundados: 85
         },
-        
+
         columna:"consumo agua recuperada",
         homeId:"home-recuperada-percent",
         fechaDia:"dia",
@@ -1072,32 +1072,43 @@ let filtroInundadosActual = 'todos';
 // ============================================================
 // TARGET DINÁMICO
 // ============================================================
-// Devuelve el target (ucl) que corresponde a una fila cruda (d.raw) para un
-// indicador dado. Para "Consumo agua recuperada" el target depende de la
-// variedad y de si el lote tuvo uno o dos inundados (columna segundo_inundado:
-// 1 = sí hubo segundo inundado / 2 inundados en total, 0 = un solo inundado).
-// Para el resto de indicadores simplemente devuelve el ucl fijo de siempre.
+// Los operarios llenan la columna "1 Inundado" con "Si" / "No":
+//   Si -> el lote tuvo UN solo inundado
+//   No -> el lote tuvo DOS inundados
+// obtenerCategoriaInundado() interpreta esa columna; obtenerTargetIndicador()
+// usa esa categoría para elegir el target correspondiente en "Consumo agua
+// recuperada" (mismo target para todas las variedades). Para el resto de
+// indicadores simplemente devuelve el ucl fijo de siempre.
+function obtenerCategoriaInundado(fila){
+    const valor = String((fila && fila['1 inundado']) || '').trim().toLowerCase();
+
+    if(valor === 'si' || valor === 'sí') return 'uno';
+    if(valor === 'no') return 'dos';
+
+    return 'desconocido'; // columna vacía o con un valor inesperado
+}
+
 function obtenerTargetIndicador(nombreIndicador, fila){
     const conf = planesConfig[nombreIndicador];
     if(!conf) return null;
 
     if(nombreIndicador === "Consumo agua recuperada" && conf.targets){
 
-        const segundoInundado = parseInt(fila ? fila['segundo_inundado'] : NaN);
+        const categoria = obtenerCategoriaInundado(fila);
 
-        if(segundoInundado === 1){
-            const variedad = String((fila && fila['variedad']) || '').trim();
-            const targetVariedad = conf.targets.dosInundados[variedad];
-
-            return (targetVariedad !== undefined && targetVariedad !== null)
-                ? targetVariedad
-                : conf.ucl; // fallback si esa variedad aún no tiene target configurado
+        if(categoria === 'uno'){
+            return (conf.targets.unInundado !== undefined && conf.targets.unInundado !== null)
+                ? conf.targets.unInundado
+                : conf.ucl;
         }
 
-        // segundo_inundado = 0, vacío o no numérico -> se trata como un solo inundado
-        return (conf.targets.unInundado !== undefined && conf.targets.unInundado !== null)
-            ? conf.targets.unInundado
-            : conf.ucl;
+        if(categoria === 'dos'){
+            return (conf.targets.dosInundados !== undefined && conf.targets.dosInundados !== null)
+                ? conf.targets.dosInundados
+                : conf.ucl;
+        }
+
+        return conf.ucl; // "1 Inundado" vacío o con un valor distinto de Si/No
     }
 
     return conf.ucl;
@@ -1871,36 +1882,46 @@ function mostrarProceso(nombreProceso){
 // SECCIONADORES: Variedad y # de Inundados
 // (exclusivos de la SIC "Consumo agua recuperada")
 // ============================================================
+// Devuelve la fuente de datos correcta según el indicador (Polvillo usa el
+// dataset agrupado por variedad; el resto usa el histórico completo)
+function obtenerFuenteDatos(nombreIndicador){
+    return nombreIndicador === "Polvillo" ? datosVariedades : datosCompletos;
+}
+
 function actualizarVisibilidadSeccionadores(nombreIndicador){
     const contVariedad = document.getElementById('filtroVariedadContainer');
     const contInundados = document.getElementById('filtroInundadosContainer');
     if(!contVariedad || !contInundados) return;
 
+    const config = planesConfig[nombreIndicador];
+    const esGrafica = !!(config && config.tipo !== "imagen"); // solo las SIC con gráfica tienen seccionadores
     const esAguaRecuperada = nombreIndicador === "Consumo agua recuperada";
 
-    contVariedad.style.display = esAguaRecuperada ? 'flex' : 'none';
+    contVariedad.style.display = esGrafica ? 'flex' : 'none';
     contInundados.style.display = esAguaRecuperada ? 'flex' : 'none';
 
-    if(esAguaRecuperada){
-        // Reiniciamos siempre a "Todas" / "Todos" al entrar al indicador
-        filtroVariedadActual = 'todas';
-        filtroInundadosActual = 'todos';
+    // Reiniciamos siempre a "Todas" / "Todos" al entrar al indicador
+    filtroVariedadActual = 'todas';
+    filtroInundadosActual = 'todos';
 
-        poblarSeccionadorVariedad();
-
-        document.querySelectorAll('#seccionadorInundados .btn-seccionador').forEach(btn=>{
-            btn.classList.toggle('active', btn.dataset.valor === 'todos');
-        });
+    if(esGrafica){
+        poblarSeccionadorVariedad(nombreIndicador);
     }
+
+    document.querySelectorAll('#seccionadorInundados .btn-seccionador').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.valor === 'todos');
+    });
 }
 
-function poblarSeccionadorVariedad(){
+function poblarSeccionadorVariedad(nombreIndicador){
     const contenedor = document.getElementById('seccionadorVariedad');
     if(!contenedor) return;
 
+    const fuente = obtenerFuenteDatos(nombreIndicador);
+
     const variedades = [...new Set(
-        datosCompletos
-            .map(d => String((d.raw && d.raw.variedad) || '').trim())
+        fuente
+            .map(d => String((d.raw && d.raw.variedad) || d.variedad || '').trim())
             .filter(v => v !== '')
     )].sort();
 
@@ -1964,10 +1985,7 @@ function filtrarPorFechas() {
 
     const config = planesConfig[variableActual];
 
-    const fuente =
-    variableActual === "Polvillo"
-        ? datosVariedades
-        : datosCompletos;
+    const fuente = obtenerFuenteDatos(variableActual);
     
 console.log("Fuente:", fuente);
 console.log(datosVariedades[0]);
@@ -1983,26 +2001,24 @@ let filtrados = fuente
         y: parseFloat(d.raw[config.columna]),
         grupo: d.raw.grupo_remojo || 'G1',
         variedad: String((d.raw && d.raw.variedad) || d.variedad || '').trim(),
-        segundoInundado: parseInt(d.raw ? d.raw.segundo_inundado : NaN),
+        categoriaInundado: obtenerCategoriaInundado(d.raw),
         target: obtenerTargetIndicador(variableActual, d.raw)
     }))
     .filter(d => !isNaN(d.y));
 
 // ============================================================
-// SECCIONADORES: Variedad y # de Inundados
-// (solo aplican a "Consumo agua recuperada")
+// SECCIONADOR DE VARIEDAD — aplica a TODAS las SIC con gráfica
 // ============================================================
-if (variableActual === "Consumo agua recuperada") {
+if (filtroVariedadActual !== 'todas') {
+    filtrados = filtrados.filter(d => d.variedad === filtroVariedadActual);
+}
 
-    if (filtroVariedadActual !== 'todas') {
-        filtrados = filtrados.filter(d => d.variedad === filtroVariedadActual);
-    }
-
-    if (filtroInundadosActual !== 'todos') {
-        // segundo_inundado: 1 = sí hubo segundo inundado (2 en total), 0 = un solo inundado
-        const valorFiltro = filtroInundadosActual === '2' ? 1 : 0;
-        filtrados = filtrados.filter(d => d.segundoInundado === valorFiltro);
-    }
+// ============================================================
+// SECCIONADOR DE # DE INUNDADOS — solo aplica a "Consumo agua recuperada"
+// ============================================================
+if (variableActual === "Consumo agua recuperada" && filtroInundadosActual !== 'todos') {
+    const categoriaDeseada = filtroInundadosActual === '1' ? 'uno' : 'dos';
+    filtrados = filtrados.filter(d => d.categoriaInundado === categoriaDeseada);
 }
 
 console.log(variableActual);
