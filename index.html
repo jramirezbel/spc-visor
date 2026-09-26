@@ -1895,44 +1895,84 @@ function actualizarVisibilidadSeccionadores(nombreIndicador){
 
     const config = planesConfig[nombreIndicador];
     const esGrafica = !!(config && config.tipo !== "imagen"); // solo las SIC con gráfica tienen seccionadores
-    const esAguaRecuperada = nombreIndicador === "Consumo agua recuperada";
 
     contVariedad.style.display = esGrafica ? 'flex' : 'none';
-    contInundados.style.display = esAguaRecuperada ? 'flex' : 'none';
+
+    // El de Inundados se muestra más adelante (ver actualizarOpcionesSeccionadores),
+    // solo si en el rango de fechas realmente hay AMBAS categorías para elegir
+    contInundados.style.display = 'none';
 
     // Reiniciamos siempre a "Todas" / "Todos" al entrar al indicador
     filtroVariedadActual = 'todas';
     filtroInundadosActual = 'todos';
+}
 
-    if(esGrafica){
-        poblarSeccionadorVariedad(nombreIndicador);
+// ============================================================
+// Recalcula las OPCIONES de los seccionadores según lo que realmente
+// existe en el rango de fechas actualmente filtrado (no en todo el histórico).
+// - Variedad: solo se listan las variedades presentes en ese rango.
+// - # de Inundados: el seccionador se OCULTA si en ese rango solo hay una
+//   categoría (todo "uno" o todo "dos") — no tiene sentido elegir, y el
+//   target dinámico ya queda proyectado directamente para esa categoría.
+// ============================================================
+function actualizarOpcionesSeccionadores(filasEnRango){
+
+    // ---- Variedad ----
+    const contenedorVariedad = document.getElementById('seccionadorVariedad');
+
+    if(contenedorVariedad){
+
+        const variedadesEnRango = [...new Set(
+            filasEnRango.map(d => d.variedad).filter(v => v !== '')
+        )].sort();
+
+        // Si la variedad seleccionada ya no existe en este rango, volvemos a "Todas"
+        if(filtroVariedadActual !== 'todas' && !variedadesEnRango.includes(filtroVariedadActual)){
+            filtroVariedadActual = 'todas';
+        }
+
+        let html = `<button type="button" class="btn-seccionador ${filtroVariedadActual === 'todas' ? 'active' : ''}" data-valor="todas" onclick="seleccionarVariedad('todas')">Todas</button>`;
+
+        variedadesEnRango.forEach(v=>{
+            const vEscapado = v.replace(/'/g, "\\'");
+            const activo = filtroVariedadActual === v ? 'active' : '';
+            html += `<button type="button" class="btn-seccionador ${activo}" data-valor="${v}" onclick="seleccionarVariedad('${vEscapado}')">${v}</button>`;
+        });
+
+        contenedorVariedad.innerHTML = html;
+    }
+
+    // ---- # de Inundados (solo aplica a "Consumo agua recuperada") ----
+    const contInundados = document.getElementById('filtroInundadosContainer');
+    if(!contInundados) return;
+
+    if(variableActual !== "Consumo agua recuperada"){
+        contInundados.style.display = 'none';
+        return;
+    }
+
+    const categoriasEnRango = new Set(
+        filasEnRango
+            .map(d => d.categoriaInundado)
+            .filter(c => c === 'uno' || c === 'dos')
+    );
+
+    const mostrarSeccionador = categoriasEnRango.size > 1;
+    contInundados.style.display = mostrarSeccionador ? 'flex' : 'none';
+
+    if(!mostrarSeccionador){
+        // Solo hay una categoría en el rango: no se elige, se proyecta directo
+        filtroInundadosActual = 'todos';
+    } else if(filtroInundadosActual !== 'todos'){
+        const categoriaSeleccionada = filtroInundadosActual === '1' ? 'uno' : 'dos';
+        if(!categoriasEnRango.has(categoriaSeleccionada)){
+            filtroInundadosActual = 'todos';
+        }
     }
 
     document.querySelectorAll('#seccionadorInundados .btn-seccionador').forEach(btn=>{
-        btn.classList.toggle('active', btn.dataset.valor === 'todos');
+        btn.classList.toggle('active', btn.dataset.valor === filtroInundadosActual);
     });
-}
-
-function poblarSeccionadorVariedad(nombreIndicador){
-    const contenedor = document.getElementById('seccionadorVariedad');
-    if(!contenedor) return;
-
-    const fuente = obtenerFuenteDatos(nombreIndicador);
-
-    const variedades = [...new Set(
-        fuente
-            .map(d => String((d.raw && d.raw.variedad) || d.variedad || '').trim())
-            .filter(v => v !== '')
-    )].sort();
-
-    let html = `<button type="button" class="btn-seccionador active" data-valor="todas" onclick="seleccionarVariedad('todas')">Todas</button>`;
-
-    variedades.forEach(v=>{
-        const vEscapado = v.replace(/'/g, "\\'");
-        html += `<button type="button" class="btn-seccionador" data-valor="${v}" onclick="seleccionarVariedad('${vEscapado}')">${v}</button>`;
-    });
-
-    contenedor.innerHTML = html;
 }
 
 function seleccionarVariedad(valor){
@@ -2007,6 +2047,12 @@ let filtrados = fuente
     .filter(d => !isNaN(d.y));
 
 // ============================================================
+// Recalculamos las OPCIONES de los seccionadores según lo que hay
+// en este rango de fechas (antes de aplicar variedad/inundados)
+// ============================================================
+actualizarOpcionesSeccionadores(filtrados);
+
+// ============================================================
 // SECCIONADOR DE VARIEDAD — aplica a TODAS las SIC con gráfica
 // ============================================================
 if (filtroVariedadActual !== 'todas') {
@@ -2021,13 +2067,41 @@ if (variableActual === "Consumo agua recuperada" && filtroInundadosActual !== 't
     filtrados = filtrados.filter(d => d.categoriaInundado === categoriaDeseada);
 }
 
-console.log(variableActual);
-console.log(config);
-console.log(filtrados);
-
 dibujarGrafica(filtrados);
 }
     
+// ============================================================
+// CACHÉ DE REPORTES (planes_reaccion)
+// ============================================================
+// Antes se traía TODA la tabla (select *, sin filtro) cada vez que se
+// abría un indicador, se pulsaba "Filtrar" o se tocaba un seccionador.
+// Ahora se filtra por indicador en el propio query y se cachea: mientras
+// no se registre un reporte nuevo, no se vuelve a consultar Supabase.
+let reportesCache = { variable: null, datos: [] };
+
+async function obtenerReportesIndicador(nombreIndicador){
+    if(reportesCache.variable === nombreIndicador){
+        return reportesCache.datos;
+    }
+
+    const { data: reportes, error } = await _supabase
+        .from('planes_reaccion')
+        .select('*')
+        .eq('variable', nombreIndicador);
+
+    if(error){
+        console.error("Error consultando planes_reaccion:", error);
+        return [];
+    }
+
+    reportesCache = { variable: nombreIndicador, datos: reportes || [] };
+    return reportesCache.datos;
+}
+
+function invalidarCacheReportes(){
+    reportesCache = { variable: null, datos: [] };
+}
+
 async function dibujarGrafica(datos){
     if(!datos.length){
         document.getElementById('myDiv').innerHTML = `
@@ -2038,8 +2112,7 @@ async function dibujarGrafica(datos){
     }
 
     const config = planesConfig[variableActual];
-    const {data:reportes} = await _supabase.from('planes_reaccion').select('*');
-    const bd = reportes || [];
+    const bd = await obtenerReportesIndicador(variableActual);
 
     const ok = datos.filter(d=>d.y <= d.target).length;
     const fuera = datos.filter(d=>d.y > d.target);
@@ -2598,7 +2671,9 @@ async function enviarReporte() {
             alert("Error en Supabase: " + error.message);
             return;
         }
-        
+
+        invalidarCacheReportes(); // el reporte recién insertado ya no coincide con lo cacheado
+
         alert("Inspección / Plan registrado correctamente.");
         cancelarRegistro(); 
         
