@@ -2707,9 +2707,10 @@ async function cargar5WhyDelIndicador(nombreIndicador) {
     try {
         // 1. Incluimos fecha_ocurrencia en el select de Supabase
         const { data: registros, error } = await _supabase
-            .from('registro_5why')
-            .select('codigo_5why, descripcion, fecha_ocurrencia')
-            .eq('variable', nombreIndicador);
+    .from('registro_5why')
+    .select('codigo_5why, descripcion, fecha_ocurrencia')
+    .eq('variable', nombreIndicador)
+    .order('fecha_ocurrencia', { ascending: false, nullsFirst: false });
 
         if (error) {
             console.error("Error consultando la tabla registro_5why:", error);
