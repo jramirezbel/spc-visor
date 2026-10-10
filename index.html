@@ -2752,7 +2752,9 @@ async function cargar5WhyDelIndicador(nombreIndicador) {
     <td style="color:#475569; font-weight: 500; font-family: monospace;">${fechaTexto}</td>
     <td><span class="badge-5why-detail">${reg.codigo_5why}</span></td>
     <td style="color:#334155; line-height: 1.4;">${reg.descripcion}</td>
-    <td style="color:#334155;">${reg.nombre_columna ?? '—'}</td>
+    <td>${reg.enlace
+    ? `<a href="${reg.enlace}" target="_blank" rel="noopener" style="color:#2563eb; font-weight:500; text-decoration:none;">Ver en SPLAN ↗</a>`
+    : '<span style="color:#94a3b8;">—</span>'}</td>
 </tr>
             `;
         });
