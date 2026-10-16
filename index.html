@@ -646,9 +646,9 @@ textarea:disabled{
         Sin lote seleccionado
     </div>
 
-    <div id="panelSplan" style="display:none;">
+    <div id="panelSplan">
 
-        <div id="detalleLote" style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; font-size:14px; line-height:1.9; border:1px solid #edf2f7;"></div>
+        <div id="detalleLote" style="display:none; background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; font-size:14px; line-height:1.9; border:1px solid #edf2f7;"></div>
 
         <a id="btnVerSplan" href="#" target="_blank" rel="noopener" style="
             display:block;
@@ -664,14 +664,10 @@ textarea:disabled{
             Ver plan de reacción en SPLAN ↗
         </a>
 
-        <button class="btn-cancelar" onclick="cerrarPanelSplan()">
-            Cerrar
+        <button id="btnLimpiarLote" class="btn-cancelar" onclick="limpiarLoteSeleccionado()" style="display:none;">
+            Quitar selección de lote
         </button>
 
-    </div>
-
-    <div id="placeholderPanel" class="placeholder-text">
-        Selecciona un punto fuera de control en la gráfica para ver su plan de reacción en SPLAN
     </div>
 
 </div>
@@ -1431,8 +1427,9 @@ function abrirIndicador(nombreIndicador) {
 
     actualizarVisibilidadSeccionadores(nombreIndicador);
 
-    // Siempre arrancamos con el panel de SPLAN cerrado
-    cerrarPanelSplan();
+    // El panel de SPLAN siempre está disponible, sin necesidad de hacer clic
+    // en nada: se muestra de una vez, sin datos de lote hasta que se elija uno
+    mostrarPanelSplan(null);
 
     // ============================================================
     // CAMBIO DE PANTALLA
@@ -1463,9 +1460,6 @@ function abrirIndicador(nombreIndicador) {
                 </div>
             </div>
         `;
-
-        // Para los módulos manuales, el plan de reacción se muestra directo (no depende de un punto de la gráfica)
-        mostrarPanelSplan(null);
     }
 
     // ============================================================
@@ -1831,14 +1825,17 @@ dibujarGrafica(filtrados);
 // ============================================================
 // El registro y seguimiento de planes de reacción ya NO vive aquí: vive en
 // SPLAN. Este visor solo muestra el dato del lote (si aplica) y un enlace
-// directo al plan de reacción de ese PI en SPLAN.
+// directo al plan de reacción de ese PI en SPLAN. El panel está disponible
+// siempre, sin necesidad de hacer clic en nada: mostrarPanelSplan(null) lo
+// deja listo con solo el enlace a SPLAN; al elegir un lote en la gráfica,
+// mostrarPanelSplan(dato) agrega lote/valor/fecha encima.
 function mostrarPanelSplan(dato){
 
     const config = planesConfig[variableActual];
     const detalleLote = document.getElementById('detalleLote');
     const btnVerSplan = document.getElementById('btnVerSplan');
+    const btnLimpiar = document.getElementById('btnLimpiarLote');
     const infoLote = document.getElementById('infoLote');
-    const placeholder = document.getElementById('placeholderPanel');
 
     if(dato){
         // Viene de un punto fuera de control en la gráfica SPC
@@ -1860,7 +1857,7 @@ function mostrarPanelSplan(dato){
             `;
         }
     } else if(detalleLote){
-        // Módulo manual (tipo imagen): no hay un punto puntual que mostrar
+        // Sin lote elegido todavía (o módulo manual, que no tiene puntos que elegir)
         detalleLote.style.display = 'none';
         detalleLote.innerHTML = '';
     }
@@ -1869,17 +1866,17 @@ function mostrarPanelSplan(dato){
         btnVerSplan.href = (config && config.splanUrl) ? config.splanUrl : '#';
     }
 
-    if(placeholder) placeholder.style.display = 'none';
-    document.getElementById('panelSplan').style.display = 'block';
+    // El botón para quitar la selección solo tiene sentido cuando hay un lote elegido
+    if(btnLimpiar){
+        btnLimpiar.style.display = dato ? 'block' : 'none';
+    }
 }
 
-function cerrarPanelSplan(){
+function limpiarLoteSeleccionado(){
     datoSeleccionado = null;
 
     const config = planesConfig[variableActual];
     const esManual = !!(config && config.tipo === "imagen");
-
-    document.getElementById('panelSplan').style.display = 'none';
 
     const infoLote = document.getElementById('infoLote');
     if(infoLote && !esManual){
@@ -1888,11 +1885,7 @@ function cerrarPanelSplan(){
         infoLote.innerText = 'Sin lote seleccionado';
     }
 
-    const placeholder = document.getElementById('placeholderPanel');
-    if(placeholder) placeholder.style.display = esManual ? 'none' : 'block';
-
-    // Los módulos manuales siempre muestran directo el enlace a SPLAN
-    if(esManual) mostrarPanelSplan(null);
+    mostrarPanelSplan(null);
 }
 
 async function dibujarGrafica(datos){
