@@ -298,23 +298,6 @@ body{
     border:1px solid #edf2f7;
     font-size:13px;
 }
-#btnEnviar{
-    width:100%;
-    margin-top:10px;
-    padding:14px;
-    border:none;
-    border-radius:8px;
-    background:#ccc;
-    color:white;
-    font-weight:bold;
-    cursor:not-allowed;
-}
-
-#btnEnviar.active{
-    background:#38a169;
-    cursor:pointer;
-}
-
 .btn-cancelar{
     width:100%;
     margin-top:8px;
@@ -663,43 +646,33 @@ textarea:disabled{
         Sin lote seleccionado
     </div>
 
-<div id="camposManual" style="display:none; background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px dashed #cbd5e1;">
-    <h4 style="margin-top:0; margin-bottom:10px; font-size:14px; color:#475569;">Datos de la Inspección</h4>
-    
-    <div id="contenedorOperadorManual"></div>
+    <div id="panelSplan" style="display:none;">
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-        <div>
-            <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Número de Lote *</label>
-            <input type="number" id="manualLote" oninput="validarPasos()" placeholder="Ej. 27324" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;">
-        </div>
-        <div>
-            <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Valor de Medición *</label>
-            <input type="number" id="manualValor" oninput="validarPasos()" placeholder="Ej. 0 o número de fugas" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;">
-        </div>
-    </div>
-</div>
-    
+        <div id="detalleLote" style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; font-size:14px; line-height:1.9; border:1px solid #edf2f7;"></div>
 
-    <div style="margin-bottom:15px;">
-        <label style="font-weight:bold; font-size:13px;"> Operador </label>
-        <input type="text" id="operador" placeholder="Nombre del operador" oninput="validarPasos()" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid #cbd5e0;">
-    </div>
+        <a id="btnVerSplan" href="#" target="_blank" rel="noopener" style="
+            display:block;
+            text-align:center;
+            width:100%;
+            padding:14px;
+            border-radius:8px;
+            background:#38a169;
+            color:white;
+            font-weight:bold;
+            text-decoration:none;
+        ">
+            Ver plan de reacción en SPLAN ↗
+        </a>
 
-    <div id="checklist-pasos"></div>
+        <button class="btn-cancelar" onclick="cerrarPanelSplan()">
+            Cerrar
+        </button>
 
-    <div style="margin-top:15px;">
-        <label style="font-weight:bold; font-size:13px;"> Comentario adicional </label>
-        <textarea id="accionExtra" placeholder="Notas sobre la inspección..." style="width:100%; min-height:100px; margin-top:5px; padding:10px; border-radius:8px; border:1px solid #cbd5e0; resize:vertical;"></textarea>
     </div>
 
-    <button id="btnEnviar" onclick="enviarReporte()" disabled>
-        Registrar Plan
-    </button>
-    
-    <button class="btn-cancelar" onclick="cancelarRegistro()">
-        Cancelar
-    </button>
+    <div id="placeholderPanel" class="placeholder-text">
+        Selecciona un punto fuera de control en la gráfica para ver su plan de reacción en SPLAN
+    </div>
 
 </div>
         
@@ -717,6 +690,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const planesConfig = {
     "Consumo agua recuperada":{
         ucl:85, // Valor de respaldo (fallback) si a un lote le falta variedad o la columna "segundo_inundado"
+
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
 
         // ============================================================
         // TARGET DINÁMICO — completa aquí los valores reales
@@ -760,6 +735,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
     "Consumo agua potable":{
         ucl:12,
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         columna:"consumo agua potable",
         homeId:"home-potable-percent",
         fechaDia:"dia",
@@ -775,6 +751,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
     "Pasamalla Malta":{
         ucl:2,
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         columna:"pasamalla malta",
         homeId:"home-malta-percent",
         fechaDia:"dia_malta",
@@ -788,6 +765,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
     "Pasamalla Cebada":{
         ucl:3,
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         columna:"pasamalla cebada",
         homeId:"home-cebada-percent",
         fechaDia:"dia",
@@ -801,6 +779,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
     
 "Polvillo": {
     ucl:1,
+    splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
     columna:"polvillo",
     homeId:"home-polvillo-percent",
     fechaDia: "dia",
@@ -817,6 +796,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
     "Malta en germen":{
         ucl:1,
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         columna:"malta en germen",
         homeId:"home-germen-percent",
         fechaDia:"dia_malta",
@@ -832,6 +812,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
     "Relleno total tanques":{
         ucl:3,
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         columna:"relleno total tanques",
         homeId:"home-relleno-percent",
         fechaDia:"dia",
@@ -845,6 +826,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
     
     "Tiempo de descarga de Tostador":{
         tipo: "imagen",
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(6).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
             "Paso 1: Verificar en el SCADA disponibilidad de Tolvas Buffer para el Tostador 4 y comunicarse 30 minutos antes de la descarga con operador de Cebadas y maltas.",
@@ -854,6 +836,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
         "Tiempo de transporte de Malta Verde":{
         tipo: "imagen",
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(7).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
             "Paso 1: Medir y ajustar manualmente la altura de los dosificadores según la velocidad de descarga 1, 2, 3 y capacidad volumétrica de Elevador 4 o 5",
@@ -867,15 +850,17 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
 
         "Tiempo de Germinación":{
         tipo: "imagen",
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(8).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
-            "Paso 1: Cuando el tiempo del lote supere las 78 horas de germinación, reducir la temperatura del germinador a 14 °C (Configurar temperatura bajo capa en SCADA)",
+            "Paso 1: Cuando el tiempo del lote supere las 78 horas de germinación, reducir la temperatura del germinador a 14 °C (Configurar temperatura bajo capa en SCADA)",
             "Paso 2: Ajustar la dosis de ácido giberélico (AG) en los lotes en curso, según el nivel de atraso identificado en el programa, consultando con el supervisor de proceso."
 ]
     },
 
             "Humedad de Germinación":{
         tipo: "imagen",
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(9).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
             "Paso 1: Realizar doble batida por turno para mejorar la aireación y homogeneidad del lecho.",
@@ -886,6 +871,7 @@ En caso de que marque flujo, cerrar la válvula manual de bypass hasta que marqu
     
 "Tiempo de Tostación": {
         tipo: "imagen",
+        splanUrl: "", // TODO: enlace al plan de reacción de este PI en SPLAN
         imagen: "https://abzxbxjhjqzzfjvuitom.supabase.co/storage/v1/object/public/imagenes/Agregar%20algo%20de%20texto%20(5).png", // <--- Pon aquí el nombre de tu archivo .png o .jpg
         pasos: [
             "Paso 1. Limpiar manualmente el ducto entre tostador y transportador antes de iniciar la descarga para evitar atraso por atascamiento",
@@ -1438,40 +1424,15 @@ function abrirIndicador(nombreIndicador) {
         return;
     }
 
-    const inputOperador = document.getElementById('operador');
-    const inputComentario = document.getElementById('accionExtra');
-    const manualLote = document.getElementById('manualLote');
-    const manualValor = document.getElementById('manualValor');
-
     const visorContainer = document.querySelector('.visor-container');
-    const camposManual = document.getElementById('camposManual');
     const infoLote = document.getElementById('infoLote');
-    const checklistPasos = document.getElementById('checklist-pasos');
-
-    const bloqueOperadorOriginal = inputOperador ? inputOperador.parentElement : null;
-    const contenedorManualOps = document.getElementById('contenedorOperadorManual');
 
     datoSeleccionado = null;
 
     actualizarVisibilidadSeccionadores(nombreIndicador);
 
-    // ============================================================
-    // LIMPIEZA GENERAL (SIN BLOQUEAR INPUTS)
-    // ============================================================
-    if (inputOperador) {
-        inputOperador.value = "";
-        inputOperador.classList.remove("bloqueado-spc");
-        inputOperador.disabled = false;
-    }
-
-    if (inputComentario) {
-        inputComentario.value = "";
-        inputComentario.classList.remove("bloqueado-spc");
-        inputComentario.disabled = false;
-    }
-
-    if (manualLote) manualLote.value = "";
-    if (manualValor) manualValor.value = "";
+    // Siempre arrancamos con el panel de SPLAN cerrado
+    cerrarPanelSplan();
 
     // ============================================================
     // CAMBIO DE PANTALLA
@@ -1481,19 +1442,14 @@ function abrirIndicador(nombreIndicador) {
     document.getElementById('tituloIndicadorActual').innerText = nombreIndicador;
 
     // ============================================================
-    // MODO IMAGEN (MANUAL)
+    // MODO IMAGEN (MANUAL) — solo muestra el SOP y el enlace a SPLAN
     // ============================================================
     if (config.tipo === "imagen") {
 
-        camposManual.style.display = 'block';
         infoLote.style.display = 'none';
 
         visorContainer.style.overflowY = 'auto';
         visorContainer.style.display = 'block';
-
-        if (inputOperador && contenedorManualOps) {
-            contenedorManualOps.appendChild(bloqueOperadorOriginal);
-        }
 
         visorContainer.innerHTML = `
             <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#f8fafc; padding:20px; overflow-y:auto;">
@@ -1508,24 +1464,8 @@ function abrirIndicador(nombreIndicador) {
             </div>
         `;
 
-        // checklist interactivo SIEMPRE
-        let htmlChecklist = "";
-        config.pasos.forEach(pasoText => {
-            htmlChecklist += `
-                <label class="step spc-step activo" style="display:block; background:#f8fafc; padding:10px; margin-bottom:8px; border-radius:8px;">
-                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
-                    <span>${pasoText}</span>
-                </label>
-            `;
-        });
-
-        checklistPasos.innerHTML = htmlChecklist;
-
-        document.getElementById('manualLote').oninput = validarPasos;
-        document.getElementById('manualValor').oninput = validarPasos;
-        if (inputOperador) inputOperador.oninput = validarPasos;
-
-        validarPasos();
+        // Para los módulos manuales, el plan de reacción se muestra directo (no depende de un punto de la gráfica)
+        mostrarPanelSplan(null);
     }
 
     // ============================================================
@@ -1533,18 +1473,11 @@ function abrirIndicador(nombreIndicador) {
     // ============================================================
     else {
 
-        camposManual.style.display = 'none';
         infoLote.style.display = 'block';
 
         infoLote.style.background = '#64748b';
         infoLote.style.color = 'white';
         infoLote.innerText = 'Sin lote seleccionado';
-
-        if (inputOperador && bloqueOperadorOriginal) {
-            const formDerecho = document.getElementById('accionExtra').parentElement.parentElement;
-            const campoAccionExtra = document.getElementById('accionExtra').parentElement;
-            formDerecho.insertBefore(bloqueOperadorOriginal, campoAccionExtra);
-        }
 
         visorContainer.style.overflowY = 'auto';
         visorContainer.style.display = 'block';
@@ -1561,187 +1494,21 @@ function abrirIndicador(nombreIndicador) {
         `;
 
         // fechas default
-        // fechas default
-const hoy = new Date();
+        const hoy = new Date();
 
-const desde = new Date(hoy);
-desde.setMonth(desde.getMonth() - 1);
-desde.setDate(desde.getDate() + 1);
+        const desde = new Date(hoy);
+        desde.setMonth(desde.getMonth() - 1);
+        desde.setDate(desde.getDate() + 1);
 
-document.getElementById('fechaDesde').value = formatearFecha(desde);
-document.getElementById('fechaHasta').value = formatearFecha(hoy);
-        // ============================================================
-        // CHECKLIST SPC (GRIS PERO SIEMPRE INTERACTIVO)
-        // ============================================================
-        let html = "";
-        config.pasos.forEach(pasoText => {
-            html += `
-                <label class="step spc-step" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:8px; border-radius:8px;">
-                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
-                    <span>${pasoText}</span>
-                </label>
-            `;
-        });
-
-        checklistPasos.innerHTML = html;
+        document.getElementById('fechaDesde').value = formatearFecha(desde);
+        document.getElementById('fechaHasta').value = formatearFecha(hoy);
 
         filtrarPorFechas();
     }
 
     cargar5WhyDelIndicador(nombreIndicador);
 }
-    
-function mostrarImagenManual(nombre){
 
-    const config = planesConfig[nombre];
-
-    document.getElementById('myDiv').innerHTML = `
-        <div style="
-            width:100%;
-            height:100%;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            background:#f8fafc;
-            overflow:auto;
-        ">
-
-            <img
-                src="${config.imagen}"
-                style="
-                    max-width:95%;
-                    max-height:95%;
-                    object-fit:contain;
-                    border-radius:12px;
-                    box-shadow:0 4px 12px rgba(0,0,0,0.15);
-                "
-            >
-
-        </div>
-    `;
-}
-
-function cancelarRegistroManual(){
-
-    document.getElementById('infoLote').innerHTML = `
-        Registro manual
-    `;
-
-    document.getElementById('infoLote').style.background = '#3182ce';
-
-    document.getElementById('operador').disabled = false;
-
-    document.getElementById('operador').value = '';
-
-    document.getElementById('accionExtra').disabled = false;
-
-    document.getElementById('accionExtra').value = '';
-
-    const pasos = planesConfig[variableActual].pasos;
-
-    document.getElementById('checklist-pasos').innerHTML = `
-
-        <div style="margin-bottom:15px;">
-
-            <label style="font-weight:bold;font-size:13px;">
-                Lote
-            </label>
-
-            <input
-                type="text"
-                id="manualLote"
-                oninput="validarManual()"
-                style="
-                    width:100%;
-                    padding:10px;
-                    margin-top:5px;
-                    border-radius:8px;
-                    border:1px solid #cbd5e0;
-                "
-            >
-
-        </div>
-
-        <div style="margin-bottom:15px;">
-
-            <label style="font-weight:bold;font-size:13px;">
-                Valor
-            </label>
-
-            <input
-                type="number"
-                id="manualValor"
-                oninput="validarManual()"
-                style="
-                    width:100%;
-                    padding:10px;
-                    margin-top:5px;
-                    border-radius:8px;
-                    border:1px solid #cbd5e0;
-                "
-            >
-
-        </div>
-
-        ${pasos.map((p,i)=>`
-            <label class="step">
-                <input
-                    type="checkbox"
-                    onchange="validarManual()"
-                    id="paso${i}"
-                >
-                ${p}
-            </label>
-        `).join('')}
-    `;
-
-    const btn = document.getElementById('btnEnviar');
-
-    btn.disabled = true;
-
-    btn.classList.remove('active');
-
-    btn.innerText = 'Registrar Plan';
-}
-
-function validarManual(){
-
-    const checks =
-        document.querySelectorAll(
-            '#checklist-pasos input[type="checkbox"]:checked'
-        ).length;
-
-    const total =
-        document.querySelectorAll(
-            '#checklist-pasos input[type="checkbox"]'
-        ).length;
-
-    const operador =
-        document.getElementById('operador')
-        .value.trim();
-
-    const lote =
-        document.getElementById('manualLote')
-        ?.value.trim();
-
-    const valor =
-        document.getElementById('manualValor')
-        ?.value.trim();
-
-    const valido =
-        operador &&
-        lote &&
-        valor &&
-        checks === total;
-
-    const btn =
-        document.getElementById('btnEnviar');
-
-    btn.disabled = !valido;
-
-    btn.classList.toggle('active', valido);
-}
-    
 function volverHome(){
     document.getElementById('dashboardScreen').style.display = 'none';
     document.getElementById('bibliotecaScreen').style.display = 'none';
@@ -2005,24 +1772,6 @@ function seleccionarInundado(valor){
     filtrarPorFechas();
 }
 
-function cambiarVariable(nombre){
-    variableActual = nombre;
-    document.getElementById('tituloIndicadorActual').innerText = nombre;
-    
-    const config = planesConfig[nombre];
-    if (!config) return;
-
-    // Solo si es un módulo estadístico real (SPC), recalculamos gráficos
-    if (config.tipo !== "imagen") {
-        document.getElementById('stats-bar').style.display = 'flex';
-        document.getElementById('infoLote').style.display = 'block';
-        filtrarPorFechas();
-    } else {
-        // Si por alguna razón cae aquí un módulo manual, apagamos barras SPC
-        document.getElementById('stats-bar').style.display = 'none';
-    }
-}
-    
 function filtrarPorFechas() {
     const desdeInput = document.getElementById('fechaDesde').value;
     const hastaInput = document.getElementById('fechaHasta').value;
@@ -2036,9 +1785,6 @@ function filtrarPorFechas() {
     const config = planesConfig[variableActual];
 
     const fuente = obtenerFuenteDatos(variableActual);
-    
-console.log("Fuente:", fuente);
-console.log(datosVariedades[0]);
 
 let filtrados = fuente
     .filter(d => {
@@ -2079,37 +1825,74 @@ if (variableActual === "Consumo agua recuperada" && filtroInundadosActual !== 't
 
 dibujarGrafica(filtrados);
 }
-    
-// ============================================================
-// CACHÉ DE REPORTES (planes_reaccion)
-// ============================================================
-// Antes se traía TODA la tabla (select *, sin filtro) cada vez que se
-// abría un indicador, se pulsaba "Filtrar" o se tocaba un seccionador.
-// Ahora se filtra por indicador en el propio query y se cachea: mientras
-// no se registre un reporte nuevo, no se vuelve a consultar Supabase.
-let reportesCache = { variable: null, datos: [] };
 
-async function obtenerReportesIndicador(nombreIndicador){
-    if(reportesCache.variable === nombreIndicador){
-        return reportesCache.datos;
+// ============================================================
+// PANEL DE PLAN DE REACCIÓN (SPLAN)
+// ============================================================
+// El registro y seguimiento de planes de reacción ya NO vive aquí: vive en
+// SPLAN. Este visor solo muestra el dato del lote (si aplica) y un enlace
+// directo al plan de reacción de ese PI en SPLAN.
+function mostrarPanelSplan(dato){
+
+    const config = planesConfig[variableActual];
+    const detalleLote = document.getElementById('detalleLote');
+    const btnVerSplan = document.getElementById('btnVerSplan');
+    const infoLote = document.getElementById('infoLote');
+    const placeholder = document.getElementById('placeholderPanel');
+
+    if(dato){
+        // Viene de un punto fuera de control en la gráfica SPC
+        const fecha = dato.fechas ? dato.fechas[variableActual] : null;
+        const fechaTexto = fecha ? fecha.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' }) : 'Sin fecha';
+
+        if(infoLote){
+            infoLote.style.background = '#e53e3e';
+            infoLote.style.color = 'white';
+            infoLote.innerHTML = `Lote: ${dato.lote} | Valor: ${dato.y}`;
+        }
+
+        if(detalleLote){
+            detalleLote.style.display = 'block';
+            detalleLote.innerHTML = `
+                <div><b>Lote:</b> ${dato.lote}</div>
+                <div><b>Valor:</b> ${dato.y}</div>
+                <div><b>Fecha:</b> ${fechaTexto}</div>
+            `;
+        }
+    } else if(detalleLote){
+        // Módulo manual (tipo imagen): no hay un punto puntual que mostrar
+        detalleLote.style.display = 'none';
+        detalleLote.innerHTML = '';
     }
 
-    const { data: reportes, error } = await _supabase
-        .from('planes_reaccion')
-        .select('*')
-        .eq('variable', nombreIndicador);
-
-    if(error){
-        console.error("Error consultando planes_reaccion:", error);
-        return [];
+    if(btnVerSplan){
+        btnVerSplan.href = (config && config.splanUrl) ? config.splanUrl : '#';
     }
 
-    reportesCache = { variable: nombreIndicador, datos: reportes || [] };
-    return reportesCache.datos;
+    if(placeholder) placeholder.style.display = 'none';
+    document.getElementById('panelSplan').style.display = 'block';
 }
 
-function invalidarCacheReportes(){
-    reportesCache = { variable: null, datos: [] };
+function cerrarPanelSplan(){
+    datoSeleccionado = null;
+
+    const config = planesConfig[variableActual];
+    const esManual = !!(config && config.tipo === "imagen");
+
+    document.getElementById('panelSplan').style.display = 'none';
+
+    const infoLote = document.getElementById('infoLote');
+    if(infoLote && !esManual){
+        infoLote.style.background = '#64748b';
+        infoLote.style.color = 'white';
+        infoLote.innerText = 'Sin lote seleccionado';
+    }
+
+    const placeholder = document.getElementById('placeholderPanel');
+    if(placeholder) placeholder.style.display = esManual ? 'none' : 'block';
+
+    // Los módulos manuales siempre muestran directo el enlace a SPLAN
+    if(esManual) mostrarPanelSplan(null);
 }
 
 async function dibujarGrafica(datos){
@@ -2122,16 +1905,14 @@ async function dibujarGrafica(datos){
     }
 
     const config = planesConfig[variableActual];
-    const bd = await obtenerReportesIndicador(variableActual);
 
     const ok = datos.filter(d=>d.y <= d.target).length;
     const fuera = datos.filter(d=>d.y > d.target);
-    const listos = fuera.filter(d=>bd.some(r=> String(r.lote_id) === d.lote && r.variable === variableActual)).length;
 
     document.getElementById('stat-total').innerText = datos.length;
     document.getElementById('stat-ok').innerText = ok;
     document.getElementById('stat-percent').innerText = Math.round((ok/datos.length)*100) + "%";
-    document.getElementById('stat-pending').innerText = fuera.length - listos;
+    document.getElementById('stat-pending').innerText = fuera.length;
 
     // Asegurar el orden ascendente por lote antes de mapear el eje X
     datos.sort((a, b) => parseInt(a.lote) - parseInt(b.lote));
@@ -2200,15 +1981,7 @@ x: [
             // Un pelín más grandes (size: 11) en Relleno para que la estrella o el rombo se distingan bien
             size: variableActual === 'Relleno total tanques' ? 11 : 8,
             symbol: simbolosMapeados, // <--- AQUÍ SE APLICA EL CAMBIO DE FIGURAS
-            color: datos.map(d => {
-                const gestionado = bd.some(r =>
-                    String(r.lote_id) === d.lote &&
-                    r.variable === variableActual
-                );
-                return d.y > d.target
-                    ? (gestionado ? '#3182ce' : 'red')
-                    : '#2d3748';
-            })
+            color: datos.map(d => d.y > d.target ? 'red' : '#2d3748')
         }
     };
 
@@ -2266,7 +2039,7 @@ x: [
 
     document.querySelector('.canvas-scroll').scrollLeft = 0;
         
-    // 3. EVENTO DE CLIC PERFECTAMENTE LIMPIO (Sin duplicados)
+    // 2. EVENTO DE CLIC: solo abre el panel con lote/valor/fecha + enlace a SPLAN
     div.on('plotly_click', function(evento){
         const punto = evento.points.find(p => p.curveNumber === 0) || evento.points[0];
         const indice = punto.pointIndex; 
@@ -2274,261 +2047,11 @@ x: [
 
         if(!dato || dato.y <= dato.target) return;
 
-        // Guardar el punto seleccionado en la variable global
         datoSeleccionado = dato;
-
-        const reporteExistente = bd.find(r =>
-            String(r.lote_id) === String(dato.lote) &&
-            r.variable === variableActual
-        );
-
-        if(reporteExistente){
-            verReporteExistente(reporteExistente);
-            
-            // Si el lote ya fue gestionado y es Relleno, le añadimos visualmente el grupo al banner azul
-            if(variableActual === 'Relleno total tanques') {
-                setTimeout(() => {
-                    const infoLote = document.getElementById('infoLote');
-                    if(infoLote) infoLote.innerHTML = `Lote: ${dato.lote} (Grupo: ${dato.grupo || 'G1'})`;
-                }, 50);
-            }
-        } else {
-            abrirPlanReaccion(dato);
-            
-            // Si es un plan nuevo fuera de control y es Relleno, le añadimos el grupo al banner rojo
-            if(variableActual === 'Relleno total tanques') {
-                setTimeout(() => {
-                    const infoLote = document.getElementById('infoLote');
-                    if(infoLote) infoLote.innerHTML = `Lote: ${dato.lote} [${dato.grupo || 'G1'}] | Valor: ${dato.y}`;
-                }, 50);
-            }
-        }
+        mostrarPanelSplan(dato);
     }); 
 }
-    
-function mostrarImagenFija(nombreIndicador){
 
-    const config = planesConfig[nombreIndicador];
-
-    const div = document.getElementById('myDiv');
-
-    div.innerHTML = `
-        <div style="
-            width:100%;
-            height:100%;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            background:#f8fafc;
-            padding:20px;
-        ">
-
-            <img
-                src="assets/${config.imagen}"
-                style="
-                    max-width:100%;
-                    max-height:100%;
-                    object-fit:contain;
-                    border-radius:12px;
-                    box-shadow:0 4px 18px rgba(0,0,0,0.12);
-                "
-            >
-
-        </div>
-    `;
-
-    document.getElementById('stat-total').innerText = '-';
-    document.getElementById('stat-ok').innerText = '-';
-    document.getElementById('stat-percent').innerText = '-';
-    document.getElementById('stat-pending').innerText = '-';
-
-    cancelarRegistro();
-document.getElementById('camposManual')
-    .classList.add('contenido-oculto');
-    document.getElementById('infoLote').innerHTML = `
-        Seleccione una acción del checklist
-    `;
-
-    document.getElementById('operador').disabled = false;
-    document.getElementById('accionExtra').disabled = false;
-
-    const pasos = config.pasos || [];
-
-    document.getElementById('checklist-pasos').innerHTML =
-        pasos.map((p,i)=>`
-            <label class="step">
-                <input
-                    type="checkbox"
-                    onchange="validarPasos()"
-                    id="paso${i}"
-                >
-                ${p}
-            </label>
-        `).join('');
-}
-    
-function cancelarRegistro() {
-    // 1. Limpieza absoluta de todos los campos de texto
-    const inputOperador = document.getElementById('operador');
-    const inputComentario = document.getElementById('accionExtra');
-    const manualLote = document.getElementById('manualLote');
-    const manualValor = document.getElementById('manualValor');
-
-    if (inputOperador) inputOperador.value = "";
-    if (inputComentario) inputComentario.value = "";
-    if (manualLote) manualLote.value = "";
-    if (manualValor) manualValor.value = "";
-    
-    // 2. Evaluar el estado según el tipo de indicador actual
-    const config = planesConfig[variableActual];
-    const esManual = (config && config.tipo === "imagen");
-
-    if (esManual) {
-        // En Control de Fugas mantenemos los campos y pasos habilitados
-        if (inputOperador) inputOperador.disabled = false;
-        if (inputComentario) inputComentario.disabled = false;
-        
-        const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            cb.checked = false;
-            cb.disabled = false;
-        });
-    } else {
-
-        if (inputOperador) inputOperador.disabled = true;
-        if (inputComentario) inputComentario.disabled = true;
-
-        // CAMBIO AQUÍ: Ahora cuando se cancela o no hay lote, se pone GRIS (#64748b)
-        const infoLote = document.getElementById('infoLote');
-        if (infoLote) {
-            infoLote.style.background = '#64748b'; 
-            infoLote.style.color = 'white';
-            infoLote.innerText = 'Sin lote seleccionado';
-        }
-        
-        // Volvemos a pintar los pasos en modo lectura inicial (gris/disabled)
-        const checklistPasos = document.getElementById('checklist-pasos');
-        if (config && config.pasos) {
-            let htmlGris = "";
-            config.pasos.forEach(pasoText => {
-                htmlGris += `
-                    <label class="step" style="opacity:0.5; cursor:not-allowed; background:#f1f5f9;">
-                        <input type="checkbox" disabled style="margin-right:10px;">
-                        <span>${pasoText}</span>
-                    </label>
-                `;
-            });
-            checklistPasos.innerHTML = htmlGris;
-        }
-    }
-
-    // 3. RESTABLECER VARIABLES Y TEXTO DEL BOTÓN
-    datoSeleccionado = null;
-
-    const btn = document.getElementById('btnEnviar');
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.remove('active');
-        btn.innerText = 'Registrar Inspección / Plan'; 
-    }
-}
-    
-function abrirPlanReaccion(dato) {
-    const config = planesConfig[variableActual];
-    
-    const infoLote = document.getElementById('infoLote');
-    if (infoLote) {
-        infoLote.style.background = '#e53e3e'; 
-        infoLote.style.color = 'white';
-        infoLote.innerHTML = `Lote: ${dato.lote} | Valor: ${dato.y}`;
-    }
-    
-    const inputOperador = document.getElementById('operador');
-    const inputComentario = document.getElementById('accionExtra');
-    
-    if (inputOperador) {
-        inputOperador.disabled = false;
-        inputOperador.value = ""; 
-    }
-    if (inputComentario) {
-        inputComentario.disabled = false;
-        inputComentario.value = "";
-    }
-    
-    const checklistPasos = document.getElementById('checklist-pasos');
-    if (config && config.pasos) {
-        let htmlActivo = "";
-        config.pasos.forEach(pasoText => {
-            htmlActivo += `
-                <label class="step">
-                    <input type="checkbox" onchange="validarPasos()" style="margin-right:10px;">
-                    <span>${pasoText}</span>
-                </label>
-            `;
-        });
-        checklistPasos.innerHTML = htmlActivo;
-    }
-    
-    // RESTABLECER TEXTO DEL BOTÓN PARA EL NUEVO REGISTRO
-    const btn = document.getElementById('btnEnviar');
-    if (btn) {
-        btn.innerText = 'Registrar Inspección / Plan';
-    }
-    
-    validarPasos();
-}
-    
-function verReporteExistente(reporte){
-    const info = document.getElementById('infoLote');
-    
-    info.style.background = '#3182ce';
-    info.style.color = 'white';
-    
-    info.innerHTML = `
-        Lote ${reporte.lote_id}<br>
-        Gestionado por: <b>${reporte.operador}</b>
-    `;
-    
-    document.getElementById('operador').value = reporte.operador || '';
-    document.getElementById('accionExtra').value = reporte.comentario || '';
-    
-    document.getElementById('operador').disabled = true;
-    document.getElementById('accionExtra').disabled = true;
-    
-    const pasos = planesConfig[variableActual].pasos;
-    const realizados = reporte.pasos_realizados || [];
-    
-    document.getElementById('checklist-pasos').innerHTML = pasos.map((p)=>{
-        // LIMPIEZA Y COMPARACIÓN STRICTA DE STRINGS:
-        // Limpiamos espacios y quitamos saltos de línea para asegurar un match perfecto
-        const textoLimpioConfig = p.replace(/\s+/g, ' ').trim();
-        
-        const ejecutado = realizados.some(r => {
-            const textoLimpioBD = String(r.paso).replace(/\s+/g, ' ').trim();
-            return textoLimpioBD === textoLimpioConfig && r.completado === true;
-        });
-        
-        return `
-            <label class="step" style="
-                background:${ejecutado ? '#ebf8ff' : '#f8fafc'};
-                border-color:${ejecutado ? '#90cdf4' : '#edf2f7'};
-            ">
-                <input
-                    type="checkbox"
-                    ${ejecutado ? 'checked' : ''}
-                    disabled
-                >
-                ${p}
-            </label>
-        `;
-    }).join('');
-    
-    const btn = document.getElementById('btnEnviar');
-    btn.disabled = true;
-    btn.classList.remove('active');
-    btn.innerText = 'Reporte ya registrado';
-}
-    
 function verPlan(proceso, id){
 
     const plan = bibliotecaPlanes[proceso]
@@ -2581,124 +2104,6 @@ function verPlan(proceso, id){
 function cerrarModalPlan(){
 
     document.getElementById('modalPlan').style.display = 'none';
-}
-    
-    
-function validarPasos() {
-    const btn = document.getElementById('btnEnviar'); 
-    if (!btn) return;
-
-    const config = planesConfig[variableActual];
-    const esManual = (config && config.tipo === "imagen");
-
-    // 1. El nombre del operador SIEMPRE es obligatorio
-    const operadorInput = document.getElementById('operador');
-    const operador = operadorInput ? operadorInput.value.trim() : "";
-
-    // 2. Validar que al menos un paso del checklist esté marcado
-    const checkboxes = document.querySelectorAll('#checklist-pasos input[type="checkbox"]');
-    const alMenosUno = Array.from(checkboxes).some(cb => cb.checked);
-
-    if (esManual) {
-        // En el módulo operativo manual, además validamos Lote y Valor
-        const loteInput = document.getElementById('manualLote');
-        const valorInput = document.getElementById('manualValor');
-        
-        const lote = loteInput ? loteInput.value.trim() : "";
-        const valor = valorInput ? valorInput.value.trim() : "";
-        
-        // Se habilita si tiene: Lote Y Valor Y Operador Y al menos un paso marcado (Comentario es opcional)
-        if (lote !== "" && valor !== "" && operador !== "" && alMenosUno) {
-            btn.disabled = false;
-            btn.classList.add('active');
-        } else {
-            btn.disabled = true;
-            btn.classList.remove('active');
-        }
-    } else {
-        // En los módulos SPC estándar (gráficas)
-        // Se habilita si tiene: Operador Y al menos un paso marcado
-        if (operador !== "" && alMenosUno) {
-            btn.disabled = false;
-            btn.classList.add('active');
-        } else {
-            btn.disabled = true;
-            btn.classList.remove('active');
-        }
-    }
-}
-
-
-async function enviarReporte() {
-    try {
-        const config = planesConfig[variableActual];
-        const esManual = (config && config.tipo === "imagen");
-        
-        let loteFinal = "";
-        let valorFinal = 0;
-        
-        if (esManual) {
-            loteFinal = document.getElementById('manualLote').value.trim();
-            valorFinal = parseFloat(document.getElementById('manualValor').value);
-            if (!loteFinal || isNaN(valorFinal)) {
-                alert("Por favor ingrese Lote y Valor válidos.");
-                return;
-            }
-        } else {
-            if (!datoSeleccionado) {
-                alert("No hay ningún punto seleccionado en la gráfica.");
-                return;
-            }
-            loteFinal = datoSeleccionado.lote;
-            valorFinal = datoSeleccionado.y;
-        }
-
-        // ============================================================
-        // UNIFICACIÓN DEL PAYLOAD: Guardar el texto completo y 'completado'
-        // ============================================================
-        const checks = [...document.querySelectorAll('#checklist-pasos input[type="checkbox"]')];
-        const pasosRealizados = checks.map(c => {
-            // Buscamos el texto del paso que está en el span hermano del checkbox
-            const textoPaso = c.parentElement.querySelector('span')?.innerText.trim() || "";
-            return {
-                paso: textoPaso,       // Guarda el string descriptivo completo
-                completado: c.checked  // Guarda true si está marcado, false si no
-            };
-        });
-
-        const payload = {
-            lote_id: loteFinal,
-            valor: valorFinal,
-            variable: variableActual,
-            operador: document.getElementById('operador').value.trim(),
-            comentario: document.getElementById('accionExtra').value.trim(),
-            pasos_realizados: pasosRealizados // Se va limpio con la nueva estructura unificada
-        };
-
-        const { error } = await _supabase.from('planes_reaccion').insert([payload]);
-        if (error) {
-            console.error("Error devuelto por Supabase:", error);
-            alert("Error en Supabase: " + error.message);
-            return;
-        }
-
-        invalidarCacheReportes(); // el reporte recién insertado ya no coincide con lo cacheado
-
-        alert("Inspección / Plan registrado correctamente.");
-        cancelarRegistro(); 
-        
-        if (!esManual) {
-            filtrarPorFechas();
-        }
-        
-    } catch (err) {
-        console.error("Error capturado en el catch:", err);
-        alert("Error crítico registrando el reporte: " + err.message);
-    }
-}
-    
-function descargarReportes(){
-    alert("Descargando CSV...");
 }
 
 window.onload = async ()=>{
