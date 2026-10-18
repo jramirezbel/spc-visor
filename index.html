@@ -1990,7 +1990,7 @@ x: [
         y: datos.map(d => d.target),
         mode: 'lines',
         name: 'Target',
-        line: { color: '#d69e2e', width: 2, dash: 'dot' },
+        line: { color: '#166534', width: 2, dash: 'dot' },
         hovertemplate: '<b>Target:</b> %{y}<extra></extra>',
         showlegend: false
     } : null;
@@ -2014,7 +2014,7 @@ x: [
     }
     valoresTarget.forEach(t => {
         tickvalsY.push(t);
-        ticktextY.push('<b style="color:#d69e2e">' + t + '</b>');
+        ticktextY.push('<b style="color:#166534">' + t + '</b>');
     });
 
     const layout = {
@@ -2041,7 +2041,7 @@ x: [
             r: 20 
         },
         shapes: targetUnico === null ? [] : [
-            { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: targetUnico, y1: targetUnico, line: { color: '#d69e2e', width: 2, dash: 'dash' }, layer: 'above' },
+            { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: targetUnico, y1: targetUnico, line: { color: '#166534', width: 2, dash: 'dash' }, layer: 'above' },
             { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: targetUnico, fillcolor: 'rgba(144,238,144,0.6)', line: { width: 0 }, layer: 'below' },
             { type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: targetUnico, y1: 1000, fillcolor: 'rgba(255,90,90,0.6)', line: { width: 0 }, layer: 'below' }
         ]
@@ -2092,7 +2092,7 @@ function verPlan(proceso, id){
                 ${plan.disparador}
             </p>
 
-            <h3 style="color:#d69e2e;">
+            <h3 style="color:#166534;">
                 Causa
             </h3>
 
